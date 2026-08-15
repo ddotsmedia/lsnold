@@ -10,11 +10,19 @@
  */
 
 /** Tags a page section is allowed to contain. */
+/**
+ * h1 is deliberately absent: every public page already renders its own <h1>,
+ * and a second one in body copy is an accessibility defect. The editor offers
+ * H2 and H3 for the same reason.
+ */
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's',
   'h2', 'h3', 'h4',
   'ul', 'ol', 'li',
   'blockquote', 'a', 'span', 'div',
+  // Emitted by the rich text editor: inline code, code blocks, and the
+  // horizontal rule its input rules produce from '---'.
+  'code', 'pre', 'hr',
 ]);
 
 /** Attributes allowed, per tag. */

@@ -72,6 +72,27 @@ body {
   margin: 0 0 1rem;
   font-style: italic;
 }
+.page-content code {
+  background: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.9em;
+}
+.page-content pre {
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.875rem 1rem;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+}
+/* The <pre> already carries the block styling; the nested <code> must not
+   repeat the background and padding on top of it. */
+.page-content pre code { background: none; padding: 0; }
+.page-content hr {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5rem 0;
+}
 .page-content > *:last-child { margin-bottom: 0; }
 
 /* The same content inside the dark admin panel. */
@@ -84,4 +105,27 @@ body {
 .prose-admin ol { list-style: decimal; }
 .prose-admin li { margin-bottom: 0.25rem; }
 .prose-admin a { color: #34d399; text-decoration: underline; }
+.prose-admin blockquote {
+  border-left: 3px solid #3f3f46;
+  padding-left: 0.875rem;
+  margin: 0 0 0.75rem;
+  font-style: italic;
+}
+.prose-admin code {
+  background: #27272a;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.9em;
+}
+.prose-admin pre {
+  background: #18181b;
+  border-radius: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  margin: 0 0 0.75rem;
+  overflow-x: auto;
+}
+.prose-admin pre code { background: none; padding: 0; }
+.prose-admin hr { border: 0; border-top: 1px solid #3f3f46; margin: 1rem 0; }
+/* The editor's own paragraphs need a caret target when the section is empty. */
+.prose-admin p:only-child:empty::before { content: ''; display: inline-block; }
 .prose-admin > *:last-child { margin-bottom: 0; }
