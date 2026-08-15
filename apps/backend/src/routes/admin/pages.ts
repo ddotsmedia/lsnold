@@ -5,13 +5,13 @@ import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
 import { createAdminPageImagesRouter } from './pageImages.js';
 import * as content from '../../controllers/pageContentController.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
 const PageSchema = z.object({
   title: z.string().min(1).max(255),
   slug: z.string().min(1).max(255),
-  content: z.string().optional().nullable(),
   meta_title: z.string().max(255).optional().nullable(),
   meta_description: z.string().optional().nullable(),
   meta_keywords: z.string().optional().nullable(),
@@ -90,9 +90,9 @@ async function createPage(db: Pool, req: AuthRequest, res: Response): Promise<vo
   try {
     const data = PageSchema.parse(req.body);
     const result = await db.query(
-      `INSERT INTO pages (title, slug, content, meta_title, meta_description, meta_keywords, og_image, status, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING *`,
-      [data.title, data.slug, data.content || null, data.meta_title || null,
+      `INSERT INTO pages (title, slug, meta_title, meta_description, meta_keywords, og_image, status, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8) RETURNING *`,
+      [data.title, data.slug, data.meta_title || null,
        data.meta_description || null, data.meta_keywords || null,
        data.og_image || null, data.status || 'draft', req.userId]
     );
@@ -117,7 +117,7 @@ async function updatePage(db: Pool, req: AuthRequest, res: Response): Promise<vo
     const params: unknown[] = [];
     let idx = 1;
 
-    const fields = ['title', 'slug', 'content', 'meta_title', 'meta_description', 'meta_keywords', 'og_image', 'status'] as const;
+    const fields = ['title', 'slug', 'meta_title', 'meta_description', 'meta_keywords', 'og_image', 'status'] as const;
     for (const f of fields) {
       if (data[f] !== undefined) { sets.push(`${f} = $${idx++}`); params.push(data[f] ?? null); }
     }
@@ -221,13 +221,17 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   // Nested before /:id so the images routes are matched first.
   router.use('/:id/images', createAdminPageImagesRouter(db));
 
+  // Writes are rate limited; reads are not, so a busy editor never locks
+  // itself out of simply viewing the page it is working on.
+  const writeLimit = rateLimit({ max: 120, windowMs: 60_000, name: 'edits' });
+
   // Editable text sections. Before /:id so they are not read as an id.
   router.get('/:pageId/content', (req, res) => content.listSections(db, req as AuthRequest, res));
-  router.post('/:pageId/content', (req, res) => content.createSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/reorder', (req, res) => content.reorderSections(db, req as AuthRequest, res));
-  router.put('/:pageId/content/:sectionId', (req, res) => content.updateSection(db, req as AuthRequest, res));
-  router.delete('/:pageId/content/:sectionId', (req, res) => content.deleteSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/restore', (req, res) => content.restoreSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content', writeLimit, (req, res) => content.createSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/reorder', writeLimit, (req, res) => content.reorderSections(db, req as AuthRequest, res));
+  router.put('/:pageId/content/:sectionId', writeLimit, (req, res) => content.updateSection(db, req as AuthRequest, res));
+  router.delete('/:pageId/content/:sectionId', writeLimit, (req, res) => content.deleteSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/restore', writeLimit, (req, res) => content.restoreSection(db, req as AuthRequest, res));
 
   router.get('/', (req, res) => listPages(db, req as AuthRequest, res));
   router.get('/:id', (req, res) => getPage(db, req as AuthRequest, res));
