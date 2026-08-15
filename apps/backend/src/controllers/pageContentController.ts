@@ -15,9 +15,12 @@ import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 const blankToNull = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v);
 
 const SectionSchema = z.object({
-  section_key: z.string().trim().min(1).max(100).regex(
-    /^[a-z0-9_-]+$/,
-    'Section key may contain lower-case letters, numbers, hyphens and underscores'
+  // Hyphens stay allowed: the admin form slugifies what is typed into them, and
+  // the seeded keys use them. The added rule is that a key cannot be made only
+  // of separators — '-' and '___' passed the old pattern and read as blank.
+  section_key: z.string().trim().min(1).max(50).regex(
+    /^[a-z0-9]+([a-z0-9_-]*[a-z0-9])?$/,
+    'Section key must start and end with a letter or number, and may contain hyphens and underscores between'
   ),
   title: z.preprocess(blankToNull, z.string().trim().max(255).nullable().optional()),
   content: z.preprocess(blankToNull, z.string().max(50000).nullable().optional()),
@@ -131,11 +134,17 @@ export async function createSection(db: Pool, req: AuthRequest, res: Response): 
 export async function updateSection(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const { sectionId } = req.params;
+    // The page in the path is part of the identity of the section, not
+    // decoration. Without it a stale tab or a mistyped id edits another page's
+    // text and reports success.
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
     const data = SectionSchema.partial().parse(req.body);
 
     const before = await db.query(
-      'SELECT * FROM page_content_sections WHERE id = $1 AND deleted_at IS NULL',
-      [sectionId]
+      'SELECT * FROM page_content_sections WHERE id = $1 AND page_id = $2 AND deleted_at IS NULL',
+      [sectionId, pageId]
     );
     if (before.rows.length === 0) { res.status(404).json({ error: 'Section not found' }); return; }
 
@@ -155,9 +164,10 @@ export async function updateSection(db: Pool, req: AuthRequest, res: Response): 
     sets.push(`updated_by = $${idx++}`);
     params.push(req.userId ?? null);
 
-    params.push(sectionId);
+    params.push(sectionId, pageId);
     const result = await db.query(
-      `UPDATE page_content_sections SET ${sets.join(', ')} WHERE id = $${idx} AND deleted_at IS NULL RETURNING *`,
+      `UPDATE page_content_sections SET ${sets.join(', ')}
+        WHERE id = $${idx} AND page_id = $${idx + 1} AND deleted_at IS NULL RETURNING *`,
       params
     );
 
@@ -184,10 +194,13 @@ export async function updateSection(db: Pool, req: AuthRequest, res: Response): 
 export async function deleteSection(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const { sectionId } = req.params;
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
     const result = await db.query(
       `UPDATE page_content_sections SET deleted_at = NOW(), updated_by = $1
-        WHERE id = $2 AND deleted_at IS NULL RETURNING *`,
-      [req.userId ?? null, sectionId]
+        WHERE id = $2 AND page_id = $3 AND deleted_at IS NULL RETURNING *`,
+      [req.userId ?? null, sectionId, pageId]
     );
     if (result.rows.length === 0) { res.status(404).json({ error: 'Section not found' }); return; }
 
@@ -202,12 +215,28 @@ export async function deleteSection(db: Pool, req: AuthRequest, res: Response): 
 }
 
 export async function restoreSection(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  // Held outside the try so the collision handler below can name the key.
+  let sectionKey: string | null = null;
   try {
     const { sectionId } = req.params;
+    // Resolving the page also refuses a restore onto a page that has itself
+    // been deleted — the section would come back somewhere nobody can reach.
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
+    // Read the key first so the collision message can name it.
+    const target = await db.query(
+      `SELECT section_key FROM page_content_sections
+        WHERE id = $1 AND page_id = $2 AND deleted_at IS NOT NULL`,
+      [sectionId, pageId]
+    );
+    if (target.rows.length === 0) { res.status(404).json({ error: 'No deleted section with that id' }); return; }
+    sectionKey = (target.rows[0] as { section_key: string }).section_key;
+
     const result = await db.query(
       `UPDATE page_content_sections SET deleted_at = NULL, updated_by = $1
-        WHERE id = $2 AND deleted_at IS NOT NULL RETURNING *`,
-      [req.userId ?? null, sectionId]
+        WHERE id = $2 AND page_id = $3 AND deleted_at IS NOT NULL RETURNING *`,
+      [req.userId ?? null, sectionId, pageId]
     );
     if (result.rows.length === 0) { res.status(404).json({ error: 'No deleted section with that id' }); return; }
 
@@ -218,7 +247,10 @@ export async function restoreSection(db: Pool, req: AuthRequest, res: Response):
   } catch (error) {
     // Restoring onto a key that has since been reused hits the unique index.
     if ((error as { code?: string }).code === '23505') {
-      res.status(409).json({ error: 'That section key is in use again. Rename the other one first.' });
+      res.status(409).json({
+        error: `Cannot restore: section key ${sectionKey ? `'${sectionKey}' ` : ''}is already in use on this page. `
+          + 'Delete or rename the current section first.',
+      });
       return;
     }
     console.error('Error restoring section:', error);
@@ -235,14 +267,19 @@ export async function reorderSections(db: Pool, req: AuthRequest, res: Response)
 
     const { ids } = ReorderSchema.parse(req.body);
     // One statement, so a half-applied order is impossible.
-    await db.query(
+    const result = await db.query(
       `UPDATE page_content_sections AS s
           SET sort_order = v.ord, updated_by = $3
          FROM (SELECT unnest($1::uuid[]) AS id, generate_subscripts($1::uuid[], 1) AS ord) AS v
         WHERE s.id = v.id AND s.page_id = $2 AND s.deleted_at IS NULL`,
       [ids, pageId, req.userId ?? null]
     );
-    res.json({ reordered: ids.length });
+
+    // The rows actually touched, not the length of the request. Ids belonging
+    // to another page match nothing, and answering with the input length
+    // reported a silent no-op as success.
+    const reordered = result.rowCount ?? 0;
+    res.json({ reordered, requested: ids.length });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: 'Validation failed', details: error.issues });
