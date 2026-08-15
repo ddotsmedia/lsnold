@@ -85,7 +85,7 @@ export function RichTextEditor({
             // onMouseDown, not onClick: clicking would blur the editor first
             // and the browser would lose the selection the command acts on.
             onMouseDown={(e) => { e.preventDefault(); exec(button); }}
-            className={`rounded px-2 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 ${button.className ?? ''}`}
+            className={`inline-flex min-h-12 min-w-12 items-center justify-center rounded px-2 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 ${button.className ?? ''}`}
           >
             {button.label}
           </button>
@@ -94,7 +94,7 @@ export function RichTextEditor({
           type="button"
           title="Add a link"
           onMouseDown={(e) => { e.preventDefault(); addLink(); }}
-          className="rounded px-2 py-1 text-xs text-zinc-300 underline transition-colors hover:bg-zinc-800"
+          className="inline-flex min-h-12 min-w-12 items-center justify-center rounded px-2 py-1 text-xs text-zinc-300 underline transition-colors hover:bg-zinc-800"
         >
           Link
         </button>
@@ -102,7 +102,7 @@ export function RichTextEditor({
           type="button"
           title="Remove formatting"
           onMouseDown={(e) => { e.preventDefault(); exec({ label: '', title: '', command: 'removeFormat' }); }}
-          className="ml-auto rounded px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-zinc-800"
+          className="ml-auto inline-flex min-h-12 min-w-12 items-center justify-center rounded px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-zinc-800"
         >
           Clear formatting
         </button>

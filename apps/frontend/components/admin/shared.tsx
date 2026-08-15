@@ -105,12 +105,12 @@ export function ConfirmDialog({
     <Modal open={open} onClose={onClose} title={title} maxWidth="max-w-sm">
       <p className="text-sm text-zinc-400 mb-6">{message}</p>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
+        <button onClick={onClose} className="inline-flex min-h-12 min-w-12 items-center justify-center px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
           Cancel
         </button>
         <button
           onClick={() => { onConfirm(); onClose(); }}
-          className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+          className={`inline-flex min-h-12 min-w-12 items-center justify-center px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
             destructive
               ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
               : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
@@ -259,15 +259,18 @@ export function Button({
     danger: 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/30',
     ghost: 'bg-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 border-transparent',
   };
+  // 48px floor on both sizes: below that a control is hard to hit accurately on
+  // a touch screen, and the admin panel is used from phones. `sm` still reads
+  // smaller than `md` through its type size and padding, not its hit area.
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs',
-    md: 'px-4 py-2 text-sm',
+    sm: 'min-h-12 min-w-12 px-3 py-1.5 text-xs',
+    md: 'min-h-12 min-w-12 px-4 py-2 text-sm',
   };
 
   return (
     <button
       {...props}
-      className={`rounded-lg font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${props.className || ''}`}
+      className={`inline-flex items-center justify-center rounded-lg font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${props.className || ''}`}
     >
       {children}
     </button>

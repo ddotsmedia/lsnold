@@ -10,12 +10,12 @@ import { StatusBadge, SearchBar, FilterSelect, Button, Modal, FormField, Input, 
 import { PageImagesTab } from '../../../components/admin/PageImagesTab';
 
 interface Page {
-  id: string; title: string; slug: string; content: string; status: string;
+  id: string; title: string; slug: string; status: string;
   meta_title: string; meta_description: string; meta_keywords: string; og_image: string;
   created_by_name: string; created_at: string; updated_at: string;
 }
 
-const EMPTY = { title: '', slug: '', content: '', status: 'draft', meta_title: '', meta_description: '', meta_keywords: '', og_image: '' };
+const EMPTY = { title: '', slug: '', status: 'draft', meta_title: '', meta_description: '', meta_keywords: '', og_image: '' };
 
 export default function PagesPage() {
   const [data, setData] = useState<Page[]>([]);
@@ -46,7 +46,7 @@ export default function PagesPage() {
 
   const openEdit = (p: Page) => {
     setEditId(p.id);
-    setForm({ title: p.title, slug: p.slug, content: p.content || '', status: p.status, meta_title: p.meta_title || '', meta_description: p.meta_description || '', meta_keywords: p.meta_keywords || '', og_image: p.og_image || '' });
+    setForm({ title: p.title, slug: p.slug, status: p.status, meta_title: p.meta_title || '', meta_description: p.meta_description || '', meta_keywords: p.meta_keywords || '', og_image: p.og_image || '' });
     setModalTab('content');
     setShowModal(true);
   };
@@ -89,7 +89,7 @@ export default function PagesPage() {
         <Link
           href={`/admin/pages/${r.id}/content`}
           onClick={(e) => e.stopPropagation()}
-          className="rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800"
+          className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800"
         >
           Text
         </Link>
@@ -120,7 +120,7 @@ export default function PagesPage() {
           {/* Only offered for a saved page: image slots are keyed to its id. */}
           {editId && (
             <div className="flex gap-1 border-b border-zinc-800" role="tablist" aria-label="Page editor sections">
-              {([['content', 'Content & SEO'], ['images', 'Images']] as const).map(([key, label]) => {
+              {([['content', 'Details & SEO'], ['images', 'Images']] as const).map(([key, label]) => {
                 const active = modalTab === key;
                 return (
                   <button
@@ -153,9 +153,24 @@ export default function PagesPage() {
             <FormField label="Title"><Input value={form.title} onChange={(e) => setField('title', e.target.value)} /></FormField>
             <FormField label="Slug"><Input value={form.slug} onChange={(e) => setField('slug', e.target.value)} placeholder="url-friendly-name" /></FormField>
           </div>
-          <FormField label="Content">
-            <Textarea value={form.content} onChange={(e) => setField('content', e.target.value)} rows={10} placeholder="Page content (HTML supported)" />
-          </FormField>
+          {/* The page's words are edited as sections, which is what the public
+              site renders. The old textarea here wrote pages.content, which
+              nothing reads — text typed into it silently went nowhere. */}
+          {editId && (
+            <div className="rounded-lg border border-zinc-800 bg-[#0c0c14] p-4">
+              <p className="text-sm text-zinc-300">Page text</p>
+              <p className="mt-1 text-xs text-zinc-500">
+                Headings and paragraphs for this page are edited as sections, so they can be
+                reordered and hidden individually.
+              </p>
+              <Link
+                href={`/admin/pages/${editId}/content`}
+                className="mt-3 inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+              >
+                Edit page text →
+              </Link>
+            </div>
+          )}
           <FormField label="Status">
             <select value={form.status} onChange={(e) => setField('status', e.target.value)} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
               <option value="draft">Draft</option>

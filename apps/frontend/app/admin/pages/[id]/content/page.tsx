@@ -144,21 +144,37 @@ export default function PageContentEditor() {
   };
 
   const commitOrder = async (from: number, to: number) => {
-    if (from === to) return;
+    if (from === to || to < 0 || to >= sections.length) return;
     const next = [...sections];
     const [moved] = next.splice(from, 1);
     if (moved) next.splice(to, 0, moved);
     setSections(next); // optimistic
     try {
-      await api(`/admin/pages/${pageId}/content/reorder`, {
-        method: 'POST', body: JSON.stringify({ ids: next.map((s) => s.id) }),
-      });
+      const res = await api<{ reordered: number; requested: number }>(
+        `/admin/pages/${pageId}/content/reorder`,
+        { method: 'POST', body: JSON.stringify({ ids: next.map((s) => s.id) }) }
+      );
+      // The server now answers with the rows it actually moved. A short count
+      // means the list on screen is stale, so reload rather than claim success.
+      if (res && res.reordered < res.requested) {
+        fail('Some sections could not be moved — reloading');
+        await load();
+        return;
+      }
       ok('Order saved');
     } catch (err) {
       fail(err instanceof Error ? err.message : 'Failed to save order');
       await load();
     }
   };
+
+  /**
+   * Keyboard- and touch-reachable reordering. Native drag and drop produces no
+   * events from touch input, so on a phone the arrows are the only way to do
+   * this at all.
+   */
+  const moveSection = (index: number, direction: 'up' | 'down') =>
+    commitOrder(index, direction === 'up' ? index - 1 : index + 1);
 
   if (loading) {
     return (
@@ -228,7 +244,29 @@ export default function PageContentEditor() {
               } ${dragIndex === index ? 'opacity-40' : ''}`}
             >
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                {editingId === null && <span className="cursor-move text-zinc-600" aria-hidden="true">⠿</span>}
+                {editingId === null && (
+                  <span className="flex items-center gap-1">
+                    <span className="hidden cursor-move text-zinc-600 sm:inline" aria-hidden="true">⠿</span>
+                    <button
+                      type="button"
+                      onClick={() => void moveSection(index, 'up')}
+                      disabled={index === 0}
+                      aria-label={`Move ${section.section_key} up`}
+                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void moveSection(index, 'down')}
+                      disabled={index === sections.length - 1}
+                      aria-label={`Move ${section.section_key} down`}
+                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent"
+                    >
+                      ▼
+                    </button>
+                  </span>
+                )}
                 <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-400">
                   {section.section_key}
                 </code>
