@@ -6,6 +6,7 @@ import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware
 import { createAdminPageImagesRouter } from './pageImages.js';
 import * as content from '../../controllers/pageContentController.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { sanitizeHtml } from '../../utils/sanitizeHtml.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -18,6 +19,9 @@ const PageSchema = z.object({
   og_image: z.string().url().optional().nullable(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
 });
+
+/** Same ceiling as a section body, so the preview cannot be used to submit more. */
+const SanitizePreviewSchema = z.object({ html: z.string().max(50000) });
 
 const ReorderSchema = z.object({
   ids: z.array(z.string().uuid()),
@@ -224,6 +228,28 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   // Writes are rate limited; reads are not, so a busy editor never locks
   // itself out of simply viewing the page it is working on.
   const writeLimit = rateLimit({ max: 120, windowMs: 60_000, name: 'edits' });
+
+  /**
+   * Runs the section sanitiser without storing anything, so the editor's live
+   * preview can show exactly what a save would keep rather than a near-enough
+   * approximation. Registered before /:id so it is not read as a page id.
+   *
+   * Its own allowance: the editor calls this on every pause in typing, which
+   * is a different rhythm from saving, and sharing the write budget would let
+   * previewing lock an admin out of saving.
+   */
+  router.post(
+    '/sanitize',
+    rateLimit({ max: 600, windowMs: 60_000, name: 'previews' }),
+    (req, res) => {
+      const parsed = SanitizePreviewSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
+        return;
+      }
+      res.json({ sanitized: sanitizeHtml(parsed.data.html) ?? '' });
+    }
+  );
 
   // Editable text sections. Before /:id so they are not read as an id.
   router.get('/:pageId/content', (req, res) => content.listSections(db, req as AuthRequest, res));

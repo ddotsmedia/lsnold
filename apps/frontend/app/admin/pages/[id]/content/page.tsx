@@ -27,6 +27,76 @@ interface PageRow {
 
 const isEmpty = (html: string | null) => !html || html.replace(/<[^>]*>/g, '').trim() === '';
 
+/**
+ * Shows the section as the public page will render it.
+ *
+ * The HTML is put through the server's own sanitiser rather than rendered
+ * straight from the editor, so the preview shows what a save would actually
+ * keep — if a tag is going to be stripped, it disappears here too instead of
+ * surprising the admin after saving. That also keeps one allowlist rather than
+ * a second copy in the browser that could drift from it.
+ *
+ * Declared at module scope: as a nested component it would be a new type on
+ * every render, remounting the preview on each keystroke.
+ */
+function SectionPreview({
+  title,
+  html,
+  className = '',
+}: {
+  title: string;
+  html: string;
+  className?: string;
+}) {
+  const [safeHtml, setSafeHtml] = useState('');
+  const [stale, setStale] = useState(false);
+
+  useEffect(() => {
+    if (isEmpty(html)) { setSafeHtml(''); setStale(false); return; }
+
+    let cancelled = false;
+    // The editor already debounces its onChange, so this fires on a pause in
+    // typing rather than per keystroke.
+    api<{ sanitized: string }>('/admin/pages/sanitize', {
+      method: 'POST',
+      body: JSON.stringify({ html }),
+    })
+      .then((res) => {
+        if (cancelled) return;
+        setSafeHtml(res.sanitized);
+        setStale(false);
+      })
+      // A preview is not worth an error toast. Keep the last good render and
+      // say it is behind, so nobody reads it as current.
+      .catch(() => { if (!cancelled) setStale(true); });
+
+    return () => { cancelled = true; };
+  }, [html]);
+
+  return (
+    <div className={className}>
+      <div className="mb-1 flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Preview</p>
+        {stale && <p className="text-[11px] text-amber-400">Preview is behind</p>}
+      </div>
+      {/* White ground and the public stylesheet, because that is what a visitor
+          sees. A dark preview would misrepresent every colour on the page. */}
+      <div className="h-full max-h-125 overflow-y-auto rounded-lg border border-zinc-800 bg-white p-4">
+        {title && <h2 className="mb-3 text-xl font-bold text-gray-800">{title}</h2>}
+        {safeHtml ? (
+          <div
+            className="page-content text-base leading-relaxed text-gray-700"
+            // Sanitised server-side by the same function that guards storage.
+            dangerouslySetInnerHTML={{ __html: safeHtml }}
+          />
+        ) : (
+          <p className="text-sm text-gray-400">Nothing to preview yet.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function PageContentEditor() {
   const params = useParams();
   const pageId = String(params?.id ?? '');
@@ -298,10 +368,23 @@ export default function PageContentEditor() {
                       maxLength={255}
                     />
                   </FormField>
-                  <RichTextEditor
-                    value={draft.content}
-                    onChange={(content) => setDraft((d) => ({ ...d, content }))}
-                  />
+                  {/* Stacked by default; side by side only once there is room
+                      for the preview to be a fair representation of the page.
+                      Below that the preview sits under the editor, which is
+                      how it reads on a phone anyway. */}
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
+                    <div className="lg:col-span-3">
+                      <RichTextEditor
+                        value={draft.content}
+                        onChange={(content) => setDraft((d) => ({ ...d, content }))}
+                      />
+                    </div>
+                    <SectionPreview
+                      title={draft.title}
+                      html={draft.content}
+                      className="lg:col-span-2"
+                    />
+                  </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="secondary" onClick={() => setEditingId(null)} disabled={saving}>Cancel</Button>
                     <Button onClick={() => void save(section.id)} disabled={saving}>
