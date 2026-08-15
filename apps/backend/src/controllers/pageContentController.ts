@@ -48,11 +48,16 @@ export async function listPublicSections(db: Pool, req: AuthRequest, res: Respon
     const pageId = await resolvePageId(db, req.params.pageId as string);
     if (!pageId) { res.json([]); return; }
 
+    // Live means: visible, written into, and its publish moment has passed.
+    // COALESCE lets a scheduled section appear by itself when the time comes,
+    // so the site does not depend on a job having run.
     const result = await db.query(
       `SELECT id, section_key, title, content, sort_order
          FROM page_content_sections
         WHERE page_id = $1 AND deleted_at IS NULL AND is_visible = TRUE
           AND content IS NOT NULL AND btrim(content) <> ''
+          AND COALESCE(published_at, scheduled_publish_at) IS NOT NULL
+          AND COALESCE(published_at, scheduled_publish_at) <= NOW()
         ORDER BY sort_order ASC, created_at ASC`,
       [pageId]
     );
@@ -255,6 +260,144 @@ export async function restoreSection(db: Pool, req: AuthRequest, res: Response):
     }
     console.error('Error restoring section:', error);
     res.status(500).json({ error: 'Failed to restore section' });
+  }
+}
+
+// ------------------------------------------------------------- publishing
+
+/**
+ * The four publish transitions, as the SQL each one applies.
+ *
+ * Kept as data rather than four near-identical handlers: they differ only in
+ * which two columns they set, and writing them out separately is how the set
+ * drifts apart later.
+ */
+const TRANSITIONS = {
+  publish: { sql: 'published_at = NOW(), scheduled_publish_at = NULL', verb: 'published' },
+  unpublish: { sql: 'published_at = NULL', verb: 'unpublished' },
+  unschedule: { sql: 'scheduled_publish_at = NULL', verb: 'unscheduled' },
+} as const;
+
+type TransitionName = keyof typeof TRANSITIONS;
+
+async function applyTransition(
+  db: Pool,
+  req: AuthRequest,
+  res: Response,
+  name: TransitionName
+): Promise<void> {
+  try {
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
+    const result = await db.query(
+      `UPDATE page_content_sections SET ${TRANSITIONS[name].sql}, updated_by = $1
+        WHERE id = $2 AND page_id = $3 AND deleted_at IS NULL RETURNING *`,
+      [req.userId ?? null, req.params.sectionId, pageId]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'Section not found' }); return; }
+
+    await logActivity(db, req.userId, 'update', 'page_content_section', req.params.sectionId as string, {
+      newValues: { action: TRANSITIONS[name].verb }, req,
+    });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(`Error running ${name} on section:`, error);
+    res.status(500).json({ error: `Failed to ${name} section` });
+  }
+}
+
+export const publishSection = (db: Pool, req: AuthRequest, res: Response) =>
+  applyTransition(db, req, res, 'publish');
+export const unpublishSection = (db: Pool, req: AuthRequest, res: Response) =>
+  applyTransition(db, req, res, 'unpublish');
+export const unscheduleSection = (db: Pool, req: AuthRequest, res: Response) =>
+  applyTransition(db, req, res, 'unschedule');
+
+const ScheduleSchema = z.object({
+  scheduled_publish_at: z.string().datetime({ offset: true }).or(z.string().min(1)),
+});
+
+/** Scheduling is separate: it carries a value and the value must be in future. */
+export async function scheduleSection(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
+    const { scheduled_publish_at: raw } = ScheduleSchema.parse(req.body);
+    const when = new Date(raw);
+    if (Number.isNaN(when.getTime())) {
+      res.status(400).json({ error: 'scheduled_publish_at is not a valid date' });
+      return;
+    }
+    if (when.getTime() <= Date.now()) {
+      // Scheduling into the past would publish immediately, which is what the
+      // Publish button is for. Saying so is clearer than silently doing it.
+      res.status(400).json({ error: 'Choose a time in the future, or use Publish now.' });
+      return;
+    }
+
+    // published_at is cleared: a section cannot be simultaneously live and
+    // waiting to go live, and leaving it set would keep it on the site.
+    const result = await db.query(
+      `UPDATE page_content_sections
+          SET scheduled_publish_at = $1, published_at = NULL, updated_by = $2
+        WHERE id = $3 AND page_id = $4 AND deleted_at IS NULL RETURNING *`,
+      [when.toISOString(), req.userId ?? null, req.params.sectionId, pageId]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'Section not found' }); return; }
+
+    await logActivity(db, req.userId, 'update', 'page_content_section', req.params.sectionId as string, {
+      newValues: { action: 'scheduled', scheduled_publish_at: when.toISOString() }, req,
+    });
+    res.json(result.rows[0]);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Validation failed', details: error.issues });
+      return;
+    }
+    console.error('Error scheduling section:', error);
+    res.status(500).json({ error: 'Failed to schedule section' });
+  }
+}
+
+const BulkSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
+  action: z.enum(['publish', 'unpublish']),
+});
+
+/**
+ * Publishes or unpublishes several sections at once. One statement rather than
+ * a request per section: the admin screen selects checkboxes, and looping would
+ * both be slower and leave a half-applied state if one call failed.
+ */
+export async function bulkPublish(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
+    const { ids, action } = BulkSchema.parse(req.body);
+    const result = await db.query(
+      `UPDATE page_content_sections
+          SET ${TRANSITIONS[action].sql}, updated_by = $1
+        WHERE id = ANY($2::uuid[]) AND page_id = $3 AND deleted_at IS NULL
+        RETURNING id`,
+      [req.userId ?? null, ids, pageId]
+    );
+
+    await logActivity(db, req.userId, 'update', 'page_content_section', ids[0] as string, {
+      newValues: { action: `bulk_${TRANSITIONS[action].verb}`, count: result.rowCount ?? 0 }, req,
+    });
+    // The count of rows touched, not of ids sent — ids for another page match
+    // nothing, and reporting the request length would hide that.
+    res.json({ updated: result.rowCount ?? 0, requested: ids.length });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Validation failed', details: error.issues });
+      return;
+    }
+    console.error('Error bulk publishing sections:', error);
+    res.status(500).json({ error: 'Failed to update sections' });
   }
 }
 

@@ -259,6 +259,14 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   router.delete('/:pageId/content/:sectionId', writeLimit, (req, res) => content.deleteSection(db, req as AuthRequest, res));
   router.post('/:pageId/content/:sectionId/restore', writeLimit, (req, res) => content.restoreSection(db, req as AuthRequest, res));
 
+  // Publish state. Registered alongside the other content routes so they all
+  // sit ahead of /:id.
+  router.post('/:pageId/content/bulk', writeLimit, (req, res) => content.bulkPublish(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/publish', writeLimit, (req, res) => content.publishSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/unpublish', writeLimit, (req, res) => content.unpublishSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/schedule', writeLimit, (req, res) => content.scheduleSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/unschedule', writeLimit, (req, res) => content.unscheduleSection(db, req as AuthRequest, res));
+
   router.get('/', (req, res) => listPages(db, req as AuthRequest, res));
   router.get('/:id', (req, res) => getPage(db, req as AuthRequest, res));
   router.post('/', (req, res) => createPage(db, req as AuthRequest, res));

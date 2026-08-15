@@ -16,6 +16,55 @@ interface Section {
   sort_order: number;
   updated_at: string;
   updated_by_name: string | null;
+  published_at: string | null;
+  scheduled_publish_at: string | null;
+}
+
+type PublishState = 'draft' | 'published' | 'scheduled';
+
+/**
+ * A section is live once its publish moment has passed — the same rule the
+ * public query applies, so this badge never disagrees with the site.
+ */
+function publishState(section: Section): PublishState {
+  if (section.published_at && new Date(section.published_at) <= new Date()) return 'published';
+  if (section.scheduled_publish_at) {
+    return new Date(section.scheduled_publish_at) <= new Date() ? 'published' : 'scheduled';
+  }
+  return section.published_at ? 'scheduled' : 'draft';
+}
+
+const formatWhen = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
+
+function PublishBadge({ section }: { section: Section }) {
+  const state = publishState(section);
+  const styles: Record<PublishState, string> = {
+    draft: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-400',
+    published: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+    scheduled: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+  };
+  const label =
+    state === 'published'
+      ? `Published ${formatWhen(section.published_at ?? section.scheduled_publish_at)}`
+      : state === 'scheduled'
+        ? `Scheduled for ${formatWhen(section.scheduled_publish_at ?? section.published_at)}`
+        : 'Draft';
+
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[11px] ${styles[state]}`}>{label}</span>
+  );
+}
+
+/**
+ * `datetime-local` wants "YYYY-MM-DDTHH:mm" in local time, with no zone. Going
+ * through toISOString would shift the value by the browser's offset and show
+ * the admin a different time from the one they picked.
+ */
+function toLocalInput(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    + `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 interface PageRow {
@@ -117,6 +166,13 @@ export default function PageContentEditor() {
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Section | null>(null);
+  const [confirmUnpublish, setConfirmUnpublish] = useState<Section | null>(null);
+  const [confirmBulkUnpublish, setConfirmBulkUnpublish] = useState(false);
+
+  /** The section whose date picker is open, and the value it holds. */
+  const [scheduling, setScheduling] = useState<string | null>(null);
+  const [scheduleAt, setScheduleAt] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const dragRef = useRef<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -238,6 +294,55 @@ export default function PageContentEditor() {
     }
   };
 
+  /* ------------------------------------------------------------ publishing */
+
+  const transition = async (section: Section, action: 'publish' | 'unpublish' | 'unschedule') => {
+    try {
+      await api(`/admin/pages/${pageId}/content/${section.id}/${action}`, { method: 'POST' });
+      ok(action === 'publish' ? 'Section published'
+        : action === 'unpublish' ? 'Section unpublished — no longer on the site'
+          : 'Schedule removed');
+      await load();
+    } catch (err) { fail(err instanceof Error ? err.message : `Failed to ${action}`); }
+  };
+
+  const schedule = async (section: Section, whenLocal: string) => {
+    if (!whenLocal) { fail('Pick a date and time first'); return; }
+    try {
+      // The input gives local time with no zone; the Date turns it into the
+      // instant the admin meant, and the server stores that.
+      await api(`/admin/pages/${pageId}/content/${section.id}/schedule`, {
+        method: 'POST',
+        body: JSON.stringify({ scheduled_publish_at: new Date(whenLocal).toISOString() }),
+      });
+      ok('Section scheduled');
+      setScheduling(null);
+      await load();
+    } catch (err) { fail(err instanceof Error ? err.message : 'Failed to schedule'); }
+  };
+
+  const bulk = async (action: 'publish' | 'unpublish') => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    try {
+      const res = await api<{ updated: number; requested: number }>(
+        `/admin/pages/${pageId}/content/bulk`,
+        { method: 'POST', body: JSON.stringify({ ids, action }) }
+      );
+      ok(`${res.updated} section${res.updated === 1 ? '' : 's'} ${action === 'publish' ? 'published' : 'unpublished'}`);
+      setSelected(new Set());
+      setConfirmBulkUnpublish(false);
+      await load();
+    } catch (err) { fail(err instanceof Error ? err.message : 'Failed to update sections'); }
+  };
+
+  const toggleSelected = (id: string) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
   /**
    * Keyboard- and touch-reachable reordering. Native drag and drop produces no
    * events from touch input, so on a phone the arrows are the only way to do
@@ -285,6 +390,23 @@ export default function PageContentEditor() {
           <p className="text-sm text-red-300">Could not load content</p>
           <p className="mt-1 text-xs text-red-400/80">{loadError}</p>
           <Button variant="secondary" onClick={() => void load()} className="mt-3">Try again</Button>
+        </div>
+      )}
+
+      {/* Only present once something is ticked, so it never sits there empty
+          taking up room above the list. */}
+      {selected.size > 0 && (
+        <div className="flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 sm:flex-row sm:items-center">
+          <p className="text-sm text-zinc-300">
+            {selected.size} section{selected.size === 1 ? '' : 's'} selected
+          </p>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <Button size="sm" onClick={() => void bulk('publish')}>Publish selected</Button>
+            <Button size="sm" variant="ghost" onClick={() => setConfirmBulkUnpublish(true)}>
+              Unpublish selected
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setSelected(new Set())}>Clear</Button>
+          </div>
         </div>
       )}
 
@@ -337,16 +459,26 @@ export default function PageContentEditor() {
                     </button>
                   </span>
                 )}
+                {editingId === null && (
+                  <label className="flex min-h-12 min-w-12 cursor-pointer items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(section.id)}
+                      onChange={() => toggleSelected(section.id)}
+                      aria-label={`Select ${section.section_key}`}
+                      className="h-4 w-4 accent-emerald-500"
+                    />
+                  </label>
+                )}
                 <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-400">
                   {section.section_key}
                 </code>
-                <span className={`rounded-full border px-2 py-0.5 text-[11px] ${
-                  section.is_visible
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                    : 'border-zinc-500/30 bg-zinc-500/10 text-zinc-400'
-                }`}>
-                  {section.is_visible ? 'Visible' : 'Hidden'}
-                </span>
+                <PublishBadge section={section} />
+                {!section.is_visible && (
+                  <span className="rounded-full border border-zinc-500/30 bg-zinc-500/10 px-2 py-0.5 text-[11px] text-zinc-400">
+                    Hidden
+                  </span>
+                )}
                 {isEmpty(section.content) && (
                   <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-400">
                     Empty — not shown on the site
@@ -406,11 +538,74 @@ export default function PageContentEditor() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="secondary" onClick={() => startEdit(section)}>Edit</Button>
+
+                    {/* Publishing an empty section would put nothing on the
+                        page, so the button waits until there is text. */}
+                    {publishState(section) !== 'published' && (
+                      <Button
+                        size="sm"
+                        onClick={() => void transition(section, 'publish')}
+                        disabled={isEmpty(section.content)}
+                        title={isEmpty(section.content) ? 'Write some text first' : undefined}
+                      >
+                        Publish now
+                      </Button>
+                    )}
+                    {publishState(section) === 'published' && (
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmUnpublish(section)}>
+                        Unpublish
+                      </Button>
+                    )}
+                    {publishState(section) === 'scheduled' ? (
+                      <Button size="sm" variant="ghost" onClick={() => void transition(section, 'unschedule')}>
+                        Unschedule
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={isEmpty(section.content)}
+                        onClick={() => {
+                          setScheduling(scheduling === section.id ? null : section.id);
+                          // Defaults an hour out, which is past the "must be in
+                          // the future" rule without the admin having to think.
+                          setScheduleAt(toLocalInput(new Date(Date.now() + 60 * 60 * 1000)));
+                        }}
+                      >
+                        Schedule…
+                      </Button>
+                    )}
+
                     <Button size="sm" variant="ghost" onClick={() => void toggleVisible(section)}>
                       {section.is_visible ? 'Hide' : 'Show'}
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => setConfirmDelete(section)}>Delete</Button>
                   </div>
+
+                  {scheduling === section.id && (
+                    <div className="mt-3 flex flex-col gap-2 rounded-lg border border-zinc-800 bg-[#0c0c14] p-3 sm:flex-row sm:items-end">
+                      <div className="flex-1">
+                        <label
+                          htmlFor={`schedule-${section.id}`}
+                          className="mb-1 block text-xs font-medium uppercase tracking-wider text-zinc-400"
+                        >
+                          Publish at
+                        </label>
+                        <input
+                          id={`schedule-${section.id}`}
+                          type="datetime-local"
+                          value={scheduleAt}
+                          min={toLocalInput(new Date())}
+                          onChange={(e) => setScheduleAt(e.target.value)}
+                          className="min-h-12 w-full rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => void schedule(section, scheduleAt)}>Set</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setScheduling(null)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </li>
@@ -475,6 +670,26 @@ export default function PageContentEditor() {
         confirmLabel="Delete"
         destructive
       />
+      <ConfirmDialog
+        open={!!confirmUnpublish}
+        onClose={() => setConfirmUnpublish(null)}
+        onConfirm={() => { if (confirmUnpublish) void transition(confirmUnpublish, 'unpublish'); }}
+        title="Unpublish section"
+        message="This section will no longer be visible on the public page. Its text is kept and it can be published again. Continue?"
+        confirmLabel="Unpublish"
+        destructive
+      />
+
+      <ConfirmDialog
+        open={confirmBulkUnpublish}
+        onClose={() => setConfirmBulkUnpublish(false)}
+        onConfirm={() => void bulk('unpublish')}
+        title="Unpublish sections"
+        message={`${selected.size} section${selected.size === 1 ? '' : 's'} will no longer be visible on the public page. Their text is kept. Continue?`}
+        confirmLabel="Unpublish"
+        destructive
+      />
+
       {toast && <Toast message={toast.message} type={toast.type} />}
     </div>
   );
