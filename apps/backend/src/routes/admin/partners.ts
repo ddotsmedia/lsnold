@@ -2,6 +2,7 @@ import express from 'express';
 import type { Pool } from 'pg';
 import multer from 'multer';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import * as c from '../../controllers/partnersController.js';
 
@@ -29,16 +30,16 @@ export function createAdminPartnersRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => c.listPartners(db, req as AuthRequest, res));
-  router.post('/', handleLogo, (req, res) => c.createPartner(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:partners'), (req, res) => c.listPartners(db, req as AuthRequest, res));
+  router.post('/', requirePermission('create:partners'), handleLogo, (req, res) => c.createPartner(db, req as AuthRequest, res));
   // Registered before /:id so "reorder" is not swallowed as an id.
-  router.post('/reorder', (req, res) => c.reorderPartners(db, req as AuthRequest, res));
-  router.put('/:id/reorder', (req, res) => c.setPartnerOrder(db, req as AuthRequest, res));
-  router.put('/:id', handleLogo, (req, res) => c.updatePartner(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => c.deletePartner(db, req as AuthRequest, res));
-  router.post('/:id/restore', (req, res) => c.restorePartner(db, req as AuthRequest, res));
+  router.post('/reorder', requirePermission('edit:partners'), (req, res) => c.reorderPartners(db, req as AuthRequest, res));
+  router.put('/:id/reorder', requirePermission('edit:partners'), (req, res) => c.setPartnerOrder(db, req as AuthRequest, res));
+  router.put('/:id', requirePermission('edit:partners'), handleLogo, (req, res) => c.updatePartner(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:partners'), (req, res) => c.deletePartner(db, req as AuthRequest, res));
+  router.post('/:id/restore', requirePermission('edit:partners'), (req, res) => c.restorePartner(db, req as AuthRequest, res));
 
   return router;
 }

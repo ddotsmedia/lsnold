@@ -4,6 +4,7 @@ import type { Pool } from 'pg';
 import multer from 'multer';
 import { cloudinary, isCloudinaryConfigured } from '../../config/cloudinary.js';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -240,14 +241,14 @@ export function createAdminPageImagesRouter(db: Pool): express.Router {
   const router = express.Router({ mergeParams: true });
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => listImages(db, req as AuthRequest, res));
-  router.post('/', handleUpload, (req, res) => assignUploaded(db, req as AuthRequest, res));
-  router.put('/:slot', handleUpload, (req, res) =>
+  router.get('/', requirePermission('view:pages'), (req, res) => listImages(db, req as AuthRequest, res));
+  router.post('/', requirePermission('edit:pages'), handleUpload, (req, res) => assignUploaded(db, req as AuthRequest, res));
+  router.put('/:slot', requirePermission('edit:pages'), handleUpload, (req, res) =>
     assignUploaded(db, req as AuthRequest, res, req.params.slot)
   );
-  router.delete('/:slot', (req, res) => removeImage(db, req as AuthRequest, res));
+  router.delete('/:slot', requirePermission('edit:pages'), (req, res) => removeImage(db, req as AuthRequest, res));
 
   return router;
 }

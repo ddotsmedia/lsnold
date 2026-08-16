@@ -242,6 +242,7 @@ export function createAdminPagesRouter(db: Pool): express.Router {
    */
   router.post(
     '/sanitize',
+    requirePermission('edit:pages'),
     rateLimit({ max: 600, windowMs: 60_000, name: 'previews' }),
     (req, res) => {
       const parsed = SanitizePreviewSchema.safeParse(req.body);

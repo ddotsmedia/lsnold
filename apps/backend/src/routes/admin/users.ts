@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 import { hashPassword } from '../../utils/hash.js';
@@ -230,20 +231,20 @@ export function createAdminUsersRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
   // Dashboard
-  router.get('/dashboard', (req, res) => getDashboardStats(db, req as AuthRequest, res));
+  router.get('/dashboard', requirePermission('view:users'), (req, res) => getDashboardStats(db, req as AuthRequest, res));
 
   // Activity Log
-  router.get('/activity-log', (req, res) => getActivityLog(db, req as AuthRequest, res));
+  router.get('/activity-log', requirePermission('view:users'), (req, res) => getActivityLog(db, req as AuthRequest, res));
 
   // Users
-  router.get('/', (req, res) => listUsers(db, req as AuthRequest, res));
-  router.get('/:id', (req, res) => getUser(db, req as AuthRequest, res));
-  router.post('/invite', (req, res) => inviteAdmin(db, req as AuthRequest, res));
-  router.put('/:id/role', (req, res) => updateRole(db, req as AuthRequest, res));
-  router.delete('/:id/admin', (req, res) => revokeAdmin(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:users'), (req, res) => listUsers(db, req as AuthRequest, res));
+  router.get('/:id', requirePermission('view:users'), (req, res) => getUser(db, req as AuthRequest, res));
+  router.post('/invite', requirePermission('create:users'), (req, res) => inviteAdmin(db, req as AuthRequest, res));
+  router.put('/:id/role', requirePermission('edit:users'), (req, res) => updateRole(db, req as AuthRequest, res));
+  router.delete('/:id/admin', requirePermission('delete:users'), (req, res) => revokeAdmin(db, req as AuthRequest, res));
 
   return router;
 }

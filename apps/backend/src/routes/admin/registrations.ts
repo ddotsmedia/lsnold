@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -182,13 +183,13 @@ export function createAdminRegistrationsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => listRegistrations(db, req as AuthRequest, res));
-  router.get('/export', (req, res) => exportRegistrations(db, req as AuthRequest, res));
-  router.get('/:id', (req, res) => getRegistration(db, req as AuthRequest, res));
-  router.patch('/:id/status', (req, res) => updateRegistrationStatus(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => deleteRegistration(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:registrations'), (req, res) => listRegistrations(db, req as AuthRequest, res));
+  router.get('/export', requirePermission('view:registrations'), (req, res) => exportRegistrations(db, req as AuthRequest, res));
+  router.get('/:id', requirePermission('view:registrations'), (req, res) => getRegistration(db, req as AuthRequest, res));
+  router.patch('/:id/status', requirePermission('edit:registrations'), (req, res) => updateRegistrationStatus(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:registrations'), (req, res) => deleteRegistration(db, req as AuthRequest, res));
 
   return router;
 }

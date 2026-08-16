@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 import multer from 'multer';
@@ -455,25 +456,25 @@ export function createAdminGalleryRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
   // Categories
-  router.get('/categories', (req, res) => listCategories(db, req as AuthRequest, res));
-  router.get('/deleted', (req, res) => listDeleted(db, req as AuthRequest, res));
-  router.post('/categories', (req, res) => createCategory(db, req as AuthRequest, res));
-  router.put('/categories/:id', (req, res) => updateCategory(db, req as AuthRequest, res));
-  router.delete('/categories/:id', (req, res) => deleteCategory(db, req as AuthRequest, res));
-  router.post('/categories/:id/restore', (req, res) => restoreCategory(db, req as AuthRequest, res));
-  router.post('/categories/reorder', (req, res) => reorderCategories(db, req as AuthRequest, res));
+  router.get('/categories', requirePermission('view:gallery'), (req, res) => listCategories(db, req as AuthRequest, res));
+  router.get('/deleted', requirePermission('view:gallery'), (req, res) => listDeleted(db, req as AuthRequest, res));
+  router.post('/categories', requirePermission('manage:gallery'), (req, res) => createCategory(db, req as AuthRequest, res));
+  router.put('/categories/:id', requirePermission('manage:gallery'), (req, res) => updateCategory(db, req as AuthRequest, res));
+  router.delete('/categories/:id', requirePermission('manage:gallery'), (req, res) => deleteCategory(db, req as AuthRequest, res));
+  router.post('/categories/:id/restore', requirePermission('manage:gallery'), (req, res) => restoreCategory(db, req as AuthRequest, res));
+  router.post('/categories/reorder', requirePermission('manage:gallery'), (req, res) => reorderCategories(db, req as AuthRequest, res));
 
   // Images
-  router.get('/images', (req, res) => listImages(db, req as AuthRequest, res));
-  router.post('/images', upload.single('image'), (req, res) => uploadImage(db, req as AuthRequest, res));
-  router.put('/images/:id', (req, res) => updateImage(db, req as AuthRequest, res));
-  router.delete('/images/:id', (req, res) => deleteImage(db, req as AuthRequest, res));
-  router.post('/images/:id/restore', (req, res) => restoreImage(db, req as AuthRequest, res));
-  router.post('/images/reorder', (req, res) => reorderImages(db, req as AuthRequest, res));
-  router.post('/images/bulk', upload.array('images', 20), (req, res) => bulkUpload(db, req as AuthRequest, res));
+  router.get('/images', requirePermission('view:gallery'), (req, res) => listImages(db, req as AuthRequest, res));
+  router.post('/images', requirePermission('manage:gallery'), upload.single('image'), (req, res) => uploadImage(db, req as AuthRequest, res));
+  router.put('/images/:id', requirePermission('manage:gallery'), (req, res) => updateImage(db, req as AuthRequest, res));
+  router.delete('/images/:id', requirePermission('manage:gallery'), (req, res) => deleteImage(db, req as AuthRequest, res));
+  router.post('/images/:id/restore', requirePermission('manage:gallery'), (req, res) => restoreImage(db, req as AuthRequest, res));
+  router.post('/images/reorder', requirePermission('manage:gallery'), (req, res) => reorderImages(db, req as AuthRequest, res));
+  router.post('/images/bulk', requirePermission('manage:gallery'), upload.array('images', 20), (req, res) => bulkUpload(db, req as AuthRequest, res));
 
   return router;
 }

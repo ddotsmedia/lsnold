@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 import { getSummary } from '../../integrations/chatbot-analytics.js';
@@ -225,18 +226,18 @@ export function createAdminChatbotRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/conversations', (req, res) => listConversations(db, req as AuthRequest, res));
-  router.get('/conversations/:id', (req, res) => getConversation(db, req as AuthRequest, res));
-  router.patch('/conversations/:id/close', (req, res) =>
+  router.get('/conversations', requirePermission('view:chatbot'), (req, res) => listConversations(db, req as AuthRequest, res));
+  router.get('/conversations/:id', requirePermission('view:chatbot'), (req, res) => getConversation(db, req as AuthRequest, res));
+  router.patch('/conversations/:id/close', requirePermission('manage:chatbot'), (req, res) =>
     closeConversation(db, req as AuthRequest, res)
   );
-  router.post('/conversations/:id/message', (req, res) =>
+  router.post('/conversations/:id/message', requirePermission('manage:chatbot'), (req, res) =>
     replyToConversation(db, req as AuthRequest, res)
   );
-  router.get('/appointments', (req, res) => listAppointmentRequests(db, req as AuthRequest, res));
-  router.get('/analytics', (req, res) => getAnalytics(db, req as AuthRequest, res));
+  router.get('/appointments', requirePermission('view:chatbot'), (req, res) => listAppointmentRequests(db, req as AuthRequest, res));
+  router.get('/analytics', requirePermission('view:chatbot'), (req, res) => getAnalytics(db, req as AuthRequest, res));
 
   return router;
 }

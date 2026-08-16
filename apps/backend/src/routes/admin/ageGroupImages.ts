@@ -5,6 +5,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { cloudinary, isCloudinaryConfigured } from '../../config/cloudinary.js';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -285,13 +286,13 @@ export function createAdminAgeGroupImagesRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => listGroups(db, req as AuthRequest, res));
-  router.get('/:id/images', (req, res) => listImages(db, req as AuthRequest, res));
-  router.post('/:id/images', handleUpload, (req, res) => uploadImage(db, req as AuthRequest, res));
-  router.post('/:id/images/reorder', (req, res) => reorder(db, req as AuthRequest, res));
-  router.delete('/:id/images/:imageId', (req, res) => removeImage(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:age-groups'), (req, res) => listGroups(db, req as AuthRequest, res));
+  router.get('/:id/images', requirePermission('view:age-groups'), (req, res) => listImages(db, req as AuthRequest, res));
+  router.post('/:id/images', requirePermission('edit:age-groups'), handleUpload, (req, res) => uploadImage(db, req as AuthRequest, res));
+  router.post('/:id/images/reorder', requirePermission('edit:age-groups'), (req, res) => reorder(db, req as AuthRequest, res));
+  router.delete('/:id/images/:imageId', requirePermission('edit:age-groups'), (req, res) => removeImage(db, req as AuthRequest, res));
 
   return router;
 }

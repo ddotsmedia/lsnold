@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -156,14 +157,14 @@ export function createAdminSeoRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/settings', (req, res) => getSettings(db, req as AuthRequest, res));
-  router.get('/settings/:key', (req, res) => getSetting(db, req as AuthRequest, res));
-  router.put('/settings', (req, res) => upsertSetting(db, req as AuthRequest, res));
-  router.put('/settings/bulk', (req, res) => bulkUpdateSettings(db, req as AuthRequest, res));
-  router.get('/sitemap', (req, res) => generateSitemap(db, req as AuthRequest, res));
-  router.get('/robots', (req, res) => getRobotsTxt(db, req as AuthRequest, res));
+  router.get('/settings', requirePermission('view:settings'), (req, res) => getSettings(db, req as AuthRequest, res));
+  router.get('/settings/:key', requirePermission('view:settings'), (req, res) => getSetting(db, req as AuthRequest, res));
+  router.put('/settings', requirePermission('manage:settings'), (req, res) => upsertSetting(db, req as AuthRequest, res));
+  router.put('/settings/bulk', requirePermission('manage:settings'), (req, res) => bulkUpdateSettings(db, req as AuthRequest, res));
+  router.get('/sitemap', requirePermission('view:settings'), (req, res) => generateSitemap(db, req as AuthRequest, res));
+  router.get('/robots', requirePermission('view:settings'), (req, res) => getRobotsTxt(db, req as AuthRequest, res));
 
   return router;
 }

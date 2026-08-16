@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 import { registerFacilityRoutes } from './facilities.js';
@@ -520,17 +521,17 @@ export function createAdminEventsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => listEvents(db, req as AuthRequest, res));
-  router.get('/:id', (req, res) => getEvent(db, req as AuthRequest, res));
-  router.post('/', (req, res) => createEvent(db, req as AuthRequest, res));
-  router.put('/:id', (req, res) => updateEvent(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => deleteEvent(db, req as AuthRequest, res));
-  router.post('/:id/restore', (req, res) => restoreEvent(db, req as AuthRequest, res));
-  router.post('/reorder', (req, res) => eventExtras.reorderEvents(db, req as AuthRequest, res));
-  router.post('/:id/image', handleEventImage, (req, res) => eventExtras.uploadEventImage(db, req as AuthRequest, res));
-  router.delete('/:id/image', (req, res) => eventExtras.deleteEventImage(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:news'), (req, res) => listEvents(db, req as AuthRequest, res));
+  router.get('/:id', requirePermission('view:news'), (req, res) => getEvent(db, req as AuthRequest, res));
+  router.post('/', requirePermission('create:news'), (req, res) => createEvent(db, req as AuthRequest, res));
+  router.put('/:id', requirePermission('edit:news'), (req, res) => updateEvent(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:news'), (req, res) => deleteEvent(db, req as AuthRequest, res));
+  router.post('/:id/restore', requirePermission('edit:news'), (req, res) => restoreEvent(db, req as AuthRequest, res));
+  router.post('/reorder', requirePermission('edit:news'), (req, res) => eventExtras.reorderEvents(db, req as AuthRequest, res));
+  router.post('/:id/image', requirePermission('edit:news'), handleEventImage, (req, res) => eventExtras.uploadEventImage(db, req as AuthRequest, res));
+  router.delete('/:id/image', requirePermission('delete:news'), (req, res) => eventExtras.deleteEventImage(db, req as AuthRequest, res));
 
   return router;
 }
@@ -539,24 +540,24 @@ export function createAdminContentRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
   // News/Events
-  router.get('/events', (req, res) => listEvents(db, req as AuthRequest, res));
-  router.get('/events/:id', (req, res) => getEvent(db, req as AuthRequest, res));
-  router.post('/events', (req, res) => createEvent(db, req as AuthRequest, res));
-  router.put('/events/:id', (req, res) => updateEvent(db, req as AuthRequest, res));
-  router.delete('/events/:id', (req, res) => deleteEvent(db, req as AuthRequest, res));
-  router.post('/events/:id/restore', (req, res) => restoreEvent(db, req as AuthRequest, res));
+  router.get('/events', requirePermission('view:news'), (req, res) => listEvents(db, req as AuthRequest, res));
+  router.get('/events/:id', requirePermission('view:news'), (req, res) => getEvent(db, req as AuthRequest, res));
+  router.post('/events', requirePermission('edit:news'), (req, res) => createEvent(db, req as AuthRequest, res));
+  router.put('/events/:id', requirePermission('edit:news'), (req, res) => updateEvent(db, req as AuthRequest, res));
+  router.delete('/events/:id', requirePermission('delete:news'), (req, res) => deleteEvent(db, req as AuthRequest, res));
+  router.post('/events/:id/restore', requirePermission('edit:news'), (req, res) => restoreEvent(db, req as AuthRequest, res));
 
   // Facilities: same controller as /admin/facilities, so the two cannot drift.
   registerFacilityRoutes(router, db, '/facilities');
 
   // Age Groups
-  router.get('/age-groups', (req, res) => listAgeGroups(db, req as AuthRequest, res));
-  router.post('/age-groups', (req, res) => createAgeGroup(db, req as AuthRequest, res));
-  router.put('/age-groups/:id', (req, res) => updateAgeGroup(db, req as AuthRequest, res));
-  router.delete('/age-groups/:id', (req, res) => deleteAgeGroup(db, req as AuthRequest, res));
+  router.get('/age-groups', requirePermission('view:age-groups'), (req, res) => listAgeGroups(db, req as AuthRequest, res));
+  router.post('/age-groups', requirePermission('edit:age-groups'), (req, res) => createAgeGroup(db, req as AuthRequest, res));
+  router.put('/age-groups/:id', requirePermission('edit:age-groups'), (req, res) => updateAgeGroup(db, req as AuthRequest, res));
+  router.delete('/age-groups/:id', requirePermission('edit:age-groups'), (req, res) => deleteAgeGroup(db, req as AuthRequest, res));
 
   return router;
 }

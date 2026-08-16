@@ -2,6 +2,7 @@ import express from 'express';
 import type { Pool } from 'pg';
 import multer from 'multer';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import * as c from '../../controllers/testimonialsController.js';
 
@@ -29,17 +30,17 @@ export function createAdminTestimonialsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => c.listTestimonials(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:testimonials'), (req, res) => c.listTestimonials(db, req as AuthRequest, res));
   // Before /:id so "reorder" is not read as an id.
-  router.post('/reorder', (req, res) => c.reorderTestimonials(db, req as AuthRequest, res));
-  router.post('/', (req, res) => c.createTestimonial(db, req as AuthRequest, res));
-  router.put('/:id', (req, res) => c.updateTestimonial(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => c.deleteTestimonial(db, req as AuthRequest, res));
-  router.post('/:id/restore', (req, res) => c.restoreTestimonial(db, req as AuthRequest, res));
-  router.post('/:id/image', handleImage, (req, res) => c.uploadAuthorImage(db, req as AuthRequest, res));
-  router.delete('/:id/image', (req, res) => c.deleteAuthorImage(db, req as AuthRequest, res));
+  router.post('/reorder', requirePermission('edit:testimonials'), (req, res) => c.reorderTestimonials(db, req as AuthRequest, res));
+  router.post('/', requirePermission('create:testimonials'), (req, res) => c.createTestimonial(db, req as AuthRequest, res));
+  router.put('/:id', requirePermission('edit:testimonials'), (req, res) => c.updateTestimonial(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:testimonials'), (req, res) => c.deleteTestimonial(db, req as AuthRequest, res));
+  router.post('/:id/restore', requirePermission('edit:testimonials'), (req, res) => c.restoreTestimonial(db, req as AuthRequest, res));
+  router.post('/:id/image', requirePermission('edit:testimonials'), handleImage, (req, res) => c.uploadAuthorImage(db, req as AuthRequest, res));
+  router.delete('/:id/image', requirePermission('delete:testimonials'), (req, res) => c.deleteAuthorImage(db, req as AuthRequest, res));
 
   return router;
 }

@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
 
@@ -182,13 +183,13 @@ export function createAdminBookingsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/', (req, res) => listBookings(db, req as AuthRequest, res));
-  router.get('/export', (req, res) => exportBookings(db, req as AuthRequest, res));
-  router.get('/:id', (req, res) => getBooking(db, req as AuthRequest, res));
-  router.patch('/:id/status', (req, res) => updateBookingStatus(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => deleteBooking(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:bookings'), (req, res) => listBookings(db, req as AuthRequest, res));
+  router.get('/export', requirePermission('view:bookings'), (req, res) => exportBookings(db, req as AuthRequest, res));
+  router.get('/:id', requirePermission('view:bookings'), (req, res) => getBooking(db, req as AuthRequest, res));
+  router.patch('/:id/status', requirePermission('edit:bookings'), (req, res) => updateBookingStatus(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:bookings'), (req, res) => deleteBooking(db, req as AuthRequest, res));
 
   return router;
 }

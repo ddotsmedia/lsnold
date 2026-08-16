@@ -2,6 +2,7 @@ import express from 'express';
 import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 
 // ======================== Analytics Endpoints ========================
@@ -217,13 +218,13 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
 
-  router.get('/overview', (req, res) => getOverview(db, req as AuthRequest, res));
-  router.get('/time-series', (req, res) => getTimeSeries(db, req as AuthRequest, res));
-  router.get('/browsers', (req, res) => getBrowserStats(db, req as AuthRequest, res));
-  router.get('/countries', (req, res) => getCountryStats(db, req as AuthRequest, res));
-  router.get('/page', (req, res) => getPageDetail(db, req as AuthRequest, res));
+  router.get('/overview', requirePermission('view:analytics'), (req, res) => getOverview(db, req as AuthRequest, res));
+  router.get('/time-series', requirePermission('view:analytics'), (req, res) => getTimeSeries(db, req as AuthRequest, res));
+  router.get('/browsers', requirePermission('view:analytics'), (req, res) => getBrowserStats(db, req as AuthRequest, res));
+  router.get('/countries', requirePermission('view:analytics'), (req, res) => getCountryStats(db, req as AuthRequest, res));
+  router.get('/page', requirePermission('view:analytics'), (req, res) => getPageDetail(db, req as AuthRequest, res));
 
   return router;
 }
@@ -231,6 +232,6 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
 // Public tracker route — mounted without auth
 export function createPublicAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
-  router.post('/track', (req, res) => trackPageView(db, req, res));
+  router.post('/track', requirePermission('view:analytics'), (req, res) => trackPageView(db, req, res));
   return router;
 }
