@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AdminPageSchema, type AdminPageInput } from '../../../lib/schemas';
 import Link from 'next/link';
 import { api } from '../../../lib/api';
 import type { PaginatedResponse } from '../../../lib/api';
@@ -15,7 +18,11 @@ interface Page {
   created_by_name: string; created_at: string; updated_at: string;
 }
 
-const EMPTY = { title: '', slug: '', status: 'draft', meta_title: '', meta_description: '', meta_keywords: '', og_image: '' };
+/** Typed from the schema, so `status` narrows to the enum rather than string. */
+const EMPTY: AdminPageInput = {
+  title: '', slug: '', status: 'draft',
+  meta_title: '', meta_description: '', meta_keywords: '', og_image: '',
+};
 
 export default function PagesPage() {
   const [data, setData] = useState<Page[]>([]);
@@ -25,7 +32,15 @@ export default function PagesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState(EMPTY);
+  // react-hook-form owns the field state; the schema owns the rules, shared
+  // with the server's in lib/schemas.
+  const {
+    register, handleSubmit, reset, watch, formState: { errors, isSubmitting },
+  } = useForm<AdminPageInput>({
+    resolver: zodResolver(AdminPageSchema),
+    defaultValues: EMPTY,
+    mode: 'onBlur',
+  });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   // Images live on a saved page, so the tab only appears once there is an id.
@@ -46,19 +61,39 @@ export default function PagesPage() {
 
   const openEdit = (p: Page) => {
     setEditId(p.id);
-    setForm({ title: p.title, slug: p.slug, status: p.status, meta_title: p.meta_title || '', meta_description: p.meta_description || '', meta_keywords: p.meta_keywords || '', og_image: p.og_image || '' });
+    // reset seeds the fields and clears any errors left from the last edit.
+    reset({
+      title: p.title,
+      slug: p.slug,
+      status: (p.status as AdminPageInput['status']) ?? 'draft',
+      meta_title: p.meta_title || '',
+      meta_description: p.meta_description || '',
+      meta_keywords: p.meta_keywords || '',
+      og_image: p.og_image || '',
+    });
     setModalTab('content');
     setShowModal(true);
   };
 
-  const save = async () => {
+  // Only runs once the schema passes, so this never sends a value the server
+  // would reject for a reason the admin cannot see.
+  const save = handleSubmit(async (values) => {
     try {
-      if (editId) { await api(`/admin/pages/${editId}`, { method: 'PUT', body: JSON.stringify(form) }); }
-      else { await api('/admin/pages', { method: 'POST', body: JSON.stringify(form) }); }
+      // Empty optional strings are sent as null: the server's og_image is a
+      // url() check that an empty string fails.
+      const payload = {
+        ...values,
+        meta_title: values.meta_title || null,
+        meta_description: values.meta_description || null,
+        meta_keywords: values.meta_keywords || null,
+        og_image: values.og_image || null,
+      };
+      if (editId) { await api(`/admin/pages/${editId}`, { method: 'PUT', body: JSON.stringify(payload) }); }
+      else { await api('/admin/pages', { method: 'POST', body: JSON.stringify(payload) }); }
       setToast({ message: `Page ${editId ? 'updated' : 'created'}`, type: 'success' });
-      setShowModal(false); setEditId(null); setForm(EMPTY); fetchData(pagination.page);
+      setShowModal(false); setEditId(null); reset(EMPTY); fetchData(pagination.page);
     } catch (e) { setToast({ message: (e as Error).message || 'Failed to save', type: 'error' }); }
-  };
+  });
 
   const togglePublish = async (id: string, current: string) => {
     try {
@@ -74,8 +109,6 @@ export default function PagesPage() {
     catch { setToast({ message: 'Failed to delete', type: 'error' }); }
     setConfirmDelete(null);
   };
-
-  const setField = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const columns: Column<Page>[] = [
     { key: 'title', header: 'Title', sortable: true, render: (r) => <span className="font-medium">{r.title}</span> },
@@ -110,7 +143,7 @@ export default function PagesPage() {
             { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' },
           ]} allLabel="All Status" />
         </div>
-        <Button onClick={() => { setEditId(null); setForm(EMPTY); setModalTab('content'); setShowModal(true); }}>+ New Page</Button>
+        <Button onClick={() => { setEditId(null); reset(EMPTY); setModalTab('content'); setShowModal(true); }}>+ New Page</Button>
       </div>
 
       <DataTable columns={columns} data={data} loading={loading} pagination={pagination} onPageChange={(p) => fetchData(p)} />
@@ -144,14 +177,14 @@ export default function PagesPage() {
           {editId && modalTab === 'images' ? (
             <PageImagesTab
               pageId={editId}
-              pageSlug={form.slug}
+              pageSlug={watch('slug')}
               onToast={(message, type) => setToast({ message, type })}
             />
           ) : (
           <>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Title"><Input value={form.title} onChange={(e) => setField('title', e.target.value)} /></FormField>
-            <FormField label="Slug"><Input value={form.slug} onChange={(e) => setField('slug', e.target.value)} placeholder="url-friendly-name" /></FormField>
+            <FormField label="Title" error={errors.title?.message}><Input {...register('title')} /></FormField>
+            <FormField label="Slug" error={errors.slug?.message}><Input {...register('slug')} placeholder="url-friendly-name" /></FormField>
           </div>
           {/* The page's words are edited as sections, which is what the public
               site renders. The old textarea here wrote pages.content, which
@@ -172,7 +205,7 @@ export default function PagesPage() {
             </div>
           )}
           <FormField label="Status">
-            <select value={form.status} onChange={(e) => setField('status', e.target.value)} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
+            <select {...register('status')} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
               <option value="draft">Draft</option>
               <option value="published">Published</option>
               <option value="archived">Archived</option>
@@ -181,15 +214,15 @@ export default function PagesPage() {
           <div className="border-t border-zinc-800/50 pt-4">
             <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">SEO Metadata</p>
             <div className="space-y-3">
-              <FormField label="Meta Title"><Input value={form.meta_title} onChange={(e) => setField('meta_title', e.target.value)} /></FormField>
-              <FormField label="Meta Description"><Textarea value={form.meta_description} onChange={(e) => setField('meta_description', e.target.value)} rows={2} /></FormField>
-              <FormField label="Meta Keywords"><Input value={form.meta_keywords} onChange={(e) => setField('meta_keywords', e.target.value)} placeholder="comma, separated, keywords" /></FormField>
-              <FormField label="OG Image URL"><Input value={form.og_image} onChange={(e) => setField('og_image', e.target.value)} placeholder="https://..." /></FormField>
+              <FormField label="Meta Title" error={errors.meta_title?.message}><Input {...register('meta_title')} /></FormField>
+              <FormField label="Meta Description"><Textarea {...register('meta_description')} rows={2} /></FormField>
+              <FormField label="Meta Keywords"><Input {...register('meta_keywords')} placeholder="comma, separated, keywords" /></FormField>
+              <FormField label="OG Image URL" error={errors.og_image?.message}><Input {...register('og_image')} placeholder="https://..." /></FormField>
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button onClick={save}>{editId ? 'Update' : 'Create'}</Button>
+            <Button onClick={save} disabled={isSubmitting}>{isSubmitting ? 'Saving…' : editId ? 'Update' : 'Create'}</Button>
           </div>
           </>
           )}
