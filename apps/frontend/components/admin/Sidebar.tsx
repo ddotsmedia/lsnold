@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { href: '/admin/analytics', label: 'Analytics', icon: '◫' },
   { href: '/admin/users', label: 'Users', icon: '◑' },
   { href: '/admin/roles', label: 'Roles & Permissions', icon: '⚿' },
+  { href: '/admin/settings/notifications', label: 'Notifications', icon: '✉' },
   { href: '/admin/activity-log', label: 'Activity Log', icon: '◌' },
   { href: '/admin/recycle-bin', label: 'Recycle Bin', icon: '⧉' },
 ];

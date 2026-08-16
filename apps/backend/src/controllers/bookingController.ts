@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import type { AuthRequest } from '../middleware/auth.js';
-import { sendRegistrationEmail, sendBookingConfirmation } from '../services/emailService.js';
+import { notifyRegistration, notifyBooking } from '../services/notify.js';
 import { emitToRoom } from '../realtime.js';
 import type { Registration, TourBooking } from '../types/index.js';
 
@@ -67,13 +67,11 @@ export async function createRegistration(
     // page still shows it on the next load.
     emitToRoom('registrations', 'registration:created', registration);
 
-    // The registration is already saved; a mail problem must not turn a
-    // successful submission into an error the family sees.
-    try {
-      await sendRegistrationEmail(data.parent_email, data.child_name);
-    } catch (mailError) {
-      console.error('registration email failed', mailError);
-    }
+    // Confirmation to the family and an alert to the nursery, each subject to
+    // the notification settings. notifyRegistration swallows its own failures:
+    // the row is already saved, and a mail outage must not turn a successful
+    // submission into an error the family sees.
+    await notifyRegistration(db, registration);
 
     res.status(201).json(registration);
   } catch (error) {
@@ -157,7 +155,7 @@ export async function createBooking(db: Pool, req: AuthRequest, res: Response): 
 
     const booking = result.rows[0] as TourBooking;
     emitToRoom('bookings', 'booking:created', booking);
-    await sendBookingConfirmation(data.email, data.preferred_date, data.time_slot);
+    await notifyBooking(db, booking);
     res.status(201).json(booking);
   } catch (error) {
     if (error instanceof z.ZodError) {

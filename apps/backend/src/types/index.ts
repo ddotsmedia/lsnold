@@ -89,13 +89,20 @@ export interface AgeGroup {
   created_at: Date;
 }
 
+/**
+ * Matches the registrations table. It described first_name, last_name, email
+ * and phone — none of which exist on it — so anything typed against this was
+ * describing a row shape the database never returns.
+ */
 export interface Registration {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  age_group_id: string;
+  child_name: string;
+  child_dob: string;
+  parent_name: string;
+  parent_email: string;
+  parent_phone: string;
+  age_group_id: string | null;
+  message: string | null;
   status: 'pending' | 'approved' | 'rejected';
   created_at: Date;
 }
