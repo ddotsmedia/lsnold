@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 import { z } from 'zod';
 import type { AuthRequest } from '../middleware/auth.js';
 import { sendRegistrationEmail, sendBookingConfirmation } from '../services/emailService.js';
+import { emitToRoom } from '../realtime.js';
 import type { Registration, TourBooking } from '../types/index.js';
 
 /** The only slots a tour can be booked into. */
@@ -60,6 +61,11 @@ export async function createRegistration(
       ]
     );
     const registration = result.rows[0] as Registration;
+
+    // Lands in any open admin panel whose user may see registrations. Failure
+    // is swallowed inside emitToRoom — the row is saved either way, and the
+    // page still shows it on the next load.
+    emitToRoom('registrations', 'registration:created', registration);
 
     // The registration is already saved; a mail problem must not turn a
     // successful submission into an error the family sees.
@@ -150,6 +156,7 @@ export async function createBooking(db: Pool, req: AuthRequest, res: Response): 
     }
 
     const booking = result.rows[0] as TourBooking;
+    emitToRoom('bookings', 'booking:created', booking);
     await sendBookingConfirmation(data.email, data.preferred_date, data.time_slot);
     res.status(201).json(booking);
   } catch (error) {

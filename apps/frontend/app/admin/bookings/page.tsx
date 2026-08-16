@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
+import { useRealtimeEvent } from '../../../lib/realtime';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -40,6 +41,18 @@ export default function BookingsPage() {
   }, [search, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // A new tour booking arrives without a refresh. Only prepended when the
+  // first page is showing and no search is active, so it cannot appear
+  // above rows it does not belong with or fight a filter.
+  const live = useRealtimeEvent<Booking>('booking:created', (incoming) => {
+    setData((rows) => {
+      if (pagination.page !== 1 || search) return rows;
+      if (rows.some((row) => row.id === incoming.id)) return rows;
+      return [incoming, ...rows];
+    });
+    setPagination((p) => ({ ...p, total: p.total + 1 }));
+  });
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); } }, [toast]);
 
   const updateStatus = async (id: string, status: string) => {
@@ -83,6 +96,12 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Says whether the list is updating by itself. Without it a quiet
+          screen is ambiguous: nothing new, or a dropped connection. */}
+      <p className="flex items-center gap-2 text-xs text-zinc-500">
+        <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-zinc-600'}`} aria-hidden="true" />
+        {live ? 'Live — new entries appear here as they arrive' : 'Not live — reload to see new entries'}
+      </p>
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 max-w-xs">
           <SearchBar value={search} onChange={setSearch} placeholder="Search visitor or email..." />

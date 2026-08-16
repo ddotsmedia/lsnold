@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'node:http';
 import cors from 'cors';
 import { Pool } from 'pg';
 import { cloudinary } from './config/cloudinary.js';
@@ -16,6 +17,7 @@ import { createMediaRouter } from './routes/media.js';
 import { createPagesRouter } from './routes/pages.js';
 import { createAdminRouter } from './routes/admin/index.js';
 import { createAnalyticsTracker } from './middleware/analytics.js';
+import { initRealtime } from './realtime.js';
 
 const app = express();
 const PORT = process.env.PORT || 3011;
@@ -33,8 +35,14 @@ const db = new Pool({
 db.on('error', (err) => console.error('Unexpected postgres client error', err));
 
 // Enable CORS for frontend
+// One list for HTTP and for the socket handshake, so the two cannot drift.
+const CORS_ORIGINS = [
+  'http://localhost:3000', 'http://localhost:3010', 'http://127.0.0.1:3010',
+  'https://bayrotna.ae', 'https://www.bayrotna.ae',
+];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3010', 'http://127.0.0.1:3010'],
+  origin: CORS_ORIGINS,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -65,8 +73,13 @@ app.use('/api/v1/pages', createPagesRouter(db));
 app.use('/api/v1', createPublicContentRouter(db));
 app.use('/api/v1/admin', createAdminRouter(db));
 
-app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
+// Socket.io needs the HTTP server rather than the express app, so it can see
+// the Upgrade requests. Express still handles every ordinary request unchanged.
+const server = createServer(app);
+initRealtime(server, db, CORS_ORIGINS);
+
+server.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT} (realtime at /api/v1/socket.io)`);
 });
 
 export default app;
