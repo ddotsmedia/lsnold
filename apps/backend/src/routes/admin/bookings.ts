@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
 import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
+import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
 
 const StatusSchema = z.object({
@@ -146,6 +147,16 @@ async function deleteBooking(db: Pool, req: AuthRequest, res: Response): Promise
   }
 }
 
+const BOOKING_COLUMNS: Column[] = [
+  { key: 'visitor_name', header: 'Visitor' },
+  { key: 'email', header: 'Email' },
+  { key: 'phone', header: 'Phone' },
+  { key: 'preferred_date', header: 'Preferred date', type: 'date' },
+  { key: 'time_slot', header: 'Time slot' },
+  { key: 'status', header: 'Status' },
+  { key: 'created_at', header: 'Booked', type: 'datetime' },
+];
+
 async function exportBookings(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const status = req.query.status as string | undefined;
@@ -165,14 +176,7 @@ async function exportBookings(db: Pool, req: AuthRequest, res: Response): Promis
       params
     );
 
-    const header = 'Visitor Name,Email,Phone,Preferred Date,Time Slot,Status,Created\n';
-    const csv = result.rows.map((r: Record<string, unknown>) =>
-      `"${r.visitor_name}","${r.email}","${r.phone}","${r.preferred_date}","${r.time_slot}","${r.status}","${r.created_at}"`
-    ).join('\n');
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=tour-bookings.csv');
-    res.send(header + csv);
+    await sendTabular(res, req, result.rows as Array<Record<string, unknown>>, BOOKING_COLUMNS, 'tour-bookings');
   } catch (error) {
     console.error('exportBookings failed', error);
     res.status(500).json({ error: 'Failed to export bookings' });

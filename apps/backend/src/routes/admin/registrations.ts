@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
 import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
+import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
 
 const StatusSchema = z.object({
@@ -22,7 +23,10 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
     const sortBy = req.query.sortBy as string || 'created_at';
     const sortDir = req.query.sortDir === 'asc' ? 'ASC' : 'DESC';
 
-    const allowedSorts = ['created_at', 'first_name', 'last_name', 'email', 'status'];
+    // Same schema drift as the export had: this table has child_name and
+    // parent_name, never first_name/last_name. Sorting or searching by the old
+    // names raised "column does not exist" rather than returning nothing.
+    const allowedSorts = ['created_at', 'child_name', 'parent_name', 'parent_email', 'status'];
     const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'created_at';
 
     const conditions: string[] = [];
@@ -36,7 +40,8 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
 
     if (search) {
       conditions.push(
-        `(LOWER(r.first_name) LIKE $${paramIdx} OR LOWER(r.last_name) LIKE $${paramIdx} OR LOWER(r.email) LIKE $${paramIdx})`
+        `(LOWER(r.child_name) LIKE $${paramIdx} OR LOWER(r.parent_name) LIKE $${paramIdx}`
+        + ` OR LOWER(r.parent_email) LIKE $${paramIdx})`
       );
       params.push(`%${search.toLowerCase()}%`);
       paramIdx++;
@@ -143,6 +148,18 @@ async function deleteRegistration(db: Pool, req: AuthRequest, res: Response): Pr
   }
 }
 
+const REGISTRATION_COLUMNS: Column[] = [
+  { key: 'child_name', header: 'Child' },
+  { key: 'child_dob', header: 'Date of birth', type: 'date' },
+  { key: 'age_group', header: 'Age group' },
+  { key: 'parent_name', header: 'Parent' },
+  { key: 'parent_email', header: 'Email' },
+  { key: 'parent_phone', header: 'Phone' },
+  { key: 'status', header: 'Status' },
+  { key: 'message', header: 'Message' },
+  { key: 'created_at', header: 'Submitted', type: 'datetime' },
+];
+
 async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const status = req.query.status as string | undefined;
@@ -156,8 +173,12 @@ async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): P
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    // The columns this table actually has. It previously selected first_name
+    // and last_name, which do not exist here — the export button in the admin
+    // panel returned a 500 every time it was pressed.
     const result = await db.query(
-      `SELECT r.first_name, r.last_name, r.email, r.phone, r.status, ag.name as age_group, r.created_at
+      `SELECT r.child_name, r.child_dob, r.parent_name, r.parent_email, r.parent_phone,
+              r.status, ag.name AS age_group, r.message, r.created_at
        FROM registrations r
        LEFT JOIN age_groups ag ON r.age_group_id = ag.id
        ${where}
@@ -165,14 +186,7 @@ async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): P
       params
     );
 
-    const header = 'First Name,Last Name,Email,Phone,Status,Age Group,Date\n';
-    const csv = result.rows.map((r: Record<string, unknown>) =>
-      `"${r.first_name}","${r.last_name}","${r.email}","${r.phone}","${r.status}","${r.age_group || ''}","${r.created_at}"`
-    ).join('\n');
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=registrations.csv');
-    res.send(header + csv);
+    await sendTabular(res, req, result.rows as Array<Record<string, unknown>>, REGISTRATION_COLUMNS, 'registrations');
   } catch (error) {
     console.error('exportRegistrations failed', error);
     res.status(500).json({ error: 'Failed to export registrations' });

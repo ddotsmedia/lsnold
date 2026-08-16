@@ -3,17 +3,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
+import { ExportMenu } from '../../../components/admin/ExportMenu';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
 import { StatusBadge, SearchBar, FilterSelect, Button, ConfirmDialog, Toast } from '../../../components/admin/shared';
 
+/** Matches the registrations table: a child, and the parent who submitted. */
 interface Registration {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
+  child_name: string;
+  child_dob: string | null;
+  parent_name: string;
+  parent_email: string;
+  parent_phone: string;
   age_group_name: string;
   status: string;
   created_at: string;
@@ -73,16 +76,23 @@ export default function RegistrationsPage() {
     } catch { setToast({ message: 'Failed to delete', type: 'error' }); }
   };
 
-  const exportCSV = () => {
-    const token = localStorage.getItem('lsn_token');
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/admin/registrations/export?status=${statusFilter}`;
-    window.open(url + `&token=${token}`, '_blank');
-  };
+  // The old handler put the JWT in the query string, which writes it into
+  // browser history and any proxy log on the way. The export endpoint reads the
+  // Authorization header, so that token was ignored and every export was
+  // unauthorised anyway. ExportMenu fetches with the header instead.
 
   const columns: Column<Registration>[] = [
-    { key: 'first_name', header: 'Name', sortable: true, render: (r) => <span className="font-medium">{r.first_name} {r.last_name}</span> },
-    { key: 'email', header: 'Email', sortable: true },
-    { key: 'phone', header: 'Phone' },
+    {
+      key: 'child_name', header: 'Child', sortable: true,
+      render: (r) => (
+        <span>
+          <span className="font-medium">{r.child_name}</span>
+          <span className="block text-[11px] text-zinc-500">{r.parent_name}</span>
+        </span>
+      ),
+    },
+    { key: 'parent_email', header: 'Email', sortable: true },
+    { key: 'parent_phone', header: 'Phone' },
     { key: 'age_group_name', header: 'Age Group' },
     { key: 'status', header: 'Status', sortable: true, render: (r) => <StatusBadge status={r.status} /> },
     { key: 'created_at', header: 'Date', sortable: true, render: (r) => <span className="text-xs text-zinc-500">{new Date(r.created_at).toLocaleDateString()}</span> },
@@ -126,7 +136,13 @@ export default function RegistrationsPage() {
             allLabel="All Status"
           />
         </div>
-        <Button variant="secondary" onClick={exportCSV}>Export CSV</Button>
+        <ExportMenu
+          path="/admin/registrations/export"
+          params={{ status: statusFilter }}
+          title="Registrations"
+          subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
+          onError={(message) => setToast({ message, type: 'error' })}
+        />
       </div>
 
       <DataTable

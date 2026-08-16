@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
+import { ExportMenu } from '../../../components/admin/ExportMenu';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -102,19 +103,28 @@ export default function BookingsPage() {
         <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-zinc-600'}`} aria-hidden="true" />
         {live ? 'Live — new entries appear here as they arrive' : 'Not live — reload to see new entries'}
       </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 max-w-xs">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search visitor or email..." />
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <div className="flex flex-1 gap-3">
+          <div className="max-w-xs flex-1">
+            <SearchBar value={search} onChange={setSearch} placeholder="Search visitor or email..." />
+          </div>
+          <FilterSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'pending', label: 'Pending' },
+              { value: 'confirmed', label: 'Confirmed' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+            allLabel="All Status"
+          />
         </div>
-        <FilterSelect
-          value={statusFilter}
-          onChange={setStatusFilter}
-          options={[
-            { value: 'pending', label: 'Pending' },
-            { value: 'confirmed', label: 'Confirmed' },
-            { value: 'cancelled', label: 'Cancelled' },
-          ]}
-          allLabel="All Status"
+        <ExportMenu
+          path="/admin/tour-bookings/export"
+          params={{ status: statusFilter }}
+          title="Tour bookings"
+          subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
+          onError={(message) => setToast({ message, type: 'error' })}
         />
       </div>
 
