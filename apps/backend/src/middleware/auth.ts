@@ -14,6 +14,10 @@ declare global {
 export interface AuthRequest extends Request {
   userId?: string;
   isAdmin?: boolean;
+  /** Permission names for this request's user; see middleware/permissions. */
+  permissions?: Set<string>;
+  /** The users.role value behind those permissions. */
+  role?: string | null;
 }
 
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction): void {

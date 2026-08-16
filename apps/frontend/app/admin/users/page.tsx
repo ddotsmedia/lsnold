@@ -9,6 +9,8 @@ import { StatusBadge, SearchBar, Button, Modal, FormField, Input, Toast, Confirm
 
 interface User {
   id: string; email: string; name: string; phone: string;
+  /** users.role — what actually decides access. */
+  role: string | null;
   admin_role: string | null; admin_permissions: string[] | null;
   created_at: string;
 }
@@ -19,7 +21,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', name: '', password: '', role: 'moderator' });
+  const [inviteForm, setInviteForm] = useState({ email: '', name: '', password: '', role: 'viewer' });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
 
@@ -41,7 +43,7 @@ export default function UsersPage() {
       await api('/admin/users/invite', { method: 'POST', body: JSON.stringify(inviteForm) });
       setToast({ message: 'Admin invited', type: 'success' });
       setShowInvite(false);
-      setInviteForm({ email: '', name: '', password: '', role: 'moderator' });
+      setInviteForm({ email: '', name: '', password: '', role: 'viewer' });
       fetchData(pagination.page);
     } catch { setToast({ message: 'Failed to invite', type: 'error' }); }
   };
@@ -59,10 +61,10 @@ export default function UsersPage() {
   const columns: Column<User>[] = [
     { key: 'name', header: 'Name', render: (r) => <span className="font-medium">{r.name}</span> },
     { key: 'email', header: 'Email' },
-    { key: 'admin_role', header: 'Role', render: (r) => r.admin_role ? <StatusBadge status={r.admin_role} /> : <span className="text-xs text-zinc-600">User</span> },
+    { key: 'role', header: 'Role', render: (r) => r.role ? <StatusBadge status={r.role} /> : <span className="text-xs text-zinc-600">No access</span> },
     { key: 'created_at', header: 'Joined', render: (r) => <span className="text-xs text-zinc-500">{new Date(r.created_at).toLocaleDateString()}</span> },
     { key: 'actions', header: '', className: 'w-[120px]', render: (r) => (
-      r.admin_role ? (
+      r.role ? (
         <Button size="sm" variant="danger" onClick={(e) => { e.stopPropagation(); setConfirmRevoke(r.id); }}>Revoke</Button>
       ) : null
     )},
@@ -84,8 +86,9 @@ export default function UsersPage() {
           <FormField label="Password"><Input type="password" value={inviteForm.password} onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })} placeholder="Min. 8 characters" /></FormField>
           <FormField label="Role">
             <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
-              <option value="moderator">Moderator</option>
-              <option value="admin">Admin</option>
+              <option value="viewer">Viewer — read-only</option>
+              <option value="editor">Editor — content and bookings</option>
+              <option value="admin">Admin — full access, including users</option>
             </select>
           </FormField>
           <div className="flex justify-end gap-2 pt-2">

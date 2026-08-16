@@ -12,12 +12,12 @@ const InviteSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(255),
   password: z.string().min(8),
-  role: z.enum(['admin', 'moderator']).optional(),
+  role: z.enum(['admin', 'editor', 'viewer']).optional(),
   permissions: z.array(z.string()).optional(),
 });
 
 const RoleUpdateSchema = z.object({
-  role: z.enum(['admin', 'moderator']),
+  role: z.enum(['admin', 'editor', 'viewer']),
   permissions: z.array(z.string()).optional(),
 });
 
@@ -45,7 +45,7 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
     const total = Number(countResult.rows[0]?.count ?? 0);
 
     const dataResult = await db.query(
-      `SELECT u.id, u.email, u.name, u.phone, u.created_at, u.updated_at,
+      `SELECT u.id, u.email, u.name, u.phone, u.role, u.created_at, u.updated_at,
               au.role as admin_role, au.permissions as admin_permissions
        FROM users u
        LEFT JOIN admin_users au ON au.user_id = u.id
@@ -65,7 +65,7 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
 async function getUser(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const result = await db.query(
-      `SELECT u.id, u.email, u.name, u.phone, u.created_at, u.updated_at,
+      `SELECT u.id, u.email, u.name, u.phone, u.role, u.created_at, u.updated_at,
               au.role as admin_role, au.permissions as admin_permissions
        FROM users u
        LEFT JOIN admin_users au ON au.user_id = u.id
@@ -102,21 +102,21 @@ async function inviteAdmin(db: Pool, req: AuthRequest, res: Response): Promise<v
       await client.query(
         `INSERT INTO admin_users (user_id, role, permissions) VALUES ($1, $2, $3)
          ON CONFLICT (user_id) DO UPDATE SET role = $2, permissions = $3`,
-        [userId, data.role || 'moderator', data.permissions || []]
+        [userId, data.role || 'viewer', data.permissions || []]
       );
 
       // users.role is what resolveAdmin reads; without this the invited admin
       // would be listed as one but get 403 from every admin endpoint.
-      await client.query("UPDATE users SET role = 'admin' WHERE id = $1", [userId]);
+      await client.query('UPDATE users SET role = $1 WHERE id = $2', [data.role || 'viewer', userId]);
 
       await client.query('COMMIT');
 
       await logActivity(db, req.userId, 'invite', 'user', userId, {
         email: data.email,
-        role: data.role || 'moderator',
+        role: data.role || 'viewer',
       });
 
-      res.status(201).json({ id: userId, email: data.email, name: data.name, role: data.role || 'moderator' });
+      res.status(201).json({ id: userId, email: data.email, name: data.name, role: data.role || 'viewer' });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -149,7 +149,7 @@ async function updateRole(db: Pool, req: AuthRequest, res: Response): Promise<vo
     );
 
     // Keep users.role, the authorization source of truth, in step.
-    await db.query("UPDATE users SET role = 'admin' WHERE id = $1", [id]);
+    await db.query('UPDATE users SET role = $1 WHERE id = $2', [data.role, id]);
 
     await logActivity(db, req.userId, 'update', 'admin_user', id, { role: data.role });
     res.json(result.rows[0]);

@@ -14,6 +14,7 @@ import { createAdminTestimonialsRouter } from './testimonials.js';
 import { createAdminPagesRouter } from './pages.js';
 import { createAdminSeoRouter } from './seo.js';
 import { createAdminAnalyticsRouter } from './analytics.js';
+import { createAdminRolesRouter } from './roles.js';
 import { createAdminUsersRouter } from './users.js';
 import { createAdminChatbotRouter } from './chatbot.js';
 import { createAdminSocialLinksRouter } from './socialLinks.js';
@@ -45,6 +46,8 @@ export function createAdminRouter(db: Pool): express.Router {
   router.use('/seo', createAdminSeoRouter(db));
   router.use('/analytics', createAdminAnalyticsRouter(db));
   router.use('/users', createAdminUsersRouter(db));
+  // Roles and the permission matrix behind them.
+  router.use('/roles', createAdminRolesRouter(db));
   router.use('/chatbot', createAdminChatbotRouter(db));
   router.use('/social-links', createAdminSocialLinksRouter(db));
   router.use('/youtube-videos', createAdminYoutubeVideosRouter(db));

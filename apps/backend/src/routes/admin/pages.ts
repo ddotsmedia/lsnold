@@ -2,10 +2,11 @@ import express from 'express';
 import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
-import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
+import { authenticate, createResolveAdmin } from '../../middleware/auth.js';
 import { createAdminPageImagesRouter } from './pageImages.js';
 import * as content from '../../controllers/pageContentController.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import { sanitizeHtml } from '../../utils/sanitizeHtml.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/activityLog.js';
@@ -220,7 +221,8 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
 
-  router.use(authenticate, resolveAdmin, requireAdmin);
+  const resolvePermissions = createResolvePermissions(db);
+  router.use(authenticate, resolveAdmin, resolvePermissions, requirePanelAccess);
 
   // Nested before /:id so the images routes are matched first.
   router.use('/:id/images', createAdminPageImagesRouter(db));
@@ -252,29 +254,29 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   );
 
   // Editable text sections. Before /:id so they are not read as an id.
-  router.get('/:pageId/content', (req, res) => content.listSections(db, req as AuthRequest, res));
-  router.post('/:pageId/content', writeLimit, (req, res) => content.createSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/reorder', writeLimit, (req, res) => content.reorderSections(db, req as AuthRequest, res));
-  router.put('/:pageId/content/:sectionId', writeLimit, (req, res) => content.updateSection(db, req as AuthRequest, res));
-  router.delete('/:pageId/content/:sectionId', writeLimit, (req, res) => content.deleteSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/restore', writeLimit, (req, res) => content.restoreSection(db, req as AuthRequest, res));
+  router.get('/:pageId/content', requirePermission('view:pages'), (req, res) => content.listSections(db, req as AuthRequest, res));
+  router.post('/:pageId/content', requirePermission('create:pages'), writeLimit, (req, res) => content.createSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/reorder', requirePermission('edit:pages'), writeLimit, (req, res) => content.reorderSections(db, req as AuthRequest, res));
+  router.put('/:pageId/content/:sectionId', requirePermission('edit:pages'), writeLimit, (req, res) => content.updateSection(db, req as AuthRequest, res));
+  router.delete('/:pageId/content/:sectionId', requirePermission('delete:pages'), writeLimit, (req, res) => content.deleteSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/restore', requirePermission('edit:pages'), writeLimit, (req, res) => content.restoreSection(db, req as AuthRequest, res));
 
   // Publish state. Registered alongside the other content routes so they all
   // sit ahead of /:id.
-  router.post('/:pageId/content/bulk', writeLimit, (req, res) => content.bulkPublish(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/publish', writeLimit, (req, res) => content.publishSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/unpublish', writeLimit, (req, res) => content.unpublishSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/schedule', writeLimit, (req, res) => content.scheduleSection(db, req as AuthRequest, res));
-  router.post('/:pageId/content/:sectionId/unschedule', writeLimit, (req, res) => content.unscheduleSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/bulk', requirePermission('publish:pages'), writeLimit, (req, res) => content.bulkPublish(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/publish', requirePermission('publish:pages'), writeLimit, (req, res) => content.publishSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/unpublish', requirePermission('publish:pages'), writeLimit, (req, res) => content.unpublishSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/schedule', requirePermission('publish:pages'), writeLimit, (req, res) => content.scheduleSection(db, req as AuthRequest, res));
+  router.post('/:pageId/content/:sectionId/unschedule', requirePermission('publish:pages'), writeLimit, (req, res) => content.unscheduleSection(db, req as AuthRequest, res));
 
-  router.get('/', (req, res) => listPages(db, req as AuthRequest, res));
-  router.get('/:id', (req, res) => getPage(db, req as AuthRequest, res));
-  router.post('/', (req, res) => createPage(db, req as AuthRequest, res));
-  router.put('/:id', (req, res) => updatePage(db, req as AuthRequest, res));
-  router.delete('/:id', (req, res) => deletePage(db, req as AuthRequest, res));
-  router.post('/reorder', (req, res) => reorderPages(db, req as AuthRequest, res));
-  router.post('/:id/publish', (req, res) => publishPage(db, req as AuthRequest, res));
-  router.post('/:id/unpublish', (req, res) => unpublishPage(db, req as AuthRequest, res));
+  router.get('/', requirePermission('view:pages'), (req, res) => listPages(db, req as AuthRequest, res));
+  router.get('/:id', requirePermission('view:pages'), (req, res) => getPage(db, req as AuthRequest, res));
+  router.post('/', requirePermission('create:pages'), (req, res) => createPage(db, req as AuthRequest, res));
+  router.put('/:id', requirePermission('edit:pages'), (req, res) => updatePage(db, req as AuthRequest, res));
+  router.delete('/:id', requirePermission('delete:pages'), (req, res) => deletePage(db, req as AuthRequest, res));
+  router.post('/reorder', requirePermission('edit:pages'), (req, res) => reorderPages(db, req as AuthRequest, res));
+  router.post('/:id/publish', requirePermission('publish:pages'), (req, res) => publishPage(db, req as AuthRequest, res));
+  router.post('/:id/unpublish', requirePermission('publish:pages'), (req, res) => unpublishPage(db, req as AuthRequest, res));
 
   return router;
 }
