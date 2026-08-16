@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import { StatCard, StatusBadge } from '../../../components/admin/shared';
+import { EnrollmentTrendChart } from '../../../components/admin/charts/EnrollmentTrendChart';
+import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
+import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
 
 interface DashboardData {
   totalStudents: number;
@@ -56,6 +59,33 @@ function TopPagesChart({ pages }: { pages: Array<{ path: string; count: number }
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * Frame around a chart, so the three read as one set.
+ *
+ * Module scope, not nested in the page: as a nested function it would be a new
+ * component type on every render and remount every chart — and an ECharts
+ * instance re-initialising mid-animation is both visible and wasteful.
+ */
+function ChartCard({
+  title,
+  hint,
+  className = '',
+  children,
+}: {
+  title: string;
+  hint?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`rounded-xl border border-zinc-800/50 bg-[#111119] p-6 ${className}`}>
+      <h3 className="text-sm font-medium text-zinc-200">{title}</h3>
+      {hint && <p className="mb-4 text-xs text-zinc-500">{hint}</p>}
+      {children}
+    </section>
   );
 }
 
@@ -120,6 +150,26 @@ export default function DashboardPage() {
         <StatCard label="Gallery" value={data.gallery.total_images} sublabel={`${data.gallery.total_categories} categories`} accent="purple" />
         <StatCard label="Pending Bookings" value={data.bookings.pending} accent="amber" />
       </div>
+
+      {/* Charts. Each loads its own data and handles its own empty state, so a
+          quiet metric cannot take the dashboard down with it. */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <ChartCard
+          title="Registrations over time"
+          hint="Daily count, with a projection ahead"
+          className="xl:col-span-2"
+        >
+          <EnrollmentTrendChart />
+        </ChartCard>
+
+        <ChartCard title="Visitors to registrations" hint="Where people stop">
+          <ConversionFunnel />
+        </ChartCard>
+      </div>
+
+      <ChartCard title="When families visit" hint="Site visits by weekday and hour">
+        <VisitHeatmap />
+      </ChartCard>
 
       {/* Top visited pages */}
       <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
