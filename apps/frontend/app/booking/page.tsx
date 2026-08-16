@@ -2,7 +2,8 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { BenefitCard } from '@/components/BenefitCard';
 import { TourBookingForm } from '@/components/TourBookingForm';
 import { Butterfly, Flower } from '@/components/Decorations';
@@ -85,6 +86,9 @@ const BENEFITS = [
 /* -------------------------------------------------------------------------- */
 
 export default function BookingPage() {
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('booking'));
+
   return (
     <>
       <Header />
@@ -124,11 +128,17 @@ export default function BookingPage() {
             >
               Why Tour Little Smarties?
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
-              A website can only show you so much. Come and see the rooms while the children are in
-              them, meet the people who would be caring for your child, and ask the questions that
-              matter to your family.
-            </p>
+            {/* admin -> Pages -> Book a Tour -> Text. */}
+            <div className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
+              <EditableProse sections={sections} sectionKey="intro">
+                <p>
+                  A website can only show you so much. Come and see the rooms while the children are
+                  in them, meet the people who would be caring for your child, and ask the questions
+                  that matter to your family.
+                </p>
+              </EditableProse>
+              <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
+            </div>
 
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-4">
               {TOUR_FACTS.map((fact) => (

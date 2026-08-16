@@ -45,6 +45,16 @@ export function usePageSections(pageSlug: string): PageSection[] {
  * The HTML is sanitised against an allowlist on the server before it is stored,
  * which is why it can be set as markup here.
  */
+/**
+ * Keys the pages render inline, in place of their own copy. Excluded here so
+ * the same text cannot appear twice — once where it belongs and again in this
+ * block at the foot of the page.
+ *
+ * What is left is any section an admin adds themselves, which has nowhere else
+ * to go and so lands here.
+ */
+const RENDERED_INLINE = ['intro', 'body'];
+
 export function PageSections({
   pageSlug,
   className = 'bg-white py-16 md:py-24',
@@ -56,7 +66,9 @@ export function PageSections({
   only?: readonly string[];
 }) {
   const all = usePageSections(pageSlug);
-  const sections = only ? all.filter((s) => only.includes(s.section_key)) : all;
+  const sections = only
+    ? all.filter((s) => only.includes(s.section_key))
+    : all.filter((s) => !RENDERED_INLINE.includes(s.section_key));
 
   if (sections.length === 0) return null;
 

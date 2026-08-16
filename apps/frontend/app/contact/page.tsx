@@ -2,7 +2,8 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { Accordion, type AccordionEntry } from '@/components/Accordion';
 import { ContactForm } from '@/components/ContactForm';
@@ -124,6 +125,8 @@ export default function ContactPage() {
   // Hero image uploaded via admin → Media Library → Pages. Absent until one is
   // set, in which case the hero keeps its gradient.
   const pageImages = usePageMedia('contact');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('contact'));
   return (
     <>
       <Header />
@@ -151,6 +154,13 @@ export default function ContactPage() {
               We&rsquo;d love to hear from you
             </p>
           </div>
+        </section>
+
+        {/* admin -> Pages -> Contact -> Text. Renders nothing until a section
+            is published, so the page is unchanged by default. */}
+        <section className="mx-auto max-w-4xl px-4 pt-12 empty:hidden md:px-6">
+          <EditableProse sections={sections} sectionKey="intro">{null}</EditableProse>
+          <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
         </section>
 
         {/* ---------------------------------------------------------------- */}

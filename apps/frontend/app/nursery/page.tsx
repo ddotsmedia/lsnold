@@ -2,7 +2,8 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { Button } from '@/components/Button';
 import { Carousel } from '@/components/Carousel';
 import { MissionCard, type MissionCardColor, type MissionCardTitle } from '@/components/MissionCard';
@@ -259,6 +260,8 @@ export default function NurseryPage() {
   // Hero image uploaded via admin → Media Library → Pages. Absent until one is
   // set, in which case the hero keeps its gradient.
   const pageImages = usePageMedia('nursery');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('about'));
 
   // Managed in admin -> Testimonials. Falls back to the built-in reviews.
   const testimonials = useTestimonials('about', FALLBACK_TESTIMONIALS);
@@ -320,28 +323,34 @@ export default function NurseryPage() {
               >
                 Little Smarties Early Learning Centre
               </h2>
+              {/* admin -> Pages -> About -> Text. Each block keeps the wording
+                  below until a replacement is published. */}
               <div className="space-y-4 text-base leading-relaxed text-gray-700">
-                <p>
-                  Little Smarties opened its doors in 2007 with a single room, a handful of families
-                  and a straightforward idea: that the early years deserve the same care and thought
-                  as any later stage of education.
-                </p>
-                <p>
-                  Nearly two decades on, we have grown into a full early learning centre serving
-                  children from infancy through to school readiness. What has not changed is the
-                  scale at which we work — small groups, familiar faces, and teachers who know every
-                  child by name and by temperament.
-                </p>
-                <p>
-                  Our teaching team combines formal training in early childhood education with years
-                  of practical experience in the classroom. Many have been with us for the better
-                  part of a decade, which gives our families the continuity that young children rely
-                  on.
-                </p>
-                <p>
-                  We hold ourselves to a simple standard: every child should leave at the end of the
-                  day having been listened to, challenged a little, and kept safe.
-                </p>
+                <EditableProse sections={sections} sectionKey="intro">
+                  <p>
+                    Little Smarties opened its doors in 2007 with a single room, a handful of
+                    families and a straightforward idea: that the early years deserve the same care
+                    and thought as any later stage of education.
+                  </p>
+                  <p>
+                    Nearly two decades on, we have grown into a full early learning centre serving
+                    children from infancy through to school readiness. What has not changed is the
+                    scale at which we work — small groups, familiar faces, and teachers who know
+                    every child by name and by temperament.
+                  </p>
+                </EditableProse>
+                <EditableProse sections={sections} sectionKey="body">
+                  <p>
+                    Our teaching team combines formal training in early childhood education with
+                    years of practical experience in the classroom. Many have been with us for the
+                    better part of a decade, which gives our families the continuity that young
+                    children rely on.
+                  </p>
+                  <p>
+                    We hold ourselves to a simple standard: every child should leave at the end of
+                    the day having been listened to, challenged a little, and kept safe.
+                  </p>
+                </EditableProse>
               </div>
             </div>
           </div>

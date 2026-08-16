@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { Button } from '@/components/Button';
 import { FacilityCard } from '@/components/FacilityCard';
 import { FacilityModal, type Facility } from '@/components/FacilityModal';
@@ -326,6 +327,8 @@ export default function FacilitiesPage() {
   // Slots set in admin → Pages → Facilities → Images. Absent until one is set,
   // in which case the hero keeps its gradient.
   const pageImages = usePageMedia('facilities');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('facilities'));
   // Only the slots that have been filled, in order, so two images lay out as a
   // pair rather than leaving a gap where the third would be.
   const featureImages = ['feature_1', 'feature_2', 'feature_3']
@@ -471,10 +474,16 @@ export default function FacilitiesPage() {
             >
               Explore Our Spaces
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
-              Nine dedicated environments, each set up for a different kind of learning. Select any
-              one to see the full detail.
-            </p>
+            {/* admin -> Pages -> Facilities -> Text. */}
+            <div className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
+              <EditableProse sections={sections} sectionKey="intro">
+                <p>
+                  Nine dedicated environments, each set up for a different kind of learning. Select
+                  any one to see the full detail.
+                </p>
+              </EditableProse>
+              <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
+            </div>
 
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-3">
               {facilities.map((facility, index) => (

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
 import Modal from '@/components/Modal';
@@ -49,6 +50,8 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 export default function GalleryPage() {
   // Hero image uploaded via admin → Media Library → Pages.
   const pageImages = usePageMedia('gallery');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('gallery'));
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [categories, setCategories] = useState<GalleryCategory[]>([]);
   const [active, setActive] = useState('all');
@@ -196,6 +199,13 @@ export default function GalleryPage() {
             </p>
           </div>
         </section>
+        {/* admin -> Pages -> Gallery -> Text. Renders nothing until a
+            section is published, so the page is unchanged by default. */}
+        <section className="mx-auto max-w-4xl px-4 empty:hidden md:px-6">
+          <EditableProse sections={sections} sectionKey="intro">{null}</EditableProse>
+          <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
+        </section>
+
         <section aria-labelledby="gallery-heading" className="py-10 md:py-16">
           <div className="mx-auto max-w-6xl px-4 md:px-6">
             <h2 id="gallery-heading" className="sr-only">

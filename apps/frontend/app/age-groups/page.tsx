@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { HeroBackground } from '@/components/HeroBackground';
 import { Button } from '@/components/Button';
@@ -322,6 +323,8 @@ const DETAIL_SECTION_ID = 'age-group-detail';
 export default function AgeGroupsPage() {
   // Page-level images, separate from the per-age-group ones below.
   const pageImages = usePageMedia('age-groups');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('age-groups'));
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const detailRef = useRef<HTMLElement>(null);
@@ -422,10 +425,16 @@ export default function AgeGroupsPage() {
             >
               Six Programs, One For Every Stage
             </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
-              Each group has its own room, its own rhythm and its own team. Select a group to see
-              how a day actually runs.
-            </p>
+            {/* admin -> Pages -> Age Groups -> Text. */}
+            <div className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
+              <EditableProse sections={sections} sectionKey="intro">
+                <p>
+                  Each group has its own room, its own rhythm and its own team. Select a group to
+                  see how a day actually runs.
+                </p>
+              </EditableProse>
+              <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
+            </div>
 
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-3">
               {AGE_GROUPS.map((group, index) => (

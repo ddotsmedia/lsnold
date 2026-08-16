@@ -17,6 +17,8 @@ import {
 import { PartnerLogo } from '@/components/PartnerLogo';
 import { PageFeatureImages, PageBackground } from '@/components/PageFeatureImages';
 import { usePageMedia } from '@/lib/media';
+import { usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import type { SiteImage } from '@/lib/media';
 import { useTestimonials, type ApiTestimonial } from '@/lib/testimonials';
 
@@ -185,6 +187,8 @@ export default function Home() {
   // Images uploaded in admin -> Media Library -> Pages -> Home. usePageMedia
   // fails quiet, so a request problem leaves the page exactly as it was.
   const pageImages = usePageMedia('home');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('home'));
 
   // Managed in admin -> Testimonials. Falls back to the built-in reviews when
   // nothing is published for this page or the request fails.
@@ -291,12 +295,19 @@ export default function Home() {
               <h2 className="font-display text-4xl sm:text-5xl">
                 <span className="text-red-600">Little Smarties</span> Early Learning Centre
               </h2>
-              <p className="mt-5 leading-relaxed text-gray-600">
-                Little Smarties Nursery was founded in 2007 and has since then been committed to
-                providing the highest international standards of child care. LSN has been
-                identified by ADEK as nursery with a high level of compliance and academic
-                quality.
-              </p>
+              {/* admin -> Pages -> Home -> Text. Falls back to the wording
+                  below until someone publishes a replacement. */}
+              <div className="mt-5 leading-relaxed text-gray-600">
+                <EditableProse sections={sections} sectionKey="intro">
+                  <p>
+                    Little Smarties Nursery was founded in 2007 and has since then been committed to
+                    providing the highest international standards of child care. LSN has been
+                    identified by ADEK as nursery with a high level of compliance and academic
+                    quality.
+                  </p>
+                </EditableProse>
+                <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
+              </div>
               <Link href="/nursery" className="mt-7 inline-block">
                 <button className="h-12 rounded-full bg-red-600 px-7 font-bold text-white shadow-md transition-transform hover:scale-105">
                   Read More →

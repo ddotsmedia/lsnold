@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { PageSections } from '@/components/PageSections';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, sectionMap } from '@/lib/renderPageSection';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
@@ -230,6 +231,8 @@ export default function EventsPage() {
   // Images uploaded in admin -> Media Library -> Pages -> News & Events. The
   // pages row is 'news-events', which is the slug page_media stores under.
   const pageImages = usePageMedia('news-events');
+  // Text written in admin -> Pages -> Text, keyed by section.
+  const sections = sectionMap(usePageSections('news-events'));
   const [upcoming, setUpcoming] = useState<ApiEvent[]>([]);
   const [news, setNews] = useState<ApiNews[]>([]);
   const [loading, setLoading] = useState(true);
@@ -282,6 +285,13 @@ export default function EventsPage() {
               Join us for exciting learning experiences
             </p>
           </div>
+        </section>
+
+        {/* admin -> Pages -> News & Events -> Text. Renders nothing until a
+            section is published, so the page is unchanged by default. */}
+        <section className="mx-auto max-w-4xl px-4 empty:hidden md:px-6">
+          <EditableProse sections={sections} sectionKey="intro">{null}</EditableProse>
+          <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
         </section>
 
         {loading ? (
