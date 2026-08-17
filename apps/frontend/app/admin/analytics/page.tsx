@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { api } from '../../../lib/api';
 import { StatCard, FilterSelect } from '../../../components/admin/shared';
 
@@ -65,6 +66,14 @@ export default function AnalyticsPage() {
           allLabel="Period"
         />
       </div>
+
+      <section className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
+        <h3 className="text-sm font-medium text-zinc-200">Visitors to registrations</h3>
+        <p className="mb-4 text-xs text-zinc-500">
+          Where people stop between arriving and registering.
+        </p>
+        <ConversionFunnel days={Number(days) || 30} />
+      </section>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
