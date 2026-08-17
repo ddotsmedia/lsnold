@@ -1,8 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '../../lib/api';
+import { useAuth } from '../../lib/auth-context';
+import { matchCommands, type Command } from '../../lib/commands';
 
 /**
  * Search across the panel, opened with Cmd+K or Ctrl+K.
@@ -90,17 +92,37 @@ export function GlobalSearch() {
     return () => clearTimeout(t);
   }, [query, run]);
 
-  const results = data?.results ?? [];
+  const { user } = useAuth();
+  const allowed = useMemo(
+    () => new Set<string>(user?.permissions ?? []),
+    [user]
+  );
 
-  const go = (result: Result) => {
+  // Actions and destinations, filtered to what this account may reach.
+  // Matched locally: they are a fixed list, so a round trip would only add
+  // latency to the thing people press Cmd+K for most.
+  const commands = useMemo(() => matchCommands(query, allowed), [query, allowed]);
+
+  const searchResults = data?.results ?? [];
+  // One flat list so ArrowDown runs through commands into search hits
+  // without the cursor jumping between two separately-indexed sections.
+  const rows: Array<{ kind: 'command'; item: Command } | { kind: 'result'; item: Result }> = [
+    ...commands.map((item) => ({ kind: 'command' as const, item })),
+    ...searchResults.map((item) => ({ kind: 'result' as const, item })),
+  ];
+
+  const go = (href: string) => {
     setOpen(false);
-    router.push(result.url);
+    router.push(href);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlighted((i) => Math.min(i + 1, results.length - 1)); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlighted((i) => Math.min(i + 1, rows.length - 1)); }
     if (e.key === 'ArrowUp') { e.preventDefault(); setHighlighted((i) => Math.max(i - 1, 0)); }
-    if (e.key === 'Enter' && results[highlighted]) { e.preventDefault(); go(results[highlighted]); }
+    if (e.key === 'Enter') {
+      const row = rows[highlighted];
+      if (row) { e.preventDefault(); go(row.kind === 'command' ? row.item.href : row.item.url); }
+    }
   };
 
   if (!open) {
@@ -141,43 +163,68 @@ export function GlobalSearch() {
         </div>
 
         <div className="max-h-96 overflow-y-auto">
-          {query.trim().length < 2 ? (
+          {rows.length === 0 && !loading ? (
             <p className="px-4 py-8 text-center text-sm text-zinc-600">
-              Type at least two characters.
-            </p>
-          ) : results.length === 0 && !loading ? (
-            <p className="px-4 py-8 text-center text-sm text-zinc-600">
-              Nothing matches “{query}”.
+              {query.trim()
+                ? `Nothing matches “${query}”.`
+                : 'Type to search, or pick an action below.'}
             </p>
           ) : (
             <ul>
-              {results.map((result, index) => (
-                <li key={`${result.type}-${result.id}`}>
-                  <button
-                    type="button"
-                    onClick={() => go(result)}
-                    onMouseEnter={() => setHighlighted(index)}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                      index === highlighted ? 'bg-zinc-800/60' : 'hover:bg-zinc-800/30'
-                    }`}
-                  >
-                    <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-600">
-                      {TYPE_LABELS[result.type] ?? result.type}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm text-zinc-200">{result.title}</span>
-                      {result.subtitle && (
-                        <span className="block truncate text-xs text-zinc-500">{result.subtitle}</span>
-                      )}
-                    </span>
-                    {result.badge && (
-                      <span className="shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] text-zinc-400">
-                        {result.badge}
+              {rows.map((row, index) => {
+                const highlightedRow = index === highlighted;
+                const cls = `flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                  highlightedRow ? 'bg-zinc-800/60' : 'hover:bg-zinc-800/30'
+                }`;
+
+                if (row.kind === 'command') {
+                  return (
+                    <li key={`cmd-${row.item.id}`}>
+                      <button
+                        type="button"
+                        onClick={() => go(row.item.href)}
+                        onMouseEnter={() => setHighlighted(index)}
+                        className={cls}
+                      >
+                        <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-600">
+                          {row.item.group}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-200">
+                          {row.item.label}
+                        </span>
+                        <span className="shrink-0 text-xs text-zinc-600" aria-hidden="true">↵</span>
+                      </button>
+                    </li>
+                  );
+                }
+
+                const result = row.item;
+                return (
+                  <li key={`${result.type}-${result.id}`}>
+                    <button
+                      type="button"
+                      onClick={() => go(result.url)}
+                      onMouseEnter={() => setHighlighted(index)}
+                      className={cls}
+                    >
+                      <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-600">
+                        {TYPE_LABELS[result.type] ?? result.type}
                       </span>
-                    )}
-                  </button>
-                </li>
-              ))}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm text-zinc-200">{result.title}</span>
+                        {result.subtitle && (
+                          <span className="block truncate text-xs text-zinc-500">{result.subtitle}</span>
+                        )}
+                      </span>
+                      {result.badge && (
+                        <span className="shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] text-zinc-400">
+                          {result.badge}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
