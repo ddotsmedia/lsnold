@@ -95,20 +95,22 @@ export async function notifyBooking(db: Pool, row: BookingLike): Promise<void> {
     const date = row.preferred_date instanceof Date
       ? row.preferred_date.toISOString()
       : String(row.preferred_date);
+    // TIME returns '10:00:00'; the slot the visitor chose is HH:MM.
+    const time = String(row.preferred_time).slice(0, 5);
 
     if (settings.email_parent_booking) {
-      await sendBookingConfirmation(row.visitor_email, date, row.preferred_time);
+      await sendBookingConfirmation(row.visitor_email, date, time);
     }
     if (settings.email_admin_booking && settings.digest_frequency === 'immediate') {
       await sendAdminAlert('New tour booking', [
         `Visitor: ${row.visitor_name}`,
-        `When: ${date.slice(0, 10)} at ${row.preferred_time}`,
+        `When: ${date.slice(0, 10)} at ${time}`,
         `Email: ${row.visitor_email}`,
         `Phone: ${row.visitor_phone}`,
       ]);
     }
     if (settings.sms_admin_booking) {
-      await sendAdminSms(`New tour: ${row.visitor_name}, ${date.slice(0, 10)} ${row.preferred_time}`);
+      await sendAdminSms(`New tour: ${row.visitor_name}, ${date.slice(0, 10)} ${time}`);
     }
   } catch (error) {
     console.error('notifyBooking failed', error);

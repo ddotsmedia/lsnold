@@ -87,11 +87,13 @@ export async function notifyNewBooking(
   const date = row.preferred_date instanceof Date
     ? row.preferred_date.toISOString().slice(0, 10)
     : String(row.preferred_date).slice(0, 10);
+  // A TIME column comes back as '10:00:00'; the slot is only ever HH:MM.
+  const time = String(row.preferred_time).slice(0, 5);
 
   await notifyUsersWith(db, 'view:bookings', {
     type: 'booking_pending',
     title: 'New tour booking',
-    message: `${row.visitor_name} — ${date} at ${row.preferred_time}`,
+    message: `${row.visitor_name} — ${date} at ${time}`,
     relatedId: row.id,
     actionUrl: '/admin/bookings',
   });
