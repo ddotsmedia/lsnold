@@ -29,15 +29,25 @@ export function renderPageSection(
   const html = section?.content;
   if (!html || html.replace(/<[^>]*>/g, '').trim() === '') return fallback;
 
+  const heading = section?.title?.trim();
+
   return (
-    <div
-      // The public content styles, not the admin's dark ones: this renders on
-      // the public site. There is no @tailwindcss/typography in this project,
-      // so `prose` classes would style nothing.
-      className="page-content"
-      // Sanitised server-side against an allowlist before it was stored.
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <>
+      {/* An optional heading above the text. Blank on every section until an
+          admin types one, so the page keeps the heading its own layout already
+          provides rather than growing a second one. */}
+      {heading && (
+        <h3 className="mb-3 text-xl font-bold text-gray-800 md:text-2xl">{heading}</h3>
+      )}
+      <div
+        // The public content styles, not the admin's dark ones: this renders on
+        // the public site. There is no @tailwindcss/typography in this project,
+        // so `prose` classes would style nothing.
+        className="page-content"
+        // Sanitised server-side against an allowlist before it was stored.
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </>
   );
 }
 
