@@ -8,7 +8,9 @@ export type ActivityAction =
   | 'restore'
   | 'status_change'
   | 'invite'
-  | 'upload';
+  | 'upload'
+  /** A question put to the assistant, kept so its token cost is visible. */
+  | 'ask';
 
 export interface ActivityContext {
   /** Row as it was before the change, for update/delete. */

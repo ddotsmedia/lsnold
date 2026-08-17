@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "@types/multer": "^2.2.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.10.0",

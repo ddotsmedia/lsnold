@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/admin/settings/social-media', label: 'Social Media', icon: '◈' },
   { href: '/admin/seo', label: 'SEO Settings', icon: '◎' },
   { href: '/admin/analytics', label: 'Analytics', icon: '◫' },
+  { href: '/admin/assistant', label: 'Assistant', icon: '◇' },
   { href: '/admin/users', label: 'Users', icon: '◑' },
   { href: '/admin/roles', label: 'Roles & Permissions', icon: '⚿' },
   { href: '/admin/notifications', label: 'Notifications', icon: '🔔' },
