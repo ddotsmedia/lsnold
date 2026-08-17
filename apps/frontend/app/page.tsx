@@ -18,7 +18,7 @@ import { PartnerLogo } from '@/components/PartnerLogo';
 import { PageFeatureImages, PageBackground } from '@/components/PageFeatureImages';
 import { usePageMedia } from '@/lib/media';
 import { usePageSections } from '@/components/PageSections';
-import { EditableProse, sectionMap } from '@/lib/renderPageSection';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import type { SiteImage } from '@/lib/media';
 import { useTestimonials, type ApiTestimonial } from '@/lib/testimonials';
 
@@ -292,9 +292,16 @@ export default function Home() {
 
           <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
             <div>
-              <h2 className="font-display text-4xl sm:text-5xl">
-                <span className="text-red-600">Little Smarties</span> Early Learning Centre
-              </h2>
+              {/* admin -> Pages -> Home -> Text -> Heading replaces this. */}
+              <EditableHeading
+                sections={sections}
+                sectionKey="intro"
+                className="font-display text-4xl sm:text-5xl"
+              >
+                <h2 className="font-display text-4xl sm:text-5xl">
+                  <span className="text-red-600">Little Smarties</span> Early Learning Centre
+                </h2>
+              </EditableHeading>
               {/* admin -> Pages -> Home -> Text. Falls back to the wording
                   below until someone publishes a replacement. */}
               <div className="mt-5 leading-relaxed text-gray-600">

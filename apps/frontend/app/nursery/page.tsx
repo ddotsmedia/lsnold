@@ -3,7 +3,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSections, usePageSections } from '@/components/PageSections';
-import { EditableProse, sectionMap } from '@/lib/renderPageSection';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { Button } from '@/components/Button';
 import { Carousel } from '@/components/Carousel';
 import { MissionCard, type MissionCardColor, type MissionCardTitle } from '@/components/MissionCard';
@@ -317,12 +317,20 @@ export default function NurseryPage() {
             )}
 
             <div className="order-2 p-0 md:p-2 lg:p-4">
-              <h2
+              {/* A heading typed in the panel replaces this one. */}
+              <EditableHeading
+                sections={sections}
+                sectionKey="intro"
                 id="intro-heading"
                 className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
               >
-                Little Smarties Early Learning Centre
-              </h2>
+                <h2
+                  id="intro-heading"
+                  className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
+                >
+                  Little Smarties Early Learning Centre
+                </h2>
+              </EditableHeading>
               {/* admin -> Pages -> About -> Text. Each block keeps the wording
                   below until a replacement is published. */}
               <div className="space-y-4 text-base leading-relaxed text-gray-700">

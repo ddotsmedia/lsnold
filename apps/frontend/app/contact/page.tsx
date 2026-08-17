@@ -3,7 +3,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSections, usePageSections } from '@/components/PageSections';
-import { EditableProse, sectionMap } from '@/lib/renderPageSection';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { Accordion, type AccordionEntry } from '@/components/Accordion';
 import { ContactForm } from '@/components/ContactForm';
@@ -159,6 +159,7 @@ export default function ContactPage() {
         {/* admin -> Pages -> Contact -> Text. Renders nothing until a section
             is published, so the page is unchanged by default. */}
         <section className="mx-auto max-w-4xl px-4 pt-12 empty:hidden md:px-6">
+          <EditableHeading sections={sections} sectionKey="intro" className="mb-3 text-2xl font-bold text-gray-800 md:text-3xl">{null}</EditableHeading>
           <EditableProse sections={sections} sectionKey="intro">{null}</EditableProse>
           <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
         </section>

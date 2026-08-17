@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSections, usePageSections } from '@/components/PageSections';
-import { EditableProse, sectionMap } from '@/lib/renderPageSection';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { HeroBackground } from '@/components/HeroBackground';
 import { Button } from '@/components/Button';
@@ -419,12 +419,20 @@ export default function AgeGroupsPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="groups-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            {/* A heading typed in the panel replaces this one. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="intro"
               id="groups-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              Six Programs, One For Every Stage
-            </h2>
+              <h2
+                id="groups-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                Six Programs, One For Every Stage
+              </h2>
+            </EditableHeading>
             {/* admin -> Pages -> Age Groups -> Text. */}
             <div className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
               <EditableProse sections={sections} sectionKey="intro">

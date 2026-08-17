@@ -3,7 +3,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSections, usePageSections } from '@/components/PageSections';
-import { EditableProse, sectionMap } from '@/lib/renderPageSection';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { BenefitCard } from '@/components/BenefitCard';
 import { TourBookingForm } from '@/components/TourBookingForm';
 import { Butterfly, Flower } from '@/components/Decorations';
@@ -122,12 +122,20 @@ export default function BookingPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="tour-info-heading" className="bg-white py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            {/* A heading typed in the panel replaces this one. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="intro"
               id="tour-info-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl"
             >
-              Why Tour Little Smarties?
-            </h2>
+              <h2
+                id="tour-info-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl"
+              >
+                Why Tour Little Smarties?
+              </h2>
+            </EditableHeading>
             {/* admin -> Pages -> Book a Tour -> Text. */}
             <div className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
               <EditableProse sections={sections} sectionKey="intro">
