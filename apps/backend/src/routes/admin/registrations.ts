@@ -21,6 +21,8 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
     const offset = (page - 1) * limit;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
+    const dateFrom = req.query.dateFrom as string | undefined;
+    const dateTo = req.query.dateTo as string | undefined;
     const sortBy = req.query.sortBy as string || 'created_at';
     const sortDir = req.query.sortDir === 'asc' ? 'ASC' : 'DESC';
 
@@ -46,6 +48,17 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
       );
       params.push(`%${search.toLowerCase()}%`);
       paramIdx++;
+    }
+
+    // Inclusive of the whole end day: a range of 1st to 1st should return that
+    // day's registrations, not none.
+    if (dateFrom) {
+      conditions.push(`r.created_at >= ${paramIdx++}::date`);
+      params.push(dateFrom);
+    }
+    if (dateTo) {
+      conditions.push(`r.created_at < (${paramIdx++}::date + INTERVAL '1 day')`);
+      params.push(dateTo);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -169,12 +182,31 @@ const REGISTRATION_COLUMNS: Column[] = [
 async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const status = req.query.status as string | undefined;
+    const search = req.query.search as string | undefined;
+    const dateFrom = req.query.dateFrom as string | undefined;
+    const dateTo = req.query.dateTo as string | undefined;
+
     const conditions: string[] = ['r.deleted_at IS NULL'];
     const params: unknown[] = [];
 
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
-      conditions.push(`r.status = $${params.length + 1}`);
+      conditions.push(`r.status = ${params.length + 1}`);
       params.push(status);
+    }
+    if (search) {
+      conditions.push(
+        `(LOWER(r.child_name) LIKE ${params.length + 1} OR LOWER(r.parent_name) LIKE ${params.length + 1}`
+        + ` OR LOWER(r.parent_email) LIKE ${params.length + 1})`
+      );
+      params.push(`%${search.toLowerCase()}%`);
+    }
+    if (dateFrom) {
+      conditions.push(`r.created_at >= ${params.length + 1}::date`);
+      params.push(dateFrom);
+    }
+    if (dateTo) {
+      conditions.push(`r.created_at < (${params.length + 1}::date + INTERVAL '1 day')`);
+      params.push(dateTo);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

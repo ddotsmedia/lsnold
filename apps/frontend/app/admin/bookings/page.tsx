@@ -143,6 +143,7 @@ export default function BookingsPage() {
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
         onError={(message) => setToast({ message, type: 'error' })}
+        statuses={[{ value: 'pending', label: 'Pending' }, { value: 'confirmed', label: 'Confirmed' }]}
       />
 
       <BulkActionsBar

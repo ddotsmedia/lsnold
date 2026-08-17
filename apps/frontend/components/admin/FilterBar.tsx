@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { Button, Select } from './shared';
+import { QuickFilters } from './QuickFilters';
 
 /**
  * Date range, page size and saved presets for an admin table.
@@ -29,6 +30,7 @@ export function FilterBar({
   pageSize,
   onPageSizeChange,
   onError,
+  statuses = [],
 }: {
   /** Which table these presets belong to. */
   screen: string;
@@ -38,6 +40,8 @@ export function FilterBar({
   pageSize: number;
   onPageSizeChange: (size: number) => void;
   onError: (message: string) => void;
+  /** Status pills for this screen, passed to QuickFilters. */
+  statuses?: Array<{ value: string; label: string }>;
 }) {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [naming, setNaming] = useState(false);
@@ -79,10 +83,21 @@ export function FilterBar({
 
   const set = (key: string, value: string) => onChange({ ...filters, [key]: value });
 
+  // Matched by value rather than remembered on click, so it stays right when
+  // a filter is edited by hand after loading one.
+  const loaded = presets.find((preset) => {
+    const saved = Object.entries(preset.filters).filter(([, v]) => v);
+    const current = Object.entries(filters).filter(([, v]) => v);
+    return saved.length === current.length
+      && saved.every(([k, v]) => filters[k] === v);
+  });
+
   const active = Object.entries(filters).filter(([, v]) => v).length;
 
   return (
     <div className="space-y-3 rounded-xl border border-zinc-800/50 bg-[#111119] p-4">
+      <QuickFilters filters={filters} onChange={onChange} statuses={statuses} />
+
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">From</span>
@@ -140,6 +155,11 @@ export function FilterBar({
         )}
 
         <div className="ml-auto flex gap-2">
+          {loaded && (
+            <span className="flex min-h-12 items-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 text-xs text-emerald-400">
+              {loaded.name}
+            </span>
+          )}
           {active > 0 && (
             <>
               <Button size="sm" variant="secondary" onClick={() => setNaming((v) => !v)}>

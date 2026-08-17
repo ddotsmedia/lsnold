@@ -5,6 +5,7 @@ import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
 import { BulkActionsBar } from '../../../components/admin/BulkActionsBar';
+import { FilterBar } from '../../../components/admin/FilterBar';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -32,6 +33,8 @@ export default function RegistrationsPage() {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [range, setRange] = useState<Record<string, string>>({});
+  const [pageSize, setPageSize] = useState(20);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<{ id: string; action: string } | null>(null);
 
@@ -39,13 +42,13 @@ export default function RegistrationsPage() {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Registration>>('/admin/registrations', {
-        params: { page, limit: 20, search, status: statusFilter, sortBy, sortDir },
+        params: { page, limit: pageSize, search, status: statusFilter, sortBy, sortDir, ...range },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { setToast({ message: 'Failed to load registrations', type: 'error' }); }
     finally { setLoading(false); }
-  }, [search, statusFilter, sortBy, sortDir]);
+  }, [search, statusFilter, sortBy, sortDir, pageSize, range]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -140,12 +143,22 @@ export default function RegistrationsPage() {
         </div>
         <ExportMenu
           path="/admin/registrations/export"
-          params={{ status: statusFilter }}
+          params={{ status: statusFilter, search, ...range }}
           title="Registrations"
           subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
           onError={(message) => setToast({ message, type: 'error' })}
         />
       </div>
+
+      <FilterBar
+        screen="registrations"
+        filters={range}
+        onChange={setRange}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        onError={(message) => setToast({ message, type: 'error' })}
+        statuses={[{ value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' }]}
+      />
 
       <BulkActionsBar
         basePath="/admin/registrations"
