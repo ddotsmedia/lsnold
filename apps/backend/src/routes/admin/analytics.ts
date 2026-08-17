@@ -371,6 +371,114 @@ async function getVisitHeatmap(db: Pool, req: AuthRequest, res: Response): Promi
   }
 }
 
+/**
+ * Everything the dashboard shows, as sections a report can print.
+ *
+ * One request rather than the five the dashboard makes: a report is a single
+ * moment, and figures gathered a second apart could disagree with each other
+ * on a busy day.
+ *
+ * Lives here with the other analytics rather than in a new reports router.
+ * The booking and registration exports already answer at their own tables'
+ * /export, and a second set beside them would be two things to keep in step.
+ */
+async function getReport(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+    const since = `${days} days`;
+
+    const [totals, pages, funnel, statuses] = await Promise.all([
+      db.query(
+        `SELECT
+           (SELECT COUNT(*)::int FROM page_analytics WHERE created_at > NOW() - $1::interval) AS page_views,
+           (SELECT COUNT(DISTINCT COALESCE(visitor_id, session_id))::int FROM page_analytics
+             WHERE created_at > NOW() - $1::interval) AS visitors,
+           (SELECT COUNT(*)::int FROM registrations
+             WHERE created_at > NOW() - $1::interval AND deleted_at IS NULL) AS registrations,
+           (SELECT COUNT(*)::int FROM tour_bookings
+             WHERE created_at > NOW() - $1::interval AND deleted_at IS NULL) AS bookings`,
+        [since]
+      ),
+      db.query(
+        `SELECT page_path AS path, COUNT(*)::int AS views
+           FROM page_analytics WHERE created_at > NOW() - $1::interval
+          GROUP BY page_path ORDER BY views DESC LIMIT 15`,
+        [since]
+      ),
+      db.query(
+        `SELECT
+           (SELECT COUNT(DISTINCT COALESCE(visitor_id, session_id))::int FROM page_analytics
+             WHERE created_at > NOW() - $1::interval) AS visitors,
+           (SELECT COUNT(*)::int FROM tour_bookings
+             WHERE created_at > NOW() - $1::interval AND deleted_at IS NULL) AS bookings,
+           (SELECT COUNT(*)::int FROM registrations
+             WHERE created_at > NOW() - $1::interval AND deleted_at IS NULL) AS registrations`,
+        [since]
+      ),
+      db.query(
+        `SELECT 'Registrations' AS kind, status, COUNT(*)::int AS count
+           FROM registrations WHERE deleted_at IS NULL GROUP BY status
+         UNION ALL
+         SELECT 'Tour bookings', status, COUNT(*)::int
+           FROM tour_bookings WHERE deleted_at IS NULL GROUP BY status
+         ORDER BY 1, 2`
+      ),
+    ]);
+
+    const t = totals.rows[0] as Record<string, number>;
+    const f = funnel.rows[0] as Record<string, number>;
+    const rate = (part: number, whole: number) =>
+      whole === 0 ? '—' : `${Math.round((part / whole) * 1000) / 10}%`;
+
+    res.json({
+      generated_at: new Date().toISOString(),
+      days,
+      sections: [
+        {
+          title: 'Summary',
+          columns: [{ key: 'metric', header: 'Metric' }, { key: 'value', header: 'Value' }],
+          rows: [
+            { metric: 'Page views', value: t.page_views },
+            { metric: 'Unique visitors', value: t.visitors },
+            { metric: 'Tour bookings', value: t.bookings },
+            { metric: 'Registrations', value: t.registrations },
+          ],
+        },
+        {
+          title: 'Visitors to registrations',
+          columns: [
+            { key: 'stage', header: 'Stage' },
+            { key: 'count', header: 'Count' },
+            { key: 'rate', header: 'From previous' },
+          ],
+          rows: [
+            { stage: 'Visitors', count: f.visitors, rate: '100%' },
+            { stage: 'Tour bookings', count: f.bookings, rate: rate(f.bookings ?? 0, f.visitors ?? 0) },
+            { stage: 'Registrations', count: f.registrations, rate: rate(f.registrations ?? 0, f.bookings ?? 0) },
+          ],
+        },
+        {
+          title: 'Most visited pages',
+          columns: [{ key: 'path', header: 'Page' }, { key: 'views', header: 'Views' }],
+          rows: pages.rows,
+        },
+        {
+          title: 'Status breakdown (all time)',
+          columns: [
+            { key: 'kind', header: 'Type' },
+            { key: 'status', header: 'Status' },
+            { key: 'count', header: 'Count' },
+          ],
+          rows: statuses.rows,
+        },
+      ],
+    });
+  } catch (error) {
+    console.error('getReport failed', error);
+    res.status(500).json({ error: 'Failed to build the report' });
+  }
+}
+
 export function createAdminAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -385,6 +493,7 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
   router.get('/forecast', requirePermission('view:analytics'), (req, res) => getForecast(db, req as AuthRequest, res));
   router.get('/funnel', requirePermission('view:analytics'), (req, res) => getFunnel(db, req as AuthRequest, res));
   router.get('/heatmap', requirePermission('view:analytics'), (req, res) => getVisitHeatmap(db, req as AuthRequest, res));
+  router.get('/report', requirePermission('view:analytics'), (req, res) => getReport(db, req as AuthRequest, res));
 
   return router;
 }

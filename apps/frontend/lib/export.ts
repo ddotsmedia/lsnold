@@ -142,3 +142,74 @@ export async function exportToPDF(
 
   doc.save(`${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
+
+export interface ReportSection {
+  title: string;
+  columns: ExportColumn[];
+  rows: Array<Record<string, unknown>>;
+}
+
+export interface Report {
+  generated_at: string;
+  days: number;
+  sections: ReportSection[];
+}
+
+/**
+ * The analytics report as a PDF.
+ *
+ * Several small tables in sequence rather than one dataset: a summary, a
+ * funnel, the busiest pages and the status counts are different shapes, and
+ * forcing them into one grid would lose what each one says.
+ *
+ * Sections continue onto a new page when they will not fit, so a table is
+ * never split from its own heading.
+ */
+export async function exportReportToPDF(report: Report, title: string): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  doc.setFontSize(18);
+  doc.text(title, 40, 46);
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text(
+    `Last ${report.days} days   ·   Generated ${new Date(report.generated_at).toLocaleString()}`,
+    40, 64
+  );
+
+  let y = 88;
+  for (const section of report.sections) {
+    // A heading at the very bottom with its table overleaf reads as an error.
+    if (y > pageHeight - 140) { doc.addPage(); y = 56; }
+
+    doc.setFontSize(12);
+    doc.setTextColor(30);
+    doc.text(section.title, 40, y);
+    y += 8;
+
+    autoTable(doc, {
+      startY: y,
+      head: [section.columns.map((c) => c.header)],
+      body: section.rows.length > 0
+        ? section.rows.map((row) => section.columns.map((c) => {
+          const value = row[c.key];
+          return value === null || value === undefined ? '—' : String(value);
+        }))
+        : [section.columns.map((_, i) => (i === 0 ? 'No data for this period' : ''))],
+      styles: { fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [39, 39, 42], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [244, 244, 245] },
+      margin: { left: 40, right: 40 },
+    });
+
+    // autoTable records where it finished; the next section starts below it.
+    const finished = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable;
+    y = (finished?.finalY ?? y) + 28;
+  }
+
+  doc.save(`analytics-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+}

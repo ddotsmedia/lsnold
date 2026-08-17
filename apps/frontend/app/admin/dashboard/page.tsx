@@ -7,6 +7,7 @@ import { EnrollmentTrendChart } from '../../../components/admin/charts/Enrollmen
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
 import { DashboardWidgets } from '../../../components/admin/DashboardWidgets';
+import { AnalyticsReportButton } from '../../../components/admin/AnalyticsReportButton';
 
 interface DashboardData {
   totalStudents: number;
@@ -135,6 +136,10 @@ export default function DashboardPage() {
           Some statistics are unavailable ({data.degraded.join(', ')}). Everything else below is current.
         </div>
       )}
+
+      <div className="flex justify-end">
+        <AnalyticsReportButton />
+      </div>
 
       <DashboardWidgets widgets={[
         { key: 'kpi', title: 'Headline numbers', render: () => (
