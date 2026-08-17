@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { authenticate, createResolveAdmin, requireAdmin } from '../../middleware/auth.js';
 import { createResolvePermissions, requirePermission, requirePanelAccess } from '../../middleware/permissions.js';
 import type { AuthRequest } from '../../middleware/auth.js';
+import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
 import { hashPassword } from '../../utils/hash.js';
 import { getDashboardStats } from '../../controllers/dashboardController.js';
@@ -184,13 +185,62 @@ async function revokeAdmin(db: Pool, req: AuthRequest, res: Response): Promise<v
 }
 
 // ---------- Activity Log ----------
-async function getActivityLog(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+const ACTIVITY_COLUMNS: Column[] = [
+  { key: 'created_at', header: 'When', type: 'datetime' },
+  { key: 'admin_name', header: 'Who' },
+  { key: 'admin_email', header: 'Email' },
+  { key: 'action', header: 'Action' },
+  { key: 'entity_type', header: 'Type' },
+  { key: 'entity_id', header: 'Record' },
+  { key: 'old_values', header: 'Before' },
+  { key: 'new_values', header: 'After' },
+  { key: 'ip_address', header: 'IP' },
+];
+
+/**
+ * The filtered log as a file, for keeping or handing over.
+ *
+ * Snapshots are flattened to text: a spreadsheet cell cannot hold a JSON
+ * object, and an audit trail is worth little if the before and after are the
+ * one thing missing from the export.
+ */
+function flattenSnapshot(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value !== 'object') return String(value);
+  return Object.entries(value as Record<string, unknown>)
+    .map(([key, v]) => `${key}: ${v === null ? '—' : String(v)}`)
+    .join('; ');
+}
+
+async function exportActivityLog(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
-    const offset = (page - 1) * limit;
-    const entityType = req.query.entityType as string | undefined;
+    const rows = await queryActivityLog(db, req);
+    const flattened = rows.map((row) => ({
+      ...row,
+      old_values: flattenSnapshot(row.old_values),
+      new_values: flattenSnapshot(row.new_values),
+    }));
+    await sendTabular(res, req, flattened, ACTIVITY_COLUMNS, 'activity-log');
+  } catch (error) {
+    console.error('exportActivityLog failed', error);
+    res.status(500).json({ error: 'Failed to export the activity log' });
+  }
+}
+
+/**
+ * The filter clause both the list and the export use.
+ *
+ * Shared so an export can never disagree with the screen it was taken from —
+ * an audit file that quietly holds different rows than the ones on display is
+ * worse than no export.
+ */
+function activityFilters(req: AuthRequest): { where: string; params: unknown[]; nextIdx: number } {
+  const entityType = req.query.entityType as string | undefined;
     const action = req.query.action as string | undefined;
+    const adminId = req.query.adminId as string | undefined;
+    const dateFrom = req.query.dateFrom as string | undefined;
+    const dateTo = req.query.dateTo as string | undefined;
+    const search = req.query.search as string | undefined;
 
     const conditions: string[] = [];
     const params: unknown[] = [];
@@ -198,10 +248,64 @@ async function getActivityLog(db: Pool, req: AuthRequest, res: Response): Promis
 
     if (entityType) { conditions.push(`al.entity_type = $${paramIdx++}`); params.push(entityType); }
     if (action) { conditions.push(`al.action = $${paramIdx++}`); params.push(action); }
+    if (adminId) { conditions.push(`al.admin_user_id = $${paramIdx++}::uuid`); params.push(adminId); }
+    if (dateFrom) { conditions.push(`al.created_at >= $${paramIdx++}::date`); params.push(dateFrom); }
+    // Inclusive of the whole end day, matching the other date filters.
+    if (dateTo) {
+      conditions.push(`al.created_at < ($${paramIdx++}::date + INTERVAL '1 day')`);
+      params.push(dateTo);
+    }
+    if (search) {
+      // entity_id is a uuid, so it is compared as text — a partial id is what
+      // somebody actually has to hand when tracing a record.
+      conditions.push(
+        `(al.entity_id::text ILIKE $${paramIdx} OR al.entity_type ILIKE $${paramIdx}`
+        + ` OR u.name ILIKE $${paramIdx} OR u.email ILIKE $${paramIdx})`
+      );
+      params.push(`%${search}%`);
+      paramIdx++;
+    }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return {
+    where: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
+    params,
+    nextIdx: paramIdx,
+  };
+}
 
-    const countResult = await db.query(`SELECT COUNT(*) FROM admin_activity_log al ${where}`, params);
+/** Every matching row, unpaginated — for the export. */
+async function queryActivityLog(
+  db: Pool,
+  req: AuthRequest
+): Promise<Array<Record<string, unknown>>> {
+  const { where, params } = activityFilters(req);
+  const result = await db.query(
+    `SELECT al.created_at, al.action, al.entity_type, al.entity_id,
+            al.old_values, al.new_values, al.ip_address,
+            u.name AS admin_name, u.email AS admin_email
+       FROM admin_activity_log al
+       LEFT JOIN users u ON al.admin_user_id = u.id
+       ${where}
+      ORDER BY al.created_at DESC
+      LIMIT 5000`,
+    params
+  );
+  return result.rows as Array<Record<string, unknown>>;
+}
+
+async function getActivityLog(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+    const offset = (page - 1) * limit;
+
+    const { where, params, nextIdx } = activityFilters(req);
+
+    const countResult = await db.query(
+      `SELECT COUNT(*) FROM admin_activity_log al
+         LEFT JOIN users u ON al.admin_user_id = u.id ${where}`,
+      params
+    );
     const total = Number(countResult.rows[0]?.count ?? 0);
 
     const dataResult = await db.query(
@@ -210,7 +314,7 @@ async function getActivityLog(db: Pool, req: AuthRequest, res: Response): Promis
        LEFT JOIN users u ON al.admin_user_id = u.id
        ${where}
        ORDER BY al.created_at DESC
-       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
+       LIMIT $${nextIdx} OFFSET $${nextIdx + 1}`,
       [...params, limit, offset]
     );
 
@@ -238,6 +342,7 @@ export function createAdminUsersRouter(db: Pool): express.Router {
 
   // Activity Log
   router.get('/activity-log', requirePermission('view:users'), (req, res) => getActivityLog(db, req as AuthRequest, res));
+  router.get('/activity-log/export', requirePermission('view:users'), (req, res) => exportActivityLog(db, req as AuthRequest, res));
 
   // Users
   router.get('/', requirePermission('view:users'), (req, res) => listUsers(db, req as AuthRequest, res));

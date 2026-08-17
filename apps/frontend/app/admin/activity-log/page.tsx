@@ -5,7 +5,9 @@ import { api } from '../../../lib/api';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
-import { StatusBadge, FilterSelect, Modal } from '../../../components/admin/shared';
+import { StatusBadge, FilterSelect, Modal, SearchBar, Toast } from '../../../components/admin/shared';
+import { ExportMenu } from '../../../components/admin/ExportMenu';
+import { FilterBar } from '../../../components/admin/FilterBar';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -84,20 +86,38 @@ export default function ActivityLogPage() {
   const [entityType, setEntityType] = useState('');
   const [action, setAction] = useState('');
   const [selected, setSelected] = useState<Activity | null>(null);
+  const [search, setSearch] = useState('');
+  const [adminId, setAdminId] = useState('');
+  const [admins, setAdmins] = useState<Array<{ id: string; name: string; email: string }>>([]);
+  const [range, setRange] = useState<Record<string, string>>({});
+  const [pageSize, setPageSize] = useState(30);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Activity>>('/admin/users/activity-log', {
-        params: { page, limit: 30, entityType, action },
+        params: { page, limit: pageSize, entityType, action, adminId, search, ...range },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { /* ignore */ }
     finally { setLoading(false); }
-  }, [entityType, action]);
+  }, [entityType, action, adminId, search, pageSize, range]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Only the accounts that can act, so the dropdown is not a list of every
+  // person who ever registered.
+  useEffect(() => {
+    api<{ data: Array<{ id: string; name: string; email: string; role: string | null }> }>('/admin/users', { params: { limit: 100 } })
+      .then((res) => setAdmins(res.data.filter((u) => u.role)))
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); }
+  }, [toast]);
 
   const columns: Column<Activity>[] = [
     { key: 'created_at', header: 'Time', render: (r) => (
@@ -162,7 +182,34 @@ export default function ActivityLogPage() {
           ]}
           allLabel="All Actions"
         />
+        <FilterSelect
+          value={adminId}
+          onChange={setAdminId}
+          options={admins.map((a) => ({ value: a.id, label: a.name || a.email }))}
+          allLabel="Anyone"
+        />
+        <div className="max-w-xs flex-1">
+          <SearchBar value={search} onChange={setSearch} placeholder="Record id, type or person…" />
+        </div>
+        <div className="ml-auto">
+          <ExportMenu
+            path="/admin/users/activity-log/export"
+            params={{ entityType, action, adminId, search, ...range }}
+            title="Activity log"
+            subtitle={[action, entityType].filter(Boolean).join(' · ') || 'All activity'}
+            onError={(message) => setToast({ message, type: 'error' })}
+          />
+        </div>
       </div>
+
+      <FilterBar
+        screen="activity-log"
+        filters={range}
+        onChange={setRange}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        onError={(message) => setToast({ message, type: 'error' })}
+      />
 
       <DataTable<Activity>
         columns={columns}
@@ -172,6 +219,8 @@ export default function ActivityLogPage() {
         onPageChange={(p) => fetchData(p)}
         emptyMessage="No activity logged yet"
       />
+
+      {toast && <Toast message={toast.message} type={toast.type} />}
 
       <Modal
         open={selected !== null}
