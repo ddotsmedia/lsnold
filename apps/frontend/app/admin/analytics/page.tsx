@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
+import { RetentionCurve } from '../../../components/admin/charts/RetentionCurve';
+import { CohortHeatmap } from '../../../components/admin/charts/CohortHeatmap';
 import { api } from '../../../lib/api';
 import { StatCard, FilterSelect } from '../../../components/admin/shared';
 
@@ -27,6 +29,7 @@ export default function AnalyticsPage() {
   const [browsers, setBrowsers] = useState<BrowserData[]>([]);
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [days, setDays] = useState('30');
+  const [tab, setTab] = useState<'overview' | 'funnel' | 'cohorts' | 'retention'>('overview');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,12 +70,34 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <section className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
-        <h3 className="text-sm font-medium text-zinc-200">Visitors to registrations</h3>
-        <p className="mb-4 text-xs text-zinc-500">
-          Where people stop between arriving and registering.
-        </p>
-        <ConversionFunnel days={Number(days) || 30} />
+      <section className="rounded-xl border border-zinc-800/50 bg-[#111119]">
+        <nav className="flex gap-1 overflow-x-auto border-b border-zinc-800 px-2" aria-label="Analytics views">
+          {(['overview','funnel','cohorts','retention'] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              aria-current={tab === key ? 'page' : undefined}
+              className={`-mb-px min-h-12 whitespace-nowrap border-b-2 px-4 text-sm font-medium capitalize transition-colors ${
+                tab === key
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              {key}
+            </button>
+          ))}
+        </nav>
+        <div className="p-6">
+          {tab === 'overview' && (
+            <p className="text-sm text-zinc-500">
+              Traffic figures are below. The other tabs cover conversion and return visits.
+            </p>
+          )}
+          {tab === 'funnel' && <ConversionFunnel days={Number(days) || 30} />}
+          {tab === 'cohorts' && <CohortHeatmap months={6} />}
+          {tab === 'retention' && <RetentionCurve days={Number(days) || 90} />}
+        </div>
       </section>
 
       {/* KPI cards */}

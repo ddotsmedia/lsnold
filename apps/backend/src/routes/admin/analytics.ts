@@ -479,6 +479,169 @@ async function getReport(db: Pool, req: AuthRequest, res: Response): Promise<voi
   }
 }
 
+/**
+ * The day visitor identity became stable across days.
+ *
+ * Before this, visitor_id was a hash that included the date, so the same
+ * browser produced a new id every day and no return visit could ever be seen.
+ * Rows written before the change cannot be linked to a later visit, so both
+ * reports below count only from here and report the date so the screen can say
+ * what the figures cover.
+ */
+async function measuringSince(db: Pool): Promise<string> {
+  const result = await db.query(
+    `SELECT MIN(created_at)::date AS since FROM page_analytics
+      WHERE created_at >= $1::timestamp`,
+    [RETENTION_EPOCH]
+  );
+  return String((result.rows[0] as { since: string | null }).since ?? RETENTION_EPOCH);
+}
+
+/** Set to the deploy that split visitor_id from session_id. */
+const RETENTION_EPOCH = '2026-08-17';
+
+/**
+ * How many first-time visitors came back, by how long after.
+ *
+ * Buckets rather than a per-day curve: with this much traffic a daily series is
+ * mostly zeroes, and the question being asked is "do people come back at all,
+ * and how quickly", which buckets answer without implying precision.
+ */
+async function getRetention(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const days = Math.min(365, Math.max(7, Number(req.query.days) || 90));
+    const since = await measuringSince(db);
+
+    const result = await db.query(
+      `WITH first_seen AS (
+         SELECT visitor_id, MIN(created_at) AS started
+           FROM page_analytics
+          WHERE created_at >= $1::timestamp AND visitor_id IS NOT NULL
+          GROUP BY visitor_id
+       ),
+       -- One row per return visit, not one per visitor: a visitor who comes
+       -- back on day 3 and again on day 20 belongs in both buckets. Collapsing
+       -- to their last visit would quietly empty the early ones.
+       returns AS (
+         SELECT f.visitor_id,
+                (EXTRACT(EPOCH FROM (a.created_at - f.started)) / 86400)::int AS days_later
+           FROM first_seen f
+           JOIN page_analytics a
+             ON a.visitor_id = f.visitor_id AND a.created_at > f.started
+          WHERE a.created_at >= $1::timestamp
+       )
+       -- Only visitors old enough to have had the chance to return within a
+       -- bucket count towards it; otherwise yesterday's arrivals drag every
+       -- longer bucket towards zero.
+       SELECT b.label, b.lo, b.hi,
+              (SELECT COUNT(*)::int FROM first_seen f
+                WHERE f.started <= NOW() - make_interval(days => b.lo)) AS eligible,
+              (SELECT COUNT(DISTINCT f.visitor_id)::int FROM first_seen f
+                JOIN returns r ON r.visitor_id = f.visitor_id
+                WHERE f.started <= NOW() - make_interval(days => b.lo)
+                  AND r.days_later BETWEEN b.lo AND b.hi) AS returned
+         FROM (VALUES
+                 ('Day 1-7', 1, 7),
+                 ('Day 8-14', 8, 14),
+                 ('Day 15-30', 15, 30),
+                 ('Day 31-60', 31, 60),
+                 ('Day 61-90', 61, 90)
+              ) AS b(label, lo, hi)
+        WHERE b.lo <= $2::int
+        ORDER BY b.lo`,
+      [since, days]
+    );
+
+    const buckets = (result.rows as Array<{ label: string; eligible: number; returned: number }>)
+      .map((row) => ({
+        label: row.label,
+        eligible: row.eligible,
+        returned: row.returned,
+        rate: row.eligible === 0 ? null : Math.round((row.returned / row.eligible) * 1000) / 10,
+      }));
+
+    res.json({ days, measuring_since: since, buckets });
+  } catch (error) {
+    console.error('getRetention failed', error);
+    res.status(500).json({ error: 'Failed to build the retention curve' });
+  }
+}
+
+/**
+ * Monthly cohorts by month of first visit, and how many returned in each later
+ * month.
+ *
+ * A cell is null rather than zero where that month has not happened yet, so an
+ * unreachable future reads as blank on the heatmap instead of as total loss.
+ */
+async function getCohorts(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const months = Math.min(24, Math.max(1, Number(req.query.months) || 6));
+    const since = await measuringSince(db);
+
+    const result = await db.query(
+      `WITH first_seen AS (
+         SELECT visitor_id, MIN(created_at) AS started
+           FROM page_analytics
+          WHERE created_at >= $1::timestamp AND visitor_id IS NOT NULL
+          GROUP BY visitor_id
+       ),
+       cohorts AS (
+         SELECT date_trunc('month', started)::date AS cohort, visitor_id, started
+           FROM first_seen
+          WHERE started >= date_trunc('month', NOW()) - make_interval(months => $2::int - 1)
+       ),
+       activity AS (
+         SELECT c.cohort, c.visitor_id,
+                (EXTRACT(YEAR FROM AGE(date_trunc('month', a.created_at), c.cohort)) * 12
+                 + EXTRACT(MONTH FROM AGE(date_trunc('month', a.created_at), c.cohort)))::int AS month_index
+           FROM cohorts c
+           JOIN page_analytics a ON a.visitor_id = c.visitor_id
+          WHERE a.created_at >= $1::timestamp
+       )
+       SELECT cohort,
+              month_index,
+              COUNT(DISTINCT visitor_id)::int AS visitors
+         FROM activity
+        WHERE month_index >= 0 AND month_index < $2::int
+        GROUP BY cohort, month_index
+        ORDER BY cohort, month_index`,
+      [since, months]
+    );
+
+    // Reshaped here rather than in SQL: a crosstab would need a fixed column
+    // list, and the number of months is a parameter.
+    const byCohort = new Map<string, Map<number, number>>();
+    for (const row of result.rows as Array<{ cohort: string; month_index: number; visitors: number }>) {
+      const key = String(row.cohort).slice(0, 7);
+      if (!byCohort.has(key)) byCohort.set(key, new Map());
+      byCohort.get(key)!.set(row.month_index, row.visitors);
+    }
+
+    const now = new Date();
+    const rows = [...byCohort.entries()].map(([cohort, counts]) => {
+      const size = counts.get(0) ?? 0;
+      const [year, month] = cohort.split('-').map(Number);
+      // Months between this cohort and now; anything beyond is not yet knowable.
+      const elapsed = (now.getFullYear() - (year ?? 0)) * 12 + (now.getMonth() + 1 - (month ?? 1));
+      return {
+        cohort,
+        size,
+        cells: Array.from({ length: months }, (_, i) => {
+          if (i > elapsed) return null;
+          if (size === 0) return null;
+          return Math.round(((counts.get(i) ?? 0) / size) * 1000) / 10;
+        }),
+      };
+    });
+
+    res.json({ months, measuring_since: since, rows });
+  } catch (error) {
+    console.error('getCohorts failed', error);
+    res.status(500).json({ error: 'Failed to build the cohort table' });
+  }
+}
+
 export function createAdminAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -494,6 +657,8 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
   router.get('/funnel', requirePermission('view:analytics'), (req, res) => getFunnel(db, req as AuthRequest, res));
   router.get('/heatmap', requirePermission('view:analytics'), (req, res) => getVisitHeatmap(db, req as AuthRequest, res));
   router.get('/report', requirePermission('view:analytics'), (req, res) => getReport(db, req as AuthRequest, res));
+  router.get('/retention', requirePermission('view:analytics'), (req, res) => getRetention(db, req as AuthRequest, res));
+  router.get('/cohorts', requirePermission('view:analytics'), (req, res) => getCohorts(db, req as AuthRequest, res));
 
   return router;
 }

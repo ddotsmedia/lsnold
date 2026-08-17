@@ -44,12 +44,47 @@ function clientIp(req: Request): string | null {
 }
 
 /**
- * A per-visitor-per-day identifier. Hashed rather than stored raw so the
- * session key itself is not another copy of the visitor's IP, and salted with
- * the date so it rotates daily instead of following someone indefinitely.
+ * A secret mixed into both identifiers.
+ *
+ * Without it these are a plain hash of an IP and a user agent, and the IPv4
+ * space is small enough to enumerate — anyone holding the table could recover
+ * the address a row belongs to. With it the hashes are meaningless outside this
+ * deployment. Falls back to the JWT secret so an existing install keeps working
+ * rather than silently reverting to unsalted hashes.
+ */
+const ANALYTICS_SALT = process.env.ANALYTICS_SALT ?? process.env.JWT_SECRET ?? 'lsn-analytics';
+
+/**
+ * A per-visitor-per-day identifier — one visit, on one day.
+ *
+ * Still rotates daily, which is what keeps a single day's browsing from being
+ * stitched to another's through this column.
  */
 function sessionId(ip: string | null, userAgent: string, day: string): string {
-  return crypto.createHash('sha256').update(`${ip ?? 'unknown'}|${userAgent}|${day}`).digest('hex').slice(0, 32);
+  return crypto.createHash('sha256')
+    .update(`${ANALYTICS_SALT}|${ip ?? 'unknown'}|${userAgent}|${day}`)
+    .digest('hex').slice(0, 32);
+}
+
+/**
+ * A stable identifier for the same browser across days.
+ *
+ * The day was previously part of this hash too, which meant a returning visitor
+ * produced a different id every day and "did anyone come back?" could only ever
+ * be answered no — the database agreed, with not one identity appearing on two
+ * days across 501 page views. Retention and cohort analysis are impossible
+ * against a value like that, so the day is dropped here while session_id above
+ * keeps it.
+ *
+ * This does follow a browser over time, which the daily rotation deliberately
+ * did not. It is pseudonymous — a salted hash of an address and a user agent,
+ * never the address itself — and only counts from the day it ships; every row
+ * written before then keeps its old daily identifier and cannot be linked up.
+ */
+function visitorId(ip: string | null, userAgent: string): string {
+  return crypto.createHash('sha256')
+    .update(`${ANALYTICS_SALT}|${ip ?? 'unknown'}|${userAgent}`)
+    .digest('hex').slice(0, 32);
 }
 
 function deviceOf(ua: string): string {
@@ -93,6 +128,9 @@ export function createAnalyticsTracker(db: Pool) {
       const ip = clientIp(req);
       const day = new Date().toISOString().slice(0, 10);
       const session = sessionId(ip, ua, day);
+      // Stable across days, unlike session — this is what makes a return visit
+      // detectable at all.
+      const visitor = visitorId(ip, ua);
 
       // INSERT ... SELECT so the dedupe check and the write are one round trip
       // and cannot race with a parallel request from the same visitor.
@@ -110,7 +148,7 @@ export function createAnalyticsTracker(db: Pool) {
                     WHERE deleted_at IS NULL
                       AND (path = $1::text OR '/' || slug = $1::text)
                     LIMIT 1),
-                  $2::text, $3::text, $4::text, $5::text, $5::text, $3::text,
+                  $2::text, $9::text, $4::text, $5::text, $5::text, $3::text,
                   $6::text, $7::text, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             WHERE NOT EXISTS (
               SELECT 1 FROM page_analytics
@@ -118,7 +156,7 @@ export function createAnalyticsTracker(db: Pool) {
                  AND page_path = $1::text
                  AND visited_at > CURRENT_TIMESTAMP - make_interval(mins => $8::int)
             )`,
-          [pagePath, ip, session, ua || null, referer ?? null, deviceOf(ua), browserOf(ua), DEDUPE_WINDOW_MINUTES]
+          [pagePath, ip, session, ua || null, referer ?? null, deviceOf(ua), browserOf(ua), DEDUPE_WINDOW_MINUTES, visitor]
         )
         .catch((error: unknown) => {
           // Missing table, bad column, database down — none of it should
