@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
+import { BulkActionsBar } from '../../../components/admin/BulkActionsBar';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -30,6 +31,7 @@ export default function RegistrationsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<{ id: string; action: string } | null>(null);
 
@@ -145,8 +147,22 @@ export default function RegistrationsPage() {
         />
       </div>
 
+      <BulkActionsBar
+        basePath="/admin/registrations"
+        noun="registration"
+        selected={selected}
+        actions={[{ key: 'approve', label: 'Approve', path: 'bulk/approve', verb: 'approved' },
+         { key: 'reject', label: 'Reject', path: 'bulk/reject', verb: 'rejected' },
+         { key: 'delete', label: 'Delete', path: 'bulk/delete', verb: 'deleted', destructive: true }]}
+        onClear={() => setSelected(new Set())}
+        onDone={(message) => { setToast({ message, type: 'success' }); fetchData(pagination.page); }}
+        onError={(message) => setToast({ message, type: 'error' })}
+      />
+
       <DataTable
         columns={columns}
+        selected={selected}
+        onSelectedChange={setSelected}
         data={data}
         loading={loading}
         pagination={pagination}

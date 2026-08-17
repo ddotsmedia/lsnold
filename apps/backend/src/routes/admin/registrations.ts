@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
 
 const StatusSchema = z.object({
   status: z.enum(['pending', 'approved', 'rejected']),
@@ -29,7 +30,7 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
     const allowedSorts = ['created_at', 'child_name', 'parent_name', 'parent_email', 'status'];
     const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'created_at';
 
-    const conditions: string[] = [];
+    const conditions: string[] = ['r.deleted_at IS NULL'];
     const params: unknown[] = [];
     let paramIdx = 1;
 
@@ -87,7 +88,7 @@ async function getRegistration(db: Pool, req: AuthRequest, res: Response): Promi
       `SELECT r.*, ag.name as age_group_name
        FROM registrations r
        LEFT JOIN age_groups ag ON r.age_group_id = ag.id
-       WHERE r.id = $1`,
+       WHERE r.id = $1 AND r.deleted_at IS NULL`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -107,7 +108,7 @@ async function updateRegistrationStatus(db: Pool, req: AuthRequest, res: Respons
     const data = StatusSchema.parse(req.body);
 
     const result = await db.query(
-      `UPDATE registrations SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      `UPDATE registrations SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND deleted_at IS NULL RETURNING *`,
       [data.status, id]
     );
 
@@ -135,7 +136,12 @@ async function updateRegistrationStatus(db: Pool, req: AuthRequest, res: Respons
 async function deleteRegistration(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const result = await db.query('DELETE FROM registrations WHERE id = $1 RETURNING id', [id]);
+    // Soft: these rows carry a family's contact details, and a misclick on
+    // the wrong one should not be unrecoverable.
+    const result = await db.query(
+      'UPDATE registrations SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING id',
+      [id]
+    );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Registration not found' });
       return;
@@ -163,11 +169,11 @@ const REGISTRATION_COLUMNS: Column[] = [
 async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const status = req.query.status as string | undefined;
-    const conditions: string[] = [];
+    const conditions: string[] = ['r.deleted_at IS NULL'];
     const params: unknown[] = [];
 
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
-      conditions.push('r.status = $1');
+      conditions.push(`r.status = $${params.length + 1}`);
       params.push(status);
     }
 
@@ -193,6 +199,12 @@ async function exportRegistrations(db: Pool, req: AuthRequest, res: Response): P
   }
 }
 
+const REGISTRATIONS: BulkTarget = {
+  table: 'registrations',
+  entity: 'registration',
+  statuses: ['pending', 'approved', 'rejected'],
+};
+
 export function createAdminRegistrationsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -204,6 +216,10 @@ export function createAdminRegistrationsRouter(db: Pool): express.Router {
   router.get('/:id', requirePermission('view:registrations'), (req, res) => getRegistration(db, req as AuthRequest, res));
   router.patch('/:id/status', requirePermission('edit:registrations'), (req, res) => updateRegistrationStatus(db, req as AuthRequest, res));
   router.delete('/:id', requirePermission('delete:registrations'), (req, res) => deleteRegistration(db, req as AuthRequest, res));
+
+  router.post('/bulk/approve', requirePermission('edit:registrations'), (req, res) => bulkStatus(db, req as AuthRequest, res, REGISTRATIONS, 'approved'));
+  router.post('/bulk/reject', requirePermission('edit:registrations'), (req, res) => bulkStatus(db, req as AuthRequest, res, REGISTRATIONS, 'rejected'));
+  router.post('/bulk/delete', requirePermission('delete:registrations'), (req, res) => bulkDelete(db, req as AuthRequest, res, REGISTRATIONS));
 
   return router;
 }

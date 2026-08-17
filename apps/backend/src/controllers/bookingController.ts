@@ -96,7 +96,7 @@ export async function getRegistrations(
   res: Response
 ): Promise<void> {
   try {
-    const result = await db.query('SELECT * FROM registrations ORDER BY created_at DESC');
+    const result = await db.query('SELECT * FROM registrations WHERE deleted_at IS NULL ORDER BY created_at DESC');
     res.json(result.rows as Registration[]);
   } catch (error) {
     console.error('getRegistrations failed', error);
@@ -111,7 +111,7 @@ export async function getAvailability(db: Pool, req: AuthRequest, res: Response)
 
     const booked = await db.query(
       `SELECT to_char(preferred_time, 'HH24:MI') AS slot
-         FROM tour_bookings WHERE preferred_date = $1::date AND status != $2`,
+         FROM tour_bookings WHERE preferred_date = $1::date AND status != $2 AND deleted_at IS NULL`,
       [date, 'cancelled']
     );
     // Formatted back to HH:MM to match TIME_SLOTS — a TIME column comes back
@@ -151,6 +151,7 @@ export async function createBooking(db: Pool, req: AuthRequest, res: Response): 
          WHERE preferred_date = $4::date
            AND preferred_time = $5::time
            AND status != 'cancelled'
+           AND deleted_at IS NULL
        )
        RETURNING *`,
       [
@@ -186,7 +187,7 @@ export async function createBooking(db: Pool, req: AuthRequest, res: Response): 
 
 export async function getBookings(db: Pool, _req: AuthRequest, res: Response): Promise<void> {
   try {
-    const result = await db.query('SELECT * FROM tour_bookings ORDER BY preferred_date DESC');
+    const result = await db.query('SELECT * FROM tour_bookings WHERE deleted_at IS NULL ORDER BY preferred_date DESC');
     res.json(result.rows as TourBooking[]);
   } catch (error) {
     console.error('getBookings failed', error);

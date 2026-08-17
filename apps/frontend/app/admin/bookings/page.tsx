@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
+import { BulkActionsBar } from '../../../components/admin/BulkActionsBar';
 import { FilterBar } from '../../../components/admin/FilterBar';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
@@ -30,6 +31,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<{ id: string } | null>(null);
   const [range, setRange] = useState<Record<string, string>>({});
@@ -143,8 +145,22 @@ export default function BookingsPage() {
         onError={(message) => setToast({ message, type: 'error' })}
       />
 
+      <BulkActionsBar
+        basePath="/admin/tour-bookings"
+        noun="booking"
+        selected={selected}
+        actions={[{ key: 'confirm', label: 'Confirm', path: 'bulk/confirm', verb: 'confirmed' },
+         { key: 'cancel', label: 'Cancel', path: 'bulk/cancel', verb: 'cancelled' },
+         { key: 'delete', label: 'Delete', path: 'bulk/delete', verb: 'deleted', destructive: true }]}
+        onClear={() => setSelected(new Set())}
+        onDone={(message) => { setToast({ message, type: 'success' }); fetchData(pagination.page); }}
+        onError={(message) => setToast({ message, type: 'error' })}
+      />
+
       <DataTable
         columns={columns}
+        selected={selected}
+        onSelectedChange={setSelected}
         data={data}
         loading={loading}
         pagination={pagination}

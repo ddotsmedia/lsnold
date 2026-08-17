@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
 
 const StatusSchema = z.object({
   status: z.enum(['pending', 'confirmed', 'cancelled']),
@@ -28,7 +29,8 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
     const allowedSorts = ['preferred_date', 'created_at', 'visitor_name', 'visitor_email', 'status'];
     const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'preferred_date';
 
-    const conditions: string[] = [];
+    // Deleted rows are excluded everywhere; this is the base of every filter.
+    const conditions: string[] = ['deleted_at IS NULL'];
     const params: unknown[] = [];
     let paramIdx = 1;
 
@@ -88,7 +90,7 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
 async function getBooking(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const result = await db.query('SELECT * FROM tour_bookings WHERE id = $1', [id]);
+    const result = await db.query('SELECT * FROM tour_bookings WHERE id = $1 AND deleted_at IS NULL', [id]);
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Booking not found' });
       return;
@@ -106,7 +108,7 @@ async function updateBookingStatus(db: Pool, req: AuthRequest, res: Response): P
     const data = StatusSchema.parse(req.body);
 
     const result = await db.query(
-      `UPDATE tour_bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      `UPDATE tour_bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND deleted_at IS NULL RETURNING *`,
       [data.status, id]
     );
 
@@ -134,7 +136,12 @@ async function updateBookingStatus(db: Pool, req: AuthRequest, res: Response): P
 async function deleteBooking(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const result = await db.query('DELETE FROM tour_bookings WHERE id = $1 RETURNING id', [id]);
+    // Soft: these rows carry a family's contact details, and a misclick on
+    // the wrong one should not be unrecoverable.
+    const result = await db.query(
+      'UPDATE tour_bookings SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING id',
+      [id]
+    );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Booking not found' });
       return;
@@ -168,7 +175,7 @@ async function exportBookings(db: Pool, req: AuthRequest, res: Response): Promis
     const dateFrom = req.query.dateFrom as string | undefined;
     const dateTo = req.query.dateTo as string | undefined;
 
-    const conditions: string[] = [];
+    const conditions: string[] = ['deleted_at IS NULL'];
     const params: unknown[] = [];
     let idx = 1;
 
@@ -201,6 +208,12 @@ async function exportBookings(db: Pool, req: AuthRequest, res: Response): Promis
   }
 }
 
+const BOOKINGS: BulkTarget = {
+  table: 'tour_bookings',
+  entity: 'tour_booking',
+  statuses: ['pending', 'confirmed', 'cancelled'],
+};
+
 export function createAdminBookingsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -212,6 +225,12 @@ export function createAdminBookingsRouter(db: Pool): express.Router {
   router.get('/:id', requirePermission('view:bookings'), (req, res) => getBooking(db, req as AuthRequest, res));
   router.patch('/:id/status', requirePermission('edit:bookings'), (req, res) => updateBookingStatus(db, req as AuthRequest, res));
   router.delete('/:id', requirePermission('delete:bookings'), (req, res) => deleteBooking(db, req as AuthRequest, res));
+
+  // Bulk. Registered after /:id — different paths, so no shadowing, and each
+  // needs the same permission as doing it one row at a time.
+  router.post('/bulk/confirm', requirePermission('edit:bookings'), (req, res) => bulkStatus(db, req as AuthRequest, res, BOOKINGS, 'confirmed'));
+  router.post('/bulk/cancel', requirePermission('edit:bookings'), (req, res) => bulkStatus(db, req as AuthRequest, res, BOOKINGS, 'cancelled'));
+  router.post('/bulk/delete', requirePermission('delete:bookings'), (req, res) => bulkDelete(db, req as AuthRequest, res, BOOKINGS));
 
   return router;
 }
