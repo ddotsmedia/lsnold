@@ -129,3 +129,48 @@ body {
 /* The editor's own paragraphs need a caret target when the section is empty. */
 .prose-admin p:only-child:empty::before { content: ''; display: inline-block; }
 .prose-admin > *:last-child { margin-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   react-big-calendar in the dark admin panel.
+
+   The library ships light styling only, so these override the parts that would
+   otherwise be white-on-white. Scoped to .rbc-dark so nothing else is touched.
+   --------------------------------------------------------------------------- */
+.rbc-dark .rbc-calendar { color: #e4e4e7; }
+.rbc-dark .rbc-toolbar { margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+.rbc-dark .rbc-toolbar button {
+  color: #a1a1aa;
+  background: #0c0c14;
+  border: 1px solid #27272a;
+  border-radius: 0.5rem;
+  /* 48px, matching every other control in the panel. */
+  min-height: 3rem;
+  padding: 0 0.875rem;
+}
+.rbc-dark .rbc-toolbar button:hover { background: #27272a; color: #e4e4e7; }
+.rbc-dark .rbc-toolbar button.rbc-active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+.rbc-dark .rbc-toolbar-label { color: #e4e4e7; font-weight: 600; }
+
+.rbc-dark .rbc-month-view,
+.rbc-dark .rbc-time-view,
+.rbc-dark .rbc-agenda-view table { border-color: #27272a; }
+.rbc-dark .rbc-header,
+.rbc-dark .rbc-time-header-content,
+.rbc-dark .rbc-timeslot-group,
+.rbc-dark .rbc-day-bg + .rbc-day-bg,
+.rbc-dark .rbc-month-row + .rbc-month-row { border-color: #27272a; }
+.rbc-dark .rbc-header { color: #a1a1aa; padding: 0.5rem 0; font-weight: 500; }
+.rbc-dark .rbc-date-cell { color: #a1a1aa; padding: 0.25rem 0.5rem; }
+.rbc-dark .rbc-off-range-bg { background: #0a0a0f; }
+.rbc-dark .rbc-off-range { color: #52525b; }
+.rbc-dark .rbc-today { background: rgba(16, 185, 129, 0.07); }
+.rbc-dark .rbc-time-content,
+.rbc-dark .rbc-time-header { border-color: #27272a; }
+.rbc-dark .rbc-agenda-view table tbody > tr > td { border-color: #27272a; color: #d4d4d8; }
+.rbc-dark .rbc-agenda-empty { color: #71717a; padding: 2rem; }
+/* The drag preview is otherwise invisible against the dark ground. */
+.rbc-dark .rbc-addons-dnd-drag-preview { opacity: 0.8; }

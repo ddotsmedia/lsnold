@@ -7,6 +7,9 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { TIME_SLOTS } from '../../controllers/bookingController.js';
+import { notifyReschedule } from '../../services/notify.js';
+import type { TourBooking } from '../../types/index.js';
 import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
 
 const StatusSchema = z.object({
@@ -154,6 +157,89 @@ async function deleteBooking(db: Pool, req: AuthRequest, res: Response): Promise
   }
 }
 
+const RescheduleSchema = z.object({
+  preferred_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  preferred_time: z.enum(TIME_SLOTS),
+});
+
+/**
+ * Moves a booking to another slot.
+ *
+ * The same two rules the public form obeys: a visit cannot be in the past, and
+ * two live bookings cannot share a slot. Enforced here rather than trusted from
+ * the calendar, because a drag is a request like any other.
+ */
+async function rescheduleBooking(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const data = RescheduleSchema.parse(req.body);
+
+    // Compared as dates, not timestamps: a visit booked for today at 09:00 is
+    // still today's booking at 3pm and should not be refused as past.
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      + `-${String(now.getDate()).padStart(2, '0')}`;
+    if (data.preferred_date < todayIso) {
+      res.status(400).json({ error: 'Cannot reschedule to a past date' });
+      return;
+    }
+
+    const before = await db.query(
+      'SELECT * FROM tour_bookings WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
+    if (before.rows.length === 0) { res.status(404).json({ error: 'Booking not found' }); return; }
+
+    // Conditional update, so the slot cannot be claimed between the check and
+    // the write. Excludes this booking, so dropping it back on its own slot is
+    // a no-op rather than a conflict.
+    const result = await db.query(
+      `UPDATE tour_bookings
+          SET preferred_date = $1::date, preferred_time = $2::time,
+              updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3 AND deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM tour_bookings other
+             WHERE other.id <> $3
+               AND other.preferred_date = $1::date
+               AND other.preferred_time = $2::time
+               AND other.status <> 'cancelled'
+               AND other.deleted_at IS NULL
+          )
+        RETURNING *`,
+      [data.preferred_date, data.preferred_time, id]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(409).json({ error: 'That slot is already booked' });
+      return;
+    }
+
+    const booking = result.rows[0] as TourBooking;
+    await logActivity(db, req.userId, 'update', 'tour_booking', id as string, {
+      oldValues: before.rows[0] as Record<string, unknown>,
+      newValues: { action: 'reschedule', ...data },
+      req,
+    });
+
+    // Tells the visitor where to turn up. Best effort, like every other send.
+    await notifyReschedule(db, booking);
+
+    res.json(booking);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Validation failed', details: error.issues });
+      return;
+    }
+    if ((error as { code?: string }).code === '23505') {
+      res.status(409).json({ error: 'That slot is already booked' });
+      return;
+    }
+    console.error('rescheduleBooking failed', error);
+    res.status(500).json({ error: 'Failed to reschedule' });
+  }
+}
+
 const BOOKING_COLUMNS: Column[] = [
   { key: 'visitor_name', header: 'Visitor' },
   { key: 'visitor_email', header: 'Email' },
@@ -228,6 +314,8 @@ export function createAdminBookingsRouter(db: Pool): express.Router {
 
   // Bulk. Registered after /:id — different paths, so no shadowing, and each
   // needs the same permission as doing it one row at a time.
+  router.put('/:id/reschedule', requirePermission('edit:bookings'), (req, res) => rescheduleBooking(db, req as AuthRequest, res));
+
   router.post('/bulk/confirm', requirePermission('edit:bookings'), (req, res) => bulkStatus(db, req as AuthRequest, res, BOOKINGS, 'confirmed'));
   router.post('/bulk/cancel', requirePermission('edit:bookings'), (req, res) => bulkStatus(db, req as AuthRequest, res, BOOKINGS, 'cancelled'));
   router.post('/bulk/delete', requirePermission('delete:bookings'), (req, res) => bulkDelete(db, req as AuthRequest, res, BOOKINGS));

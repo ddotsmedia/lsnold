@@ -116,3 +116,24 @@ export async function notifyBooking(db: Pool, row: BookingLike): Promise<void> {
     console.error('notifyBooking failed', error);
   }
 }
+
+/**
+ * Tells a visitor their tour has moved.
+ *
+ * Uses the parent-booking switch: someone who has turned off booking
+ * confirmations does not want a reschedule notice either, and the calendar
+ * should not become a way around that setting.
+ */
+export async function notifyReschedule(db: Pool, row: BookingLike): Promise<void> {
+  try {
+    const settings = await getSettings(db);
+    if (!settings.email_parent_booking) return;
+
+    const date = row.preferred_date instanceof Date
+      ? row.preferred_date.toISOString()
+      : String(row.preferred_date);
+    await sendBookingConfirmation(row.visitor_email, date, String(row.preferred_time).slice(0, 5));
+  } catch (error) {
+    console.error('notifyReschedule failed', error);
+  }
+}
