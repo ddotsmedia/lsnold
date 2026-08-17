@@ -85,6 +85,11 @@ export function initRealtime(server: HttpServer, db: Pool, corsOrigins: string[]
     for (const [room, permission] of Object.entries(ROOMS)) {
       if (permissions.has(permission)) { void socket.join(room); joined.push(room); }
     }
+
+    // A private room per account, for notifications addressed to one person.
+    // The id comes from the verified token, never from the client.
+    const userId = socket.data.userId as string | undefined;
+    if (userId) { void socket.join(`user:${userId}`); joined.push('notifications'); }
     socket.emit('ready', { rooms: joined });
 
     socket.on('error', (error) => console.error('socket error', error));

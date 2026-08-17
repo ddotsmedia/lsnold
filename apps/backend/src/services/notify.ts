@@ -1,6 +1,7 @@
 import type { Pool } from 'pg';
 import { sendRegistrationEmail, sendBookingConfirmation, sendAdminAlert } from './emailService.js';
 import { sendAdminSms } from './smsService.js';
+import { notifyNewRegistration, notifyNewBooking } from './notifications.js';
 
 /**
  * Decides what to send when something arrives, and sends it.
@@ -45,6 +46,7 @@ export async function getSettings(db: Pool): Promise<NotificationSettings> {
 }
 
 interface RegistrationLike {
+  id: string;
   child_name: string;
   parent_name: string;
   parent_email: string;
@@ -53,6 +55,8 @@ interface RegistrationLike {
 
 export async function notifyRegistration(db: Pool, row: RegistrationLike): Promise<void> {
   try {
+    await notifyNewRegistration(db, row);
+
     const settings = await getSettings(db);
 
     if (settings.email_parent_registration) {
@@ -75,6 +79,7 @@ export async function notifyRegistration(db: Pool, row: RegistrationLike): Promi
 }
 
 interface BookingLike {
+  id: string;
   visitor_name: string;
   visitor_email: string;
   visitor_phone: string;
@@ -84,6 +89,8 @@ interface BookingLike {
 
 export async function notifyBooking(db: Pool, row: BookingLike): Promise<void> {
   try {
+    await notifyNewBooking(db, row);
+
     const settings = await getSettings(db);
     const date = row.preferred_date instanceof Date
       ? row.preferred_date.toISOString()

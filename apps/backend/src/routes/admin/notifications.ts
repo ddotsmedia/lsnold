@@ -92,3 +92,103 @@ export function createAdminNotificationsRouter(db: Pool): express.Router {
 
   return router;
 }
+
+/* ------------------------------------------------------------------- feed */
+
+/**
+ * The bell in the admin header.
+ *
+ * Every statement is scoped to `req.userId`, so one admin can neither read nor
+ * dismiss another's. No permission check beyond panel access: a notification
+ * already exists only because its recipient held the permission that produced
+ * it (see services/notifications), so checking again here would be the same
+ * question asked twice.
+ */
+
+async function listNotifications(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const unreadOnly = req.query.unread === 'true';
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+
+    const [rows, unread] = await Promise.all([
+      db.query(
+        `SELECT id, type, title, message, related_id, action_url, read_at, created_at
+           FROM notifications
+          WHERE user_id = $1 ${unreadOnly ? 'AND read_at IS NULL' : ''}
+          ORDER BY created_at DESC
+          LIMIT $2`,
+        [req.userId, limit]
+      ),
+      db.query(
+        'SELECT COUNT(*)::int AS n FROM notifications WHERE user_id = $1 AND read_at IS NULL',
+        [req.userId]
+      ),
+    ]);
+
+    res.json({ notifications: rows.rows, unread: (unread.rows[0] as { n: number }).n });
+  } catch (error) {
+    console.error('listNotifications failed', error);
+    // The bell is decoration on a working panel; an empty list beats an error.
+    res.json({ notifications: [], unread: 0 });
+  }
+}
+
+async function markRead(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const result = await db.query(
+      `UPDATE notifications SET read_at = NOW()
+        WHERE id = $1 AND user_id = $2 AND read_at IS NULL RETURNING id`,
+      [req.params.id, req.userId]
+    );
+    // Already read is not an error; the client may have raced itself.
+    res.json({ updated: result.rowCount ?? 0 });
+  } catch (error) {
+    if ((error as { code?: string }).code === '22P02') { res.json({ updated: 0 }); return; }
+    console.error('markRead failed', error);
+    res.status(500).json({ error: 'Failed to mark as read' });
+  }
+}
+
+async function markAllRead(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const result = await db.query(
+      'UPDATE notifications SET read_at = NOW() WHERE user_id = $1 AND read_at IS NULL',
+      [req.userId]
+    );
+    res.json({ updated: result.rowCount ?? 0 });
+  } catch (error) {
+    console.error('markAllRead failed', error);
+    res.status(500).json({ error: 'Failed to mark all as read' });
+  }
+}
+
+async function dismiss(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const result = await db.query(
+      'DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id',
+      [req.params.id, req.userId]
+    );
+    // Someone else's reads as absent rather than forbidden — that it exists is
+    // not their business.
+    if (result.rows.length === 0) { res.status(404).json({ error: 'Not found' }); return; }
+    res.status(204).send();
+  } catch (error) {
+    if ((error as { code?: string }).code === '22P02') { res.status(404).json({ error: 'Not found' }); return; }
+    console.error('dismiss failed', error);
+    res.status(500).json({ error: 'Failed to dismiss' });
+  }
+}
+
+export function createAdminNotificationFeedRouter(db: Pool): express.Router {
+  const router = express.Router();
+  const resolveAdmin = createResolveAdmin(db);
+
+  router.use(authenticate, resolveAdmin, createResolvePermissions(db), requirePanelAccess);
+
+  router.get('/', (req, res) => listNotifications(db, req as AuthRequest, res));
+  router.post('/mark-all-read', (req, res) => markAllRead(db, req as AuthRequest, res));
+  router.put('/:id/read', (req, res) => markRead(db, req as AuthRequest, res));
+  router.delete('/:id', (req, res) => dismiss(db, req as AuthRequest, res));
+
+  return router;
+}
