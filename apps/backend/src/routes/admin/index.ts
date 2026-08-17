@@ -18,6 +18,7 @@ import { createAdminRolesRouter } from './roles.js';
 import { createAdminNotificationsRouter, createAdminNotificationFeedRouter } from './notifications.js';
 import { createAdminPreferencesRouter } from './preferences.js';
 import { createAdminFilterPresetsRouter } from './filterPresets.js';
+import { createAdminSearchRouter } from './search.js';
 import { createAdminUsersRouter } from './users.js';
 import { createAdminChatbotRouter } from './chatbot.js';
 import { createAdminSocialLinksRouter } from './socialLinks.js';
@@ -55,6 +56,7 @@ export function createAdminRouter(db: Pool): express.Router {
   // A caller's own dashboard arrangement; no permission beyond panel access.
   router.use('/dashboard-preferences', createAdminPreferencesRouter(db));
   router.use('/filter-presets', createAdminFilterPresetsRouter(db));
+  router.use('/search', createAdminSearchRouter(db));
   // The bell feed. /notification-settings above decides what is emailed.
   router.use('/notifications', createAdminNotificationFeedRouter(db));
   router.use('/chatbot', createAdminChatbotRouter(db));

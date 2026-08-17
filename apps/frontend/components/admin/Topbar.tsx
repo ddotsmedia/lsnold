@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { NotificationCenter } from './NotificationCenter';
+import { GlobalSearch } from './GlobalSearch';
 
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
@@ -28,6 +29,7 @@ export function Topbar() {
         <h1 className="text-lg font-semibold text-zinc-100 tracking-tight">{title}</h1>
       </div>
       <div className="flex items-center gap-3">
+        <GlobalSearch />
         <NotificationCenter />
         <a
           href="/"
