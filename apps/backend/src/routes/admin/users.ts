@@ -47,7 +47,8 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
     const total = Number(countResult.rows[0]?.count ?? 0);
 
     const dataResult = await db.query(
-      `SELECT u.id, u.email, u.name, u.phone, u.role, u.created_at, u.updated_at,
+      `SELECT u.id, u.email, u.name, u.phone, u.role, u.is_active, u.last_login_at,
+              u.password_reset_required, u.created_at, u.updated_at,
               au.role as admin_role, au.permissions as admin_permissions
        FROM users u
        LEFT JOIN admin_users au ON au.user_id = u.id
@@ -181,6 +182,99 @@ async function revokeAdmin(db: Pool, req: AuthRequest, res: Response): Promise<v
   } catch (error) {
     console.error('revokeAdmin failed', error);
     res.status(500).json({ error: 'Failed to revoke admin access' });
+  }
+}
+
+// ---------- Account state ----------
+
+/**
+ * Switches an account on or off.
+ *
+ * is_active is the existing flag that resolveAdmin and resolvePermissions both
+ * read, and now the login handler too — so switching it off ends the account's
+ * access rather than merely emptying its panel.
+ *
+ * An existing token stays valid until it expires; permissions are resolved from
+ * the database on every request, so a disabled account can do nothing with it.
+ */
+async function setActive(db: Pool, req: AuthRequest, res: Response, active: boolean): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    // Locking yourself out is a support call, and with two administrators it
+    // could leave nobody able to manage the panel.
+    if (id === req.userId) {
+      res.status(400).json({ error: 'You cannot disable your own account' });
+      return;
+    }
+
+    if (!active) {
+      // Refuse if this is the last administrator who could switch it back on.
+      const remaining = await db.query(
+        `SELECT COUNT(*)::int AS n FROM users
+          WHERE role = 'admin' AND is_active IS NOT FALSE AND id <> $1`,
+        [id]
+      );
+      if ((remaining.rows[0] as { n: number }).n === 0) {
+        res.status(400).json({
+          error: 'That is the last active administrator. Promote another account first.',
+        });
+        return;
+      }
+    }
+
+    const result = await db.query(
+      'UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, is_active',
+      [active, id]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return; }
+
+    await logActivity(db, req.userId, 'update', 'user', id, {
+      newValues: { is_active: active }, req,
+    });
+    res.json(result.rows[0]);
+  } catch (error) {
+    if ((error as { code?: string }).code === '22P02') { res.status(404).json({ error: 'User not found' }); return; }
+    console.error('setActive failed', error);
+    res.status(500).json({ error: 'Failed to update the account' });
+  }
+}
+
+/** Makes the next sign-in change the password before anything else. */
+async function forcePasswordReset(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const result = await db.query(
+      'UPDATE users SET password_reset_required = TRUE, updated_at = NOW() WHERE id = $1 RETURNING id, email',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return; }
+
+    await logActivity(db, req.userId, 'update', 'user', req.params.id as string, {
+      newValues: { password_reset_required: true }, req,
+    });
+    res.json({ ...result.rows[0], password_reset_required: true });
+  } catch (error) {
+    if ((error as { code?: string }).code === '22P02') { res.status(404).json({ error: 'User not found' }); return; }
+    console.error('forcePasswordReset failed', error);
+    res.status(500).json({ error: 'Failed to require a password reset' });
+  }
+}
+
+/** Recent sign-in attempts for one account, successes and refusals alike. */
+async function getLoginHistory(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+    const result = await db.query(
+      `SELECT id, succeeded, failure_reason, ip_address, device_type, browser, created_at
+         FROM login_history WHERE user_id = $1
+        ORDER BY created_at DESC LIMIT $2`,
+      [req.params.id, limit]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    if ((error as { code?: string }).code === '22P02') { res.json([]); return; }
+    console.error('getLoginHistory failed', error);
+    res.status(500).json({ error: 'Failed to fetch login history' });
   }
 }
 
@@ -350,6 +444,12 @@ export function createAdminUsersRouter(db: Pool): express.Router {
   router.post('/invite', requirePermission('create:users'), (req, res) => inviteAdmin(db, req as AuthRequest, res));
   router.put('/:id/role', requirePermission('edit:users'), (req, res) => updateRole(db, req as AuthRequest, res));
   router.delete('/:id/admin', requirePermission('delete:users'), (req, res) => revokeAdmin(db, req as AuthRequest, res));
+
+  // Account state. Disabling ends access, so it needs the edit permission.
+  router.get('/:id/login-history', requirePermission('view:users'), (req, res) => getLoginHistory(db, req as AuthRequest, res));
+  router.post('/:id/disable', requirePermission('edit:users'), (req, res) => setActive(db, req as AuthRequest, res, false));
+  router.post('/:id/enable', requirePermission('edit:users'), (req, res) => setActive(db, req as AuthRequest, res, true));
+  router.post('/:id/force-password-reset', requirePermission('edit:users'), (req, res) => forcePasswordReset(db, req as AuthRequest, res));
 
   return router;
 }

@@ -5,6 +5,7 @@ import { hashPassword, comparePassword } from '../utils/hash.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import type { User, TokenResponse } from '../types/index.js';
+import { recordLogin } from '../services/loginHistory.js';
 
 const RegisterSchema = z.object({
   email: z.string().email(),
@@ -77,9 +78,23 @@ export async function login(db: Pool, req: AuthRequest, res: Response): Promise<
     const user = result.rows[0] as User;
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
+      await recordLogin(db, user.id, req, 'bad_password');
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
+
+    // A deactivated account previously still signed in and received a token. It
+    // held no permissions, so the panel was empty, but "disable this account"
+    // did not actually stop them authenticating — which is what it has to mean.
+    if ((user as User & { is_active?: boolean }).is_active === false) {
+      await recordLogin(db, user.id, req, 'inactive');
+      // Same wording as a wrong password: whether an account exists but is
+      // switched off is not something an unauthenticated caller should learn.
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
+    }
+
+    await recordLogin(db, user.id, req);
 
     const accessToken = generateToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
