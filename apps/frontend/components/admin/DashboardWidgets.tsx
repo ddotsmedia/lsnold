@@ -44,6 +44,9 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
   const [order, setOrder] = useState<string[]>([]);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [customising, setCustomising] = useState(false);
+  // Off by default: the handles are clutter above every chart when nobody is
+  // rearranging, and a stray drag on a normal visit should not move anything.
+  const [editing, setEditing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const dragFrom = useRef<number | null>(null);
 
@@ -101,6 +104,19 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
     void persist(order.length > 0 ? order : arranged.map((w) => w.key), next);
   };
 
+  /**
+   * Back to the order the code declares, with nothing hidden.
+   *
+   * Saved as empty rather than as the current default order: storing today's
+   * default would freeze it, so a widget added later would land at the end
+   * instead of where the code puts it.
+   */
+  const resetToDefault = () => {
+    setOrder([]);
+    setHidden(new Set());
+    void persist([], new Set());
+  };
+
   // Waits for the saved order before painting, so widgets do not visibly jump
   // from the default arrangement into the saved one.
   if (!loaded) {
@@ -109,9 +125,23 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-end">
-        <Button variant="secondary" size="sm" onClick={() => setCustomising(true)}>
-          ⚙ Customise
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {editing && (
+          <p className="mr-auto text-xs text-zinc-500">
+            Drag a widget, or use the arrows, to change the order. Changes save as you make them.
+          </p>
+        )}
+        {editing && (
+          <Button variant="secondary" size="sm" onClick={() => setCustomising(true)}>
+            Show or hide
+          </Button>
+        )}
+        <Button
+          variant={editing ? 'primary' : 'secondary'}
+          size="sm"
+          onClick={() => setEditing((v) => !v)}
+        >
+          {editing ? 'Done' : '✎ Edit layout'}
         </Button>
       </div>
 
@@ -119,7 +149,7 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
         {visible.map((widget, index) => (
           <div
             key={widget.key}
-            draggable
+            draggable={editing}
             onDragStart={() => { dragFrom.current = index; }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -131,9 +161,9 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
             onDragEnd={() => { dragFrom.current = null; }}
             className="group relative"
           >
-            {/* Sits outside the widget on wide screens and above it otherwise,
-                so it never covers a chart. */}
-            <div className="mb-1 flex items-center gap-1 opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            {/* Only while editing: above the widget, never covering a chart. */}
+            {editing && (
+            <div className="mb-1 flex items-center gap-1">
               <span className="cursor-grab select-none text-zinc-600" aria-hidden="true">⠿</span>
               <button
                 type="button"
@@ -155,6 +185,7 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
               </button>
               <span className="text-[11px] text-zinc-600">{widget.title}</span>
             </div>
+            )}
             {widget.render()}
           </div>
         ))}
@@ -179,7 +210,15 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
               <span className="text-sm text-zinc-200">{widget.title}</span>
             </label>
           ))}
-          <div className="flex justify-end border-t border-zinc-800/50 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800/50 pt-4">
+            <Button
+              variant="ghost"
+              onClick={resetToDefault}
+              // Nothing to undo when the layout is already the default one.
+              disabled={order.length === 0 && hidden.size === 0}
+            >
+              Reset to default
+            </Button>
             <Button onClick={() => setCustomising(false)}>Done</Button>
           </div>
         </div>
