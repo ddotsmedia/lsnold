@@ -107,13 +107,16 @@ export interface Registration {
   created_at: Date;
 }
 
+/** Matches tour_bookings: visitor_email, visitor_phone, preferred_time. */
 export interface TourBooking {
   id: string;
   visitor_name: string;
-  email: string;
-  phone: string;
-  preferred_date: Date;
-  time_slot: string;
+  visitor_email: string;
+  visitor_phone: string;
+  preferred_date: string;
+  preferred_time: string;
+  number_of_children: number | null;
+  message: string | null;
   status: 'pending' | 'confirmed' | 'cancelled';
   created_at: Date;
 }

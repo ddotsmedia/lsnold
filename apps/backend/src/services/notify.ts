@@ -76,10 +76,10 @@ export async function notifyRegistration(db: Pool, row: RegistrationLike): Promi
 
 interface BookingLike {
   visitor_name: string;
-  email: string;
-  phone: string;
+  visitor_email: string;
+  visitor_phone: string;
   preferred_date: string | Date;
-  time_slot: string;
+  preferred_time: string;
 }
 
 export async function notifyBooking(db: Pool, row: BookingLike): Promise<void> {
@@ -90,18 +90,18 @@ export async function notifyBooking(db: Pool, row: BookingLike): Promise<void> {
       : String(row.preferred_date);
 
     if (settings.email_parent_booking) {
-      await sendBookingConfirmation(row.email, date, row.time_slot);
+      await sendBookingConfirmation(row.visitor_email, date, row.preferred_time);
     }
     if (settings.email_admin_booking && settings.digest_frequency === 'immediate') {
       await sendAdminAlert('New tour booking', [
         `Visitor: ${row.visitor_name}`,
-        `When: ${date.slice(0, 10)} at ${row.time_slot}`,
-        `Email: ${row.email}`,
-        `Phone: ${row.phone}`,
+        `When: ${date.slice(0, 10)} at ${row.preferred_time}`,
+        `Email: ${row.visitor_email}`,
+        `Phone: ${row.visitor_phone}`,
       ]);
     }
     if (settings.sms_admin_booking) {
-      await sendAdminSms(`New tour: ${row.visitor_name}, ${date.slice(0, 10)} ${row.time_slot}`);
+      await sendAdminSms(`New tour: ${row.visitor_name}, ${date.slice(0, 10)} ${row.preferred_time}`);
     }
   } catch (error) {
     console.error('notifyBooking failed', error);

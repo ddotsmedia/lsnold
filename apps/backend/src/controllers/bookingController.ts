@@ -110,10 +110,13 @@ export async function getAvailability(db: Pool, req: AuthRequest, res: Response)
     const { date } = AvailabilitySchema.parse(req.query);
 
     const booked = await db.query(
-      'SELECT time_slot FROM tour_bookings WHERE DATE(preferred_date) = $1 AND status != $2',
+      `SELECT to_char(preferred_time, 'HH24:MI') AS slot
+         FROM tour_bookings WHERE preferred_date = $1::date AND status != $2`,
       [date, 'cancelled']
     );
-    const bookedSlots = booked.rows.map((r: { time_slot: string }) => r.time_slot);
+    // Formatted back to HH:MM to match TIME_SLOTS — a TIME column comes back
+    // as '09:00:00', which would never equal '09:00'.
+    const bookedSlots = booked.rows.map((r: { slot: string }) => r.slot);
     const available = TIME_SLOTS.filter((slot) => !bookedSlots.includes(slot));
     res.json({ date, available, booked: bookedSlots });
   } catch (error) {
@@ -136,16 +139,24 @@ export async function createBooking(db: Pool, req: AuthRequest, res: Response): 
     // idx_tour_bookings_slot_unique — a timestamptz cast would resolve the
     // date in the server's timezone and could disagree with the index.
     const result = await db.query(
-      `INSERT INTO tour_bookings (visitor_name, email, phone, preferred_date, time_slot, status)
-       SELECT $1::varchar, $2::varchar, $3::varchar, $4::timestamp, $5::varchar, $6::varchar
+      // The columns this table actually has: visitor_email, visitor_phone and
+      // preferred_time. The code wrote email, phone and time_slot, so every
+      // tour booking failed with "column email does not exist" — the form has
+      // never once succeeded. preferred_date is a DATE and preferred_time a
+      // TIME, so the incoming ISO datetime is split rather than stored whole.
+      `INSERT INTO tour_bookings (visitor_name, visitor_email, visitor_phone, preferred_date, preferred_time, status)
+       SELECT $1::varchar, $2::varchar, $3::varchar, $4::date, $5::time, $6::varchar
        WHERE NOT EXISTS (
          SELECT 1 FROM tour_bookings
-         WHERE DATE(preferred_date) = DATE($4::timestamp)
-           AND time_slot = $5::varchar
+         WHERE preferred_date = $4::date
+           AND preferred_time = $5::time
            AND status != 'cancelled'
        )
        RETURNING *`,
-      [data.visitor_name, data.email, data.phone, data.preferred_date, data.time_slot, 'pending']
+      [
+        data.visitor_name, data.email, data.phone,
+        data.preferred_date.slice(0, 10), data.time_slot, 'pending',
+      ]
     );
 
     if (result.rows.length === 0) {

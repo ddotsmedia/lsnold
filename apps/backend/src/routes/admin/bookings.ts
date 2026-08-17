@@ -25,7 +25,7 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
     const sortBy = req.query.sortBy as string || 'preferred_date';
     const sortDir = req.query.sortDir === 'asc' ? 'ASC' : 'DESC';
 
-    const allowedSorts = ['preferred_date', 'created_at', 'visitor_name', 'email', 'status'];
+    const allowedSorts = ['preferred_date', 'created_at', 'visitor_name', 'visitor_email', 'status'];
     const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'preferred_date';
 
     const conditions: string[] = [];
@@ -39,19 +39,19 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
 
     if (search) {
       conditions.push(
-        `(LOWER(visitor_name) LIKE $${paramIdx} OR LOWER(email) LIKE $${paramIdx})`
+        `(LOWER(visitor_name) LIKE $${paramIdx} OR LOWER(visitor_email) LIKE $${paramIdx})`
       );
       params.push(`%${search.toLowerCase()}%`);
       paramIdx++;
     }
 
     if (dateFrom) {
-      conditions.push(`preferred_date >= $${paramIdx++}::timestamp`);
+      conditions.push(`preferred_date >= $${paramIdx++}::date`);
       params.push(dateFrom);
     }
 
     if (dateTo) {
-      conditions.push(`preferred_date <= $${paramIdx++}::timestamp`);
+      conditions.push(`preferred_date <= $${paramIdx++}::date`);
       params.push(dateTo);
     }
 
@@ -149,30 +149,48 @@ async function deleteBooking(db: Pool, req: AuthRequest, res: Response): Promise
 
 const BOOKING_COLUMNS: Column[] = [
   { key: 'visitor_name', header: 'Visitor' },
-  { key: 'email', header: 'Email' },
-  { key: 'phone', header: 'Phone' },
+  { key: 'visitor_email', header: 'Email' },
+  { key: 'visitor_phone', header: 'Phone' },
   { key: 'preferred_date', header: 'Preferred date', type: 'date' },
-  { key: 'time_slot', header: 'Time slot' },
+  { key: 'preferred_time', header: 'Time slot' },
+  { key: 'number_of_children', header: 'Children' },
+  { key: 'message', header: 'Message' },
   { key: 'status', header: 'Status' },
   { key: 'created_at', header: 'Booked', type: 'datetime' },
 ];
 
 async function exportBookings(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
+    // The same filters the list applies. Exporting only by status would give a
+    // file that disagrees with the screen it was exported from.
     const status = req.query.status as string | undefined;
+    const search = req.query.search as string | undefined;
+    const dateFrom = req.query.dateFrom as string | undefined;
+    const dateTo = req.query.dateTo as string | undefined;
+
     const conditions: string[] = [];
     const params: unknown[] = [];
+    let idx = 1;
 
     if (status && ['pending', 'confirmed', 'cancelled'].includes(status)) {
-      conditions.push('status = $1');
+      conditions.push(`status = $${idx++}`);
       params.push(status);
     }
+    if (search) {
+      conditions.push(`(LOWER(visitor_name) LIKE $${idx} OR LOWER(visitor_email) LIKE $${idx})`);
+      params.push(`%${search.toLowerCase()}%`);
+      idx++;
+    }
+    if (dateFrom) { conditions.push(`preferred_date >= $${idx++}::date`); params.push(dateFrom); }
+    if (dateTo) { conditions.push(`preferred_date <= $${idx++}::date`); params.push(dateTo); }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const result = await db.query(
-      `SELECT visitor_name, email, phone, preferred_date, time_slot, status, created_at
-       FROM tour_bookings ${where} ORDER BY preferred_date DESC`,
+      `SELECT visitor_name, visitor_email, visitor_phone, preferred_date,
+              to_char(preferred_time, 'HH24:MI') AS preferred_time,
+              number_of_children, status, message, created_at
+         FROM tour_bookings ${where} ORDER BY preferred_date DESC`,
       params
     );
 

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
+import { FilterBar } from '../../../components/admin/FilterBar';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -12,10 +13,13 @@ import { StatusBadge, SearchBar, FilterSelect, Button, ConfirmDialog, Toast } fr
 interface Booking {
   id: string;
   visitor_name: string;
-  email: string;
-  phone: string;
+  /** tour_bookings uses visitor_email / visitor_phone / preferred_time. */
+  visitor_email: string;
+  visitor_phone: string;
   preferred_date: string;
-  time_slot: string;
+  preferred_time: string;
+  number_of_children: number | null;
+  message: string | null;
   status: string;
   created_at: string;
 }
@@ -28,18 +32,20 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<{ id: string } | null>(null);
+  const [range, setRange] = useState<Record<string, string>>({});
+  const [pageSize, setPageSize] = useState(20);
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Booking>>('/admin/tour-bookings', {
-        params: { page, limit: 20, search, status: statusFilter },
+        params: { page, limit: pageSize, search, status: statusFilter, ...range },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { setToast({ message: 'Failed to load bookings', type: 'error' }); }
     finally { setLoading(false); }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, pageSize, range]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -74,10 +80,10 @@ export default function BookingsPage() {
 
   const columns: Column<Booking>[] = [
     { key: 'visitor_name', header: 'Visitor', sortable: true, render: (r) => <span className="font-medium">{r.visitor_name}</span> },
-    { key: 'email', header: 'Email', sortable: true },
-    { key: 'phone', header: 'Phone' },
+    { key: 'visitor_email', header: 'Email', sortable: true },
+    { key: 'visitor_phone', header: 'Phone' },
     { key: 'preferred_date', header: 'Date', sortable: true, render: (r) => <span>{new Date(r.preferred_date).toLocaleDateString()}</span> },
-    { key: 'time_slot', header: 'Time' },
+    { key: 'preferred_time', header: 'Time' },
     { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
       key: 'actions', header: '', className: 'w-[180px]',
@@ -121,12 +127,21 @@ export default function BookingsPage() {
         </div>
         <ExportMenu
           path="/admin/tour-bookings/export"
-          params={{ status: statusFilter }}
+          params={{ status: statusFilter, search, ...range }}
           title="Tour bookings"
           subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
           onError={(message) => setToast({ message, type: 'error' })}
         />
       </div>
+
+      <FilterBar
+        screen="bookings"
+        filters={range}
+        onChange={setRange}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        onError={(message) => setToast({ message, type: 'error' })}
+      />
 
       <DataTable
         columns={columns}

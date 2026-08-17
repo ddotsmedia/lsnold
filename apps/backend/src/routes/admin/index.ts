@@ -17,6 +17,7 @@ import { createAdminAnalyticsRouter } from './analytics.js';
 import { createAdminRolesRouter } from './roles.js';
 import { createAdminNotificationsRouter } from './notifications.js';
 import { createAdminPreferencesRouter } from './preferences.js';
+import { createAdminFilterPresetsRouter } from './filterPresets.js';
 import { createAdminUsersRouter } from './users.js';
 import { createAdminChatbotRouter } from './chatbot.js';
 import { createAdminSocialLinksRouter } from './socialLinks.js';
@@ -53,6 +54,7 @@ export function createAdminRouter(db: Pool): express.Router {
   router.use('/notification-settings', createAdminNotificationsRouter(db));
   // A caller's own dashboard arrangement; no permission beyond panel access.
   router.use('/dashboard-preferences', createAdminPreferencesRouter(db));
+  router.use('/filter-presets', createAdminFilterPresetsRouter(db));
   router.use('/chatbot', createAdminChatbotRouter(db));
   router.use('/social-links', createAdminSocialLinksRouter(db));
   router.use('/youtube-videos', createAdminYoutubeVideosRouter(db));
