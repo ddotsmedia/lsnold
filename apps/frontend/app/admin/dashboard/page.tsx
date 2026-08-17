@@ -6,6 +6,7 @@ import { StatCard, StatusBadge } from '../../../components/admin/shared';
 import { EnrollmentTrendChart } from '../../../components/admin/charts/EnrollmentTrendChart';
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
+import { DashboardWidgets } from '../../../components/admin/DashboardWidgets';
 
 interface DashboardData {
   totalStudents: number;
@@ -135,24 +136,28 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* KPI Cards */}
+      <DashboardWidgets widgets={[
+        { key: 'kpi', title: 'Headline numbers', render: () => (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Students" value={data.totalStudents} sublabel="approved registrations" accent="emerald" />
         <StatCard label="Total Registrations" value={data.totalRegistrations} sublabel={`${data.registrations.pending} pending`} accent="blue" />
         <StatCard label="Total Page Views" value={data.pageViews} sublabel={`${data.analytics.viewsToday} today`} accent="purple" />
         <StatCard label="Tour Bookings" value={data.bookings.total} sublabel={`${data.bookings.upcoming} upcoming`} accent="amber" />
       </div>
+        )},
 
-      {/* Second row */}
+        { key: 'counts', title: 'Content counts', render: () => (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="News & Events" value={data.events.total} accent="blue" />
         <StatCard label="Pages" value={data.pages.total} sublabel={`${data.pages.published} published`} accent="emerald" />
         <StatCard label="Gallery" value={data.gallery.total_images} sublabel={`${data.gallery.total_categories} categories`} accent="purple" />
         <StatCard label="Pending Bookings" value={data.bookings.pending} accent="amber" />
       </div>
+        )},
 
-      {/* Charts. Each loads its own data and handles its own empty state, so a
-          quiet metric cannot take the dashboard down with it. */}
+        // Each chart loads its own data and handles its own empty state, so a
+        // quiet metric cannot take the dashboard down with it.
+        { key: 'charts', title: 'Registrations and funnel', render: () => (
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard
           title="Registrations over time"
@@ -166,12 +171,15 @@ export default function DashboardPage() {
           <ConversionFunnel />
         </ChartCard>
       </div>
+        )},
 
+        { key: 'heatmap', title: 'When families visit', render: () => (
       <ChartCard title="When families visit" hint="Site visits by weekday and hour">
         <VisitHeatmap />
       </ChartCard>
+        )},
 
-      {/* Top visited pages */}
+        { key: 'top-pages', title: 'Top visited pages', render: () => (
       <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
         <div className="mb-4 flex items-baseline justify-between">
           <h3 className="text-sm font-medium text-zinc-300">Top Visited Pages</h3>
@@ -179,8 +187,9 @@ export default function DashboardPage() {
         </div>
         <TopPagesChart pages={data.visitedPages} />
       </div>
+        )},
 
-      {/* Registration status breakdown */}
+        { key: 'status', title: 'Registration and booking status', render: () => (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
           <h3 className="text-sm font-medium text-zinc-300 mb-4">Registration Status</h3>
@@ -228,8 +237,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+        )},
 
-      {/* Recent Activity */}
+        { key: 'activity', title: 'Recent activity', render: () => (
       <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
         <h3 className="text-sm font-medium text-zinc-300 mb-4">Recent Activity</h3>
         {data.recentActivity.length === 0 ? (
@@ -250,6 +260,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+        )},
+      ]} />
     </div>
   );
 }
