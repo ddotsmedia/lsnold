@@ -86,11 +86,16 @@ export function useAgeGroupMedia(slug: string | null): AgeGroupImages {
 }
 
 /**
- * Icons for several age groups at once, keyed by slug. Fetched in parallel on
- * mount so the cards do not each open their own request as they render.
+ * Every uploaded image for several age groups at once, keyed by slug. Fetched
+ * in parallel on mount so the cards do not each open their own request.
+ *
+ * This kept only `icon` until now and dropped the rest of each response.
+ * Uploads made in the panel are stored as `hero`, so the photographs were
+ * being fetched and then discarded on the next line, and the cards fell back
+ * to their emoji — which looked exactly like nothing had been uploaded.
  */
-export function useAgeGroupIcons(slugs: readonly string[]): Record<string, SiteImage> {
-  const [icons, setIcons] = useState<Record<string, SiteImage>>({});
+export function useAgeGroupImages(slugs: readonly string[]): Record<string, AgeGroupImages> {
+  const [images, setImages] = useState<Record<string, AgeGroupImages>>({});
   // Slugs are a fixed list defined at module scope; joining them keeps the
   // effect from re-running on every render because the array is a new object.
   const key = slugs.join(',');
@@ -103,20 +108,22 @@ export function useAgeGroupIcons(slugs: readonly string[]): Record<string, SiteI
       list.map((slug) =>
         fetch(`${API}/age-group-media/${slug}`)
           .then((r) => (r.ok ? r.json() : null))
-          .then((data: { images?: AgeGroupImages } | null) => ({ slug, icon: data?.images?.icon ?? null }))
-          .catch(() => ({ slug, icon: null }))
+          .then((data: { images?: AgeGroupImages } | null) => ({ slug, images: data?.images ?? null }))
+          .catch(() => ({ slug, images: null }))
       )
     ).then((results) => {
       if (cancelled) return;
-      const next: Record<string, SiteImage> = {};
-      for (const { slug, icon } of results) if (icon) next[slug] = icon;
-      setIcons(next);
+      const next: Record<string, AgeGroupImages> = {};
+      for (const { slug, images: found } of results) {
+        if (found) next[slug] = { ...EMPTY_AGE_GROUP, ...found };
+      }
+      setImages(next);
     });
 
     return () => { cancelled = true; };
   }, [key]);
 
-  return icons;
+  return images;
 }
 
 /**

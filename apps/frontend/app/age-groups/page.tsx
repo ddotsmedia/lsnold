@@ -11,7 +11,8 @@ import { Button } from '@/components/Button';
 import { AgeGroupCard, type AgeGroupColor } from '@/components/AgeGroupCard';
 import { QuickFactsCard } from '@/components/QuickFactsCard';
 import { Butterfly, Flower } from '@/components/Decorations';
-import { useAgeGroupMedia, useAgeGroupIcons, usePageMedia, slugify } from '@/lib/media';
+import { useAgeGroupMedia, useAgeGroupImages, usePageMedia, slugify } from '@/lib/media';
+import { useAgeGroups, formatRange } from '@/lib/ageGroups';
 import type { SiteImage } from '@/lib/media';
 import { Modal } from '@/components/Modal';
 
@@ -376,7 +377,11 @@ export default function AgeGroupsPage() {
   const [lightbox, setLightbox] = useState<SiteImage | null>(null);
 
   // Icons for every card, fetched once rather than per card.
-  const groupIcons = useAgeGroupIcons(AGE_GROUP_SLUGS);
+  // Photographs and icons uploaded in admin -> Age Groups.
+  const groupImages = useAgeGroupImages(AGE_GROUP_SLUGS);
+  // The editable rows. Merged over the copy below, never replacing it: the
+  // table has no column for a daily routine or focus areas.
+  const groupRecords = useAgeGroups();
   const previousGroup =
     selectedIndex === null || selectedIndex === 0 ? null : AGE_GROUPS[selectedIndex - 1];
   const nextGroup =
@@ -449,11 +454,27 @@ export default function AgeGroupsPage() {
                 <AgeGroupCard
                   key={group.id}
                   emoji={group.emoji}
-                  iconUrl={groupIcons[slugify(group.name)]?.url}
-                  iconAlt={groupIcons[slugify(group.name)]?.alt_text}
-                  name={group.name}
-                  range={group.range}
-                  description={group.description}
+                  heroUrl={
+                    groupImages[slugify(group.name)]?.hero?.url
+                    ?? groupRecords[slugify(group.name)]?.image_url
+                  }
+                  heroAlt={
+                    groupImages[slugify(group.name)]?.hero?.alt_text ?? group.name
+                  }
+                  iconUrl={groupImages[slugify(group.name)]?.icon?.url}
+                  iconAlt={groupImages[slugify(group.name)]?.icon?.alt_text}
+                  name={groupRecords[slugify(group.name)]?.name ?? group.name}
+                  range={
+                    groupRecords[slugify(group.name)]
+                      ? formatRange(
+                          groupRecords[slugify(group.name)]!.min_age_months,
+                          groupRecords[slugify(group.name)]!.max_age_months
+                        )
+                      : group.range
+                  }
+                  description={
+                    groupRecords[slugify(group.name)]?.description ?? group.description
+                  }
                   color={group.color}
                   isSelected={selectedIndex === index}
                   controlsId={DETAIL_SECTION_ID}

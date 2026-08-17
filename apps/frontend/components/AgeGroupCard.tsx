@@ -7,6 +7,9 @@ export type AgeGroupColor = 'pink' | 'purple' | 'blue' | 'red' | 'green' | 'yell
 export interface AgeGroupCardProps {
   emoji: string;
   /** Uploaded icon. Replaces the emoji when one has been set in the admin panel. */
+  /** Photograph uploaded in admin -> Age Groups. */
+  heroUrl?: string | null;
+  heroAlt?: string | null;
   iconUrl?: string | null;
   iconAlt?: string | null;
   name: string;
@@ -56,6 +59,8 @@ const COLOR_CLASSES: Record<AgeGroupColor, { surface: string; ring: string; acce
  */
 export function AgeGroupCard({
   emoji,
+  heroUrl,
+  heroAlt,
   iconUrl,
   iconAlt,
   name,
@@ -84,13 +89,30 @@ export function AgeGroupCard({
         className,
       )}
     >
+      {/* The photograph uploaded in the panel, when there is one. It is the
+          subject of the card, so it leads; the icon or emoji stays as the
+          small marker beside the name. */}
+      {heroUrl && (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={heroUrl}
+          alt={heroAlt || ''}
+          loading="lazy"
+          className="mb-4 aspect-3/2 w-full rounded-xl object-cover"
+        />
+      )}
+
       {iconUrl ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img src={iconUrl} alt={iconAlt || ''} className="mb-3 h-12 w-12 object-contain md:h-14 md:w-14" />
       ) : (
-        <span className="mb-3 text-4xl md:text-5xl" aria-hidden="true">
-          {emoji}
-        </span>
+        // Hidden when a photograph is showing: an emoji under a real picture
+        // reads as a placeholder that failed to load.
+        !heroUrl && (
+          <span className="mb-3 text-4xl md:text-5xl" aria-hidden="true">
+            {emoji}
+          </span>
+        )
       )}
 
       <h3 className="text-xl font-bold text-gray-800 md:text-2xl">{name}</h3>
