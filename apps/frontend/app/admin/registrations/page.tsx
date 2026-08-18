@@ -6,6 +6,8 @@ import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
 import { BulkActionsBar } from '../../../components/admin/BulkActionsBar';
 import { FilterBar } from '../../../components/admin/FilterBar';
+import { ColumnSettings, readVisible } from '../../../components/admin/ColumnSettings';
+import type { SortTerm } from '../../../components/admin/DataTable';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
@@ -35,6 +37,8 @@ export default function RegistrationsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [range, setRange] = useState<Record<string, string>>({});
   const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortTerm[]>([]);
+  const [visible, setVisible] = useState<Set<string> | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<{ id: string; action: string } | null>(null);
 
@@ -42,15 +46,24 @@ export default function RegistrationsPage() {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Registration>>('/admin/registrations', {
-        params: { page, limit: pageSize, search, status: statusFilter, sortBy, sortDir, ...range },
+        params: {
+          page, limit: pageSize, search, status: statusFilter, sortBy, sortDir, ...range,
+          sort: sort.map((t) => t.key + ':' + t.dir).join(',') || undefined,
+        },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { setToast({ message: 'Failed to load registrations', type: 'error' }); }
     finally { setLoading(false); }
-  }, [search, statusFilter, sortBy, sortDir, pageSize, range]);
+  }, [search, statusFilter, sortBy, sortDir, pageSize, range, sort]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // After mount: localStorage does not exist during SSR.
+  useEffect(() => {
+    setVisible(readVisible('registrations', columns.map((c) => ({ key: c.key, header: c.header }))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // A new registration arrives without a refresh. Only prepended when the
   // first page is showing and no search is active, so it cannot appear
@@ -141,6 +154,13 @@ export default function RegistrationsPage() {
             allLabel="All Status"
           />
         </div>
+        <div className="flex items-center gap-2">
+          <ColumnSettings
+            table="registrations"
+            columns={columns.map((c) => ({ key: c.key, header: c.header }))}
+            visible={visible ?? new Set(columns.map((c) => c.key))}
+            onChange={setVisible}
+          />
         <ExportMenu
           path="/admin/registrations/export"
           params={{ status: statusFilter, search, ...range }}
@@ -148,6 +168,7 @@ export default function RegistrationsPage() {
           subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
           onError={(message) => setToast({ message, type: 'error' })}
         />
+        </div>
       </div>
 
       <FilterBar
@@ -173,7 +194,8 @@ export default function RegistrationsPage() {
       />
 
       <DataTable
-        columns={columns}
+        columns={visible ? columns.filter((c) => visible.has(c.key)) : columns}
+        onSortChange={setSort}
         selected={selected}
         onSelectedChange={setSelected}
         data={data}

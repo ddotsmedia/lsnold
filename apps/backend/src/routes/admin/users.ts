@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { parseSort } from '../../utils/sorting.js';
 import { hashPassword } from '../../utils/hash.js';
 import { getDashboardStats } from '../../controllers/dashboardController.js';
 
@@ -43,6 +44,9 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    const ALLOWED_SORTS = ['created_at', 'name', 'email', 'role', 'last_login_at'] as const;
+    const { clause: orderBy, terms: sortTerms } = parseSort(req, ALLOWED_SORTS, 'created_at', 'u');
+
     const countResult = await db.query(`SELECT COUNT(*) FROM users u ${where}`, params);
     const total = Number(countResult.rows[0]?.count ?? 0);
 
@@ -53,12 +57,12 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
        FROM users u
        LEFT JOIN admin_users au ON au.user_id = u.id
        ${where}
-       ORDER BY u.created_at DESC
+       ORDER BY ${orderBy}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, limit, offset]
     );
 
-    res.json({ data: dataResult.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+    res.json({ data: dataResult.rows, sort: sortTerms, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     console.error('listUsers failed', error);
     res.status(500).json({ error: 'Failed to fetch users' });

@@ -6,6 +6,8 @@ import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
 import { StatusBadge, SearchBar, Button, Modal, FormField, Input, Toast, ConfirmDialog } from '../../../components/admin/shared';
+import { ColumnSettings, readVisible } from '../../../components/admin/ColumnSettings';
+import type { SortTerm } from '../../../components/admin/DataTable';
 
 interface User {
   id: string; email: string; name: string; phone: string;
@@ -20,6 +22,8 @@ export default function UsersPage() {
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortTerm[]>([]);
+  const [visible, setVisible] = useState<Set<string> | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', name: '', password: '', role: 'viewer' });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -28,14 +32,25 @@ export default function UsersPage() {
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api<PaginatedResponse<User>>('/admin/users', { params: { page, limit: 20, search } });
+      const res = await api<PaginatedResponse<User>>('/admin/users', {
+        params: {
+          page, limit: 20, search,
+          sort: sort.map((t) => t.key + ':' + t.dir).join(',') || undefined,
+        },
+      });
       setData(res.data);
       setPagination(res.pagination);
     } catch { setToast({ message: 'Failed to load users', type: 'error' }); }
     finally { setLoading(false); }
-  }, [search]);
+  }, [search, sort]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // After mount: localStorage does not exist during SSR.
+  useEffect(() => {
+    setVisible(readVisible('users', columns.map((c) => ({ key: c.key, header: c.header }))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); } }, [toast]);
 
   const invite = async () => {
@@ -59,10 +74,10 @@ export default function UsersPage() {
   };
 
   const columns: Column<User>[] = [
-    { key: 'name', header: 'Name', render: (r) => <span className="font-medium">{r.name}</span> },
-    { key: 'email', header: 'Email' },
-    { key: 'role', header: 'Role', render: (r) => r.role ? <StatusBadge status={r.role} /> : <span className="text-xs text-panel-faint">No access</span> },
-    { key: 'created_at', header: 'Joined', render: (r) => <span className="text-xs text-panel-muted">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: 'name', header: 'Name', sortable: true, render: (r) => <span className="font-medium">{r.name}</span> },
+    { key: 'email', header: 'Email', sortable: true },
+    { key: 'role', header: 'Role', sortable: true, render: (r) => r.role ? <StatusBadge status={r.role} /> : <span className="text-xs text-panel-faint">No access</span> },
+    { key: 'created_at', header: 'Joined', sortable: true, render: (r) => <span className="text-xs text-panel-muted">{new Date(r.created_at).toLocaleDateString()}</span> },
     { key: 'actions', header: '', className: 'w-[120px]', render: (r) => (
       r.role ? (
         <Button size="sm" variant="danger" onClick={(e) => { e.stopPropagation(); setConfirmRevoke(r.id); }}>Revoke</Button>
@@ -74,10 +89,25 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex justify-between gap-3">
         <div className="flex-1 max-w-xs"><SearchBar value={search} onChange={setSearch} placeholder="Search users..." /></div>
-        <Button onClick={() => setShowInvite(true)}>+ Invite Admin</Button>
+        <div className="flex items-center gap-2">
+          <ColumnSettings
+            table="users"
+            columns={columns.map((c) => ({ key: c.key, header: c.header }))}
+            visible={visible ?? new Set(columns.map((c) => c.key))}
+            onChange={setVisible}
+          />
+          <Button onClick={() => setShowInvite(true)}>+ Invite Admin</Button>
+        </div>
       </div>
 
-      <DataTable columns={columns} data={data} loading={loading} pagination={pagination} onPageChange={(p) => fetchData(p)} />
+      <DataTable
+        columns={visible ? columns.filter((c) => visible.has(c.key)) : columns}
+        onSortChange={setSort}
+        data={data}
+        loading={loading}
+        pagination={pagination}
+        onPageChange={(p) => fetchData(p)}
+      />
 
       <Modal open={showInvite} onClose={() => setShowInvite(false)} title="Invite New Admin">
         <div className="space-y-4">
