@@ -30,8 +30,13 @@
   --panel-line-2: #d4d4d8;
   --panel-strong: #18181b;
   --panel-body: #3f3f46;
+  /* muted 4.8:1, faint 5.3:1 against the white surface — both clear AA. The
+     obvious light choice for faint was #a1a1aa, mirroring how faint looks on
+     dark, but it lands at 2.6:1 and this weight carries timestamps and counts.
+     Faint reads darker than muted here; on white, "quieter" has to mean lower
+     contrast against a dark foreground, not a paler grey. */
   --panel-muted: #71717a;
-  --panel-faint: #a1a1aa;
+  --panel-faint: #6b6b73;
 }
 
 .dark {
