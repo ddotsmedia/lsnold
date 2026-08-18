@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3011';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | undefined>;

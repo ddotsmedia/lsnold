@@ -15,7 +15,7 @@ import { io, type Socket } from 'socket.io-client';
  * mechanism.
  */
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 let shared: Socket | null = null;
 let refCount = 0;

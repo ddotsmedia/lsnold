@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
  * logo must never take out the header.
  */
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export interface SiteImage {
   id: string;

@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
  * site — so what the database has wins, and what only the page has survives.
  */
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export interface AgeGroupRecord {
   id: string;

@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
  * two agree.
  */
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export interface ApiTestimonial {
   id: string;
