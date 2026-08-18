@@ -20,7 +20,11 @@ services:
       retries: 5
 
   grafana:
-    image: grafana/grafana:11.4.0
+    # Built rather than pulled: the provisioning files are copied in, because
+    # Docker on this host is snap-confined and cannot bind-mount from /opt.
+    build:
+      context: ./grafana
+    image: lsn-grafana:local
     container_name: lsn-grafana
     depends_on:
       postgres:
@@ -38,7 +42,6 @@ services:
       GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD must be set in .env}
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
       # Bound to 127.0.0.1 deliberately. The brief published this on 3100, which
       # is already taken on this host by another project's server, and which
