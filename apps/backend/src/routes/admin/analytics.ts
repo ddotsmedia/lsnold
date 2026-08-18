@@ -642,6 +642,80 @@ async function getCohorts(db: Pool, req: AuthRequest, res: Response): Promise<vo
   }
 }
 
+/**
+ * Two nested breakdowns, for the treemap and the sunburst.
+ *
+ * Traffic is grouped by the first path segment so /nursery and /nursery/rooms
+ * sit under one branch — a flat list of paths is a bar chart with extra steps,
+ * and the nesting is the only reason to reach for these shapes.
+ *
+ * Deliberately not enrolment. The charts were asked for over class capacity and
+ * enrolment by month, and neither exists: age_groups has no capacity column, so
+ * there is no denominator for "how full", and registrations is empty. A treemap
+ * of nothing is worse than no treemap.
+ */
+async function getHierarchy(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+
+    const [traffic, activity] = await Promise.all([
+      db.query(
+        `SELECT
+           COALESCE(NULLIF(split_part(page_path, '/', 2), ''), 'home') AS section,
+           page_path AS path,
+           COUNT(*)::int AS views
+         FROM page_analytics
+        WHERE created_at > NOW() - make_interval(days => $1::int)
+        GROUP BY section, page_path
+        ORDER BY views DESC
+        LIMIT 60`,
+        [days]
+      ),
+      db.query(
+        `SELECT action, entity_type, COUNT(*)::int AS count
+           FROM admin_activity_log
+          WHERE created_at > NOW() - make_interval(days => $1::int)
+          GROUP BY action, entity_type
+          ORDER BY count DESC
+          LIMIT 60`,
+        [days]
+      ),
+    ]);
+
+    // Nested here rather than in SQL: the shape ECharts wants is recursive and
+    // building it in one pass over flat rows is clearer than a recursive CTE.
+    const nest = (
+      rows: Array<Record<string, unknown>>,
+      outer: string,
+      inner: string,
+      value: string
+    ) => {
+      const groups = new Map<string, Array<{ name: string; value: number }>>();
+      for (const row of rows) {
+        const key = String(row[outer]);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push({ name: String(row[inner]), value: Number(row[value]) });
+      }
+      return [...groups.entries()].map(([name, children]) => ({
+        name,
+        value: children.reduce((sum, c) => sum + c.value, 0),
+        // A branch with one leaf is drawn as a leaf; an extra ring showing the
+        // same number twice tells the reader nothing.
+        children: children.length > 1 ? children : undefined,
+      })).sort((a, b) => b.value - a.value);
+    };
+
+    res.json({
+      days,
+      traffic: nest(traffic.rows as Array<Record<string, unknown>>, 'section', 'path', 'views'),
+      activity: nest(activity.rows as Array<Record<string, unknown>>, 'action', 'entity_type', 'count'),
+    });
+  } catch (error) {
+    console.error('getHierarchy failed', error);
+    res.status(500).json({ error: 'Failed to build the breakdown' });
+  }
+}
+
 export function createAdminAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -659,6 +733,7 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
   router.get('/report', requirePermission('view:analytics'), (req, res) => getReport(db, req as AuthRequest, res));
   router.get('/retention', requirePermission('view:analytics'), (req, res) => getRetention(db, req as AuthRequest, res));
   router.get('/cohorts', requirePermission('view:analytics'), (req, res) => getCohorts(db, req as AuthRequest, res));
+  router.get('/hierarchy', requirePermission('view:analytics'), (req, res) => getHierarchy(db, req as AuthRequest, res));
 
   return router;
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { RetentionCurve } from '../../../components/admin/charts/RetentionCurve';
 import { CohortHeatmap } from '../../../components/admin/charts/CohortHeatmap';
+import { HierarchyCharts } from '../../../components/admin/charts/HierarchyCharts';
 import { api } from '../../../lib/api';
 import { StatCard, FilterSelect } from '../../../components/admin/shared';
 
@@ -29,7 +30,7 @@ export default function AnalyticsPage() {
   const [browsers, setBrowsers] = useState<BrowserData[]>([]);
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [days, setDays] = useState('30');
-  const [tab, setTab] = useState<'overview' | 'funnel' | 'cohorts' | 'retention'>('overview');
+  const [tab, setTab] = useState<'overview' | 'funnel' | 'cohorts' | 'retention' | 'breakdown'>('overview');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function AnalyticsPage() {
 
       <section className="rounded-xl border border-panel-line/50 bg-panel-surface">
         <nav className="flex gap-1 overflow-x-auto border-b border-panel-line px-2" aria-label="Analytics views">
-          {(['overview','funnel','cohorts','retention'] as const).map((key) => (
+          {(['overview','funnel','cohorts','retention','breakdown'] as const).map((key) => (
             <button
               key={key}
               type="button"
@@ -97,6 +98,7 @@ export default function AnalyticsPage() {
           {tab === 'funnel' && <ConversionFunnel days={Number(days) || 30} />}
           {tab === 'cohorts' && <CohortHeatmap months={6} />}
           {tab === 'retention' && <RetentionCurve days={Number(days) || 90} />}
+          {tab === 'breakdown' && <HierarchyCharts days={Number(days) || 30} />}
         </div>
       </section>
 
