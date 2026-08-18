@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import { StatCard, StatusBadge } from '../../../components/admin/shared';
 import { EnrollmentTrendChart } from '../../../components/admin/charts/EnrollmentTrendChart';
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
 import { DashboardWidgets } from '../../../components/admin/DashboardWidgets';
+import { LiveActivity } from '../../../components/admin/LiveActivity';
+import { useRealtimeEvent } from '../../../lib/realtime';
+import { Toast } from '../../../components/admin/shared';
 import { AnalyticsReportButton } from '../../../components/admin/AnalyticsReportButton';
 
 interface DashboardData {
@@ -95,16 +98,48 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  // Set briefly when a figure changes, so the affected card can flash.
+  const [flash, setFlash] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await api<DashboardData>('/admin/dashboard/stats');
+      setData(res);
+      setError(null);
+    } catch (err: unknown) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  /**
+   * Refetch when something arrives, rather than adjusting a counter.
+   *
+   * The cards are derived from several columns each — a pending count, a total,
+   * a thirty-day window — and nudging one of them by hand drifts away from the
+   * database as soon as anything else moves. Refetching is one small query and
+   * is always right.
+   */
+  const announce = useCallback((message: string) => {
+    setToast(message);
+    setFlash(true);
+    void load();
+    setTimeout(() => setFlash(false), 1500);
+  }, [load]);
+
+  useRealtimeEvent('booking:created', () => announce('New tour booking received'));
+  useRealtimeEvent('booking:updated', () => announce('A booking was updated'));
+  useRealtimeEvent('registration:created', () => announce('New registration received'));
+  useRealtimeEvent('registration:updated', () => announce('A registration was updated'));
 
   useEffect(() => {
-    api<DashboardData>('/admin/dashboard/stats')
-      .then((res) => { setData(res); setError(null); })
-      .catch((err: unknown) => {
-        console.error(err);
-        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   if (loading) {
     return (
@@ -141,11 +176,13 @@ export default function DashboardPage() {
         <AnalyticsReportButton />
       </div>
 
+      <LiveActivity />
+
       <DashboardWidgets widgets={[
         { key: 'kpi', title: 'Headline numbers', render: () => (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Students" value={data.totalStudents} sublabel="approved registrations" accent="emerald" />
-        <StatCard label="Total Registrations" value={data.totalRegistrations} sublabel={`${data.registrations.pending} pending`} accent="blue" />
+        <StatCard label="Total Registrations" value={data.totalRegistrations} sublabel={`${data.registrations.pending} pending`} accent="blue" className={flash ? 'ring-2 ring-emerald-500/60' : undefined} />
         <StatCard label="Total Page Views" value={data.pageViews} sublabel={`${data.analytics.viewsToday} today`} accent="purple" />
         <StatCard label="Tour Bookings" value={data.bookings.total} sublabel={`${data.bookings.upcoming} upcoming`} accent="amber" />
       </div>
@@ -156,7 +193,7 @@ export default function DashboardPage() {
         <StatCard label="News & Events" value={data.events.total} accent="blue" />
         <StatCard label="Pages" value={data.pages.total} sublabel={`${data.pages.published} published`} accent="emerald" />
         <StatCard label="Gallery" value={data.gallery.total_images} sublabel={`${data.gallery.total_categories} categories`} accent="purple" />
-        <StatCard label="Pending Bookings" value={data.bookings.pending} accent="amber" />
+        <StatCard label="Pending Bookings" value={data.bookings.pending} accent="amber" className={flash ? 'ring-2 ring-emerald-500/60' : undefined} />
       </div>
         )},
 
@@ -267,6 +304,7 @@ export default function DashboardPage() {
       </div>
         )},
       ]} />
+      {toast && <Toast message={toast} type="success" />}
     </div>
   );
 }

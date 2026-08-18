@@ -24,6 +24,9 @@ import { verifyToken } from './utils/jwt.js';
 const ROOMS: Record<string, string> = {
   registrations: 'view:registrations',
   bookings: 'view:bookings',
+  // Every admin action, for the dashboard's live feed. Gated on the same
+  // permission as the activity log page it mirrors.
+  activity: 'view:users',
 };
 
 let io: SocketServer | null = null;

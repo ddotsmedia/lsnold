@@ -1,5 +1,6 @@
 import type { Pool } from 'pg';
 import type { AuthRequest } from '../middleware/auth.js';
+import { emitToRoom } from '../realtime.js';
 
 export type ActivityAction =
   | 'create'
@@ -21,6 +22,8 @@ export interface ActivityContext {
   details?: Record<string, unknown>;
   /** Request the change came from, for ip_address / user_agent. */
   req?: AuthRequest;
+  /** Display name of whoever acted, carried on the live feed only. */
+  actorName?: string;
 }
 
 /** Columns never worth storing in an audit row. */
@@ -71,11 +74,12 @@ export async function logActivity(
 
     const userAgent = context.req?.headers['user-agent'];
 
-    await db.query(
+    const inserted = await db.query(
       `INSERT INTO admin_activity_log
          (admin_user_id, action, entity_type, entity_id, details,
           old_values, new_values, ip_address, user_agent)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING id, action, entity_type, entity_id, created_at`,
       [
         adminUserId ?? null,
         action,
@@ -88,6 +92,25 @@ export async function logActivity(
         typeof userAgent === 'string' ? userAgent.slice(0, 500) : null,
       ]
     );
+
+    // Broadcast so an open dashboard shows the action without a refresh.
+    //
+    // Deliberately thin: the id, what happened, and to what. Not the old and
+    // new values — those can hold a family's contact details, and the activity
+    // room is gated on view:users rather than on the permission for whatever
+    // entity was touched. A subscriber fetches the full row from the activity
+    // log if they are allowed to see it.
+    const row = inserted.rows[0] as Record<string, unknown> | undefined;
+    if (row) {
+      emitToRoom('activity', 'activity:log', {
+        id: row.id,
+        action: row.action,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        created_at: row.created_at,
+        actor_name: context.actorName ?? null,
+      });
+    }
   } catch (error) {
     console.error('logActivity failed (non-fatal)', error);
   }

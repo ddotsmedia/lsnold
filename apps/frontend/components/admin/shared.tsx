@@ -28,11 +28,14 @@ export function StatCard({
   value,
   sublabel,
   accent = 'emerald',
+  className = '',
 }: {
   label: string;
   value: string | number;
   sublabel?: string;
   accent?: 'emerald' | 'amber' | 'red' | 'blue' | 'purple';
+  /** Lets a caller highlight a card, e.g. when its figure just changed. */
+  className?: string;
 }) {
   const accents = {
     emerald: 'from-emerald-500/10 to-transparent border-emerald-500/20',
@@ -43,7 +46,7 @@ export function StatCard({
   };
 
   return (
-    <div className={`bg-gradient-to-br ${accents[accent]} rounded-xl border p-5`}>
+    <div className={`bg-gradient-to-br ${accents[accent]} rounded-xl border p-5 transition-shadow duration-500 ${className}`}>
       <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">{label}</p>
       <p className="text-2xl font-bold text-zinc-100 tabular-nums">{value}</p>
       {sublabel && <p className="text-xs text-zinc-500 mt-1">{sublabel}</p>}

@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { emitToRoom } from '../../realtime.js';
 import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
 
 const StatusSchema = z.object({
@@ -134,6 +135,8 @@ async function updateRegistrationStatus(db: Pool, req: AuthRequest, res: Respons
       newStatus: data.status,
       notes: data.notes,
     });
+
+    emitToRoom('registrations', 'registration:updated', result.rows[0]);
 
     res.json(result.rows[0]);
   } catch (error) {

@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { emitToRoom } from '../../realtime.js';
 import { TIME_SLOTS } from '../../controllers/bookingController.js';
 import { notifyReschedule } from '../../services/notify.js';
 import type { TourBooking } from '../../types/index.js';
@@ -124,6 +125,10 @@ async function updateBookingStatus(db: Pool, req: AuthRequest, res: Response): P
       newStatus: data.status,
       notes: data.notes,
     });
+
+    // An open dashboard recounts rather than trusting a delta, so the payload
+    // only needs to say which row moved.
+    emitToRoom('bookings', 'booking:updated', result.rows[0]);
 
     res.json(result.rows[0]);
   } catch (error) {
