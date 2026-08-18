@@ -56,11 +56,11 @@ const RATING_OPTIONS = [
 ];
 
 function Stars({ rating }: { rating: number | null }) {
-  if (!rating) return <span className="text-xs text-zinc-600">No rating</span>;
+  if (!rating) return <span className="text-xs text-panel-faint">No rating</span>;
   return (
     <span className="text-amber-400" aria-label={`${rating} out of 5 stars`}>
       {'★'.repeat(rating)}
-      <span className="text-zinc-700">{'★'.repeat(5 - rating)}</span>
+      <span className="text-panel-faint">{'★'.repeat(5 - rating)}</span>
     </span>
   );
 }
@@ -284,10 +284,10 @@ export default function TestimonialsAdmin() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-panel-body">
             {loading ? 'Loading…' : `${items.length} testimonial${items.length === 1 ? '' : 's'}`}
           </p>
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs text-panel-faint">
             Drag to change the order they appear in. Only published ones show on the site.
           </p>
         </div>
@@ -302,10 +302,10 @@ export default function TestimonialsAdmin() {
         </div>
       ) : loading ? (
         <div className="space-y-2">
-          {[0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-zinc-800/40" />)}
+          {[0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-panel-raised/40" />)}
         </div>
       ) : items.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#111119] p-10 text-center text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-surface p-10 text-center text-sm text-panel-muted">
           No testimonials yet. Use “+ Add Testimonial” to add the first one.
         </p>
       ) : (
@@ -323,40 +323,40 @@ export default function TestimonialsAdmin() {
                 if (from !== null) void commitOrder(from, index);
                 dragRef.current = null; setDragIndex(null); setOverIndex(null);
               }}
-              className={`flex cursor-move gap-4 rounded-xl border bg-[#111119] p-4 transition-all ${
+              className={`flex cursor-move gap-4 rounded-xl border bg-panel-surface p-4 transition-all ${
                 overIndex === index && dragIndex !== index
                   ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                  : 'border-zinc-800/50'
+                  : 'border-panel-line/50'
               } ${dragIndex === index ? 'opacity-40' : ''}`}
             >
-              <span className="pt-1 text-zinc-600" aria-hidden="true">⠿</span>
+              <span className="pt-1 text-panel-faint" aria-hidden="true">⠿</span>
 
               {t.author_image_url ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={t.author_image_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
               ) : (
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-sm text-zinc-500">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-panel-raised text-sm text-panel-muted">
                   {t.author_name.slice(0, 1).toUpperCase()}
                 </span>
               )}
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-zinc-200">{t.author_name}</span>
-                  {t.author_title && <span className="text-xs text-zinc-500">{t.author_title}</span>}
+                  <span className="font-medium text-panel-strong">{t.author_name}</span>
+                  {t.author_title && <span className="text-xs text-panel-muted">{t.author_title}</span>}
                   <Stars rating={t.rating} />
                   <span className={`rounded-full border px-2 py-0.5 text-[11px] ${
                     t.is_published
                       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                      : 'border-zinc-500/30 bg-zinc-500/10 text-zinc-400'
+                      : 'border-zinc-500/30 bg-zinc-500/10 text-panel-body'
                   }`}>
                     {t.is_published ? 'Published' : 'Draft'}
                   </span>
                   {t.page_slug && (
-                    <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-500">{t.page_slug}</code>
+                    <code className="rounded bg-panel-raised px-1.5 py-0.5 text-[10px] text-panel-muted">{t.page_slug}</code>
                   )}
                 </div>
-                <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{t.quote}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-panel-muted">{t.quote}</p>
               </div>
 
               <div className="flex shrink-0 flex-col gap-1">
@@ -372,15 +372,15 @@ export default function TestimonialsAdmin() {
       )}
 
       {deleted.length > 0 && (
-        <div className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-5">
-          <button onClick={() => setShowDeleted((v) => !v)} className="text-sm text-zinc-400 hover:text-zinc-200">
+        <div className="rounded-xl border border-panel-line/50 bg-panel-sunken p-5">
+          <button onClick={() => setShowDeleted((v) => !v)} className="text-sm text-panel-body hover:text-panel-strong">
             {showDeleted ? '▾' : '▸'} Deleted testimonials ({deleted.length})
           </button>
           {showDeleted && (
             <ul className="mt-3 space-y-2">
               {deleted.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 rounded-lg bg-[#111119] px-3 py-2">
-                  <span className="flex-1 truncate text-sm text-zinc-400">
+                <li key={t.id} className="flex items-center gap-3 rounded-lg bg-panel-surface px-3 py-2">
+                  <span className="flex-1 truncate text-sm text-panel-body">
                     {t.author_name} — {t.quote.slice(0, 60)}…
                   </span>
                   <Button size="sm" variant="secondary" onClick={() => void restore(t)}>Restore</Button>
@@ -400,11 +400,11 @@ export default function TestimonialsAdmin() {
         <div className="max-h-[72vh] space-y-4 overflow-y-auto pr-2">
           <div className="flex items-start gap-4">
             <div>
-              <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-zinc-400">Photo</p>
+              <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-panel-body">Photo</p>
               {photoPreview ? (
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoPreview} alt="" className="h-24 w-24 rounded-full border border-zinc-800 object-cover" />
+                  <img src={photoPreview} alt="" className="h-24 w-24 rounded-full border border-panel-line object-cover" />
                   <button
                     type="button"
                     onClick={() => void removePhoto()}
@@ -416,7 +416,7 @@ export default function TestimonialsAdmin() {
                   </button>
                 </div>
               ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-zinc-700 text-xs text-zinc-600">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-panel-line-2 text-xs text-panel-faint">
                   Optional
                 </div>
               )}
@@ -424,7 +424,7 @@ export default function TestimonialsAdmin() {
                 type="file"
                 accept="image/*"
                 onChange={(e) => pickPhoto(e.target.files?.[0])}
-                className="mt-2 w-24 text-[10px] text-zinc-400 file:mr-1 file:rounded file:border-0 file:bg-zinc-800 file:px-1.5 file:py-0.5 file:text-[10px] file:text-zinc-200"
+                className="mt-2 w-24 text-[10px] text-panel-body file:mr-1 file:rounded file:border-0 file:bg-panel-raised file:px-1.5 file:py-0.5 file:text-[10px] file:text-panel-strong"
               />
             </div>
 
@@ -484,7 +484,7 @@ export default function TestimonialsAdmin() {
             </FormField>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saving}>Cancel</Button>
             <Button onClick={() => void save()} disabled={saving}>
               {saving ? 'Saving…' : editing ? 'Save Changes' : 'Add'}

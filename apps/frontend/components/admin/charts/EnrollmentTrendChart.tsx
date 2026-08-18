@@ -77,14 +77,14 @@ export function EnrollmentTrendChart({ days = 90, ahead = 30 }: { days?: number;
   }, [data]);
 
   if (error) return <ChartNote>Could not load the registration trend.</ChartNote>;
-  if (!data) return <div className="h-70 animate-pulse rounded-lg bg-zinc-800/40" />;
+  if (!data) return <div className="h-70 animate-pulse rounded-lg bg-panel-raised/40" />;
 
   if (data.status === 'insufficient_data') {
     return (
       <ChartNote>
         Not enough history to project yet — {data.observed_days} of{' '}
         {data.required_days ?? 7} days with a registration.
-        <span className="mt-1 block text-zinc-600">
+        <span className="mt-1 block text-panel-faint">
           The trend appears here once registrations start arriving.
         </span>
       </ChartNote>
@@ -94,7 +94,7 @@ export function EnrollmentTrendChart({ days = 90, ahead = 30 }: { days?: number;
   return (
     <>
       <EChart option={option} height={280} ariaLabel="Registrations per day with projection" />
-      <p className="mt-1 text-[11px] text-zinc-600">
+      <p className="mt-1 text-[11px] text-panel-faint">
         Projection is a straight-line trend, not a forecast model — it knows nothing about term
         dates or campaigns.
       </p>
@@ -104,7 +104,7 @@ export function EnrollmentTrendChart({ days = 90, ahead = 30 }: { days?: number;
 
 function ChartNote({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-70 items-center justify-center rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-500">
+    <div className="flex h-70 items-center justify-center rounded-lg border border-dashed border-panel-line p-6 text-center text-sm text-panel-muted">
       <p>{children}</p>
     </div>
   );

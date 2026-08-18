@@ -118,7 +118,7 @@ export function NotificationCenter() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
-        className="relative flex min-h-12 min-w-12 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+        className="relative flex min-h-12 min-w-12 items-center justify-center rounded-lg text-panel-body transition-colors hover:bg-panel-raised hover:text-panel-strong"
       >
         <span aria-hidden="true" className="text-lg">🔔</span>
         {unread > 0 && (
@@ -131,10 +131,10 @@ export function NotificationCenter() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-1 w-80 overflow-hidden rounded-xl border border-zinc-800 bg-[#111119] shadow-2xl"
+          className="absolute right-0 z-50 mt-1 w-80 overflow-hidden rounded-xl border border-panel-line bg-panel-surface shadow-2xl"
         >
-          <div className="flex items-center justify-between border-b border-zinc-800/50 px-4 py-2">
-            <span className="text-sm font-medium text-zinc-200">Notifications</span>
+          <div className="flex items-center justify-between border-b border-panel-line/50 px-4 py-2">
+            <span className="text-sm font-medium text-panel-strong">Notifications</span>
             {unread > 0 && (
               <button
                 type="button"
@@ -147,7 +147,7 @@ export function NotificationCenter() {
           </div>
 
           {items.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-zinc-500">Nothing yet.</p>
+            <p className="px-4 py-8 text-center text-sm text-panel-muted">Nothing yet.</p>
           ) : (
             <ul className="max-h-96 overflow-y-auto">
               {items.map((item) => {
@@ -159,23 +159,23 @@ export function NotificationCenter() {
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
                       )}
                       <span className="flex-1">
-                        <span className="block text-sm text-zinc-200">{item.title}</span>
+                        <span className="block text-sm text-panel-strong">{item.title}</span>
                         {item.message && (
-                          <span className="block text-xs text-zinc-500">{item.message}</span>
+                          <span className="block text-xs text-panel-muted">{item.message}</span>
                         )}
-                        <span className="mt-0.5 block text-[11px] text-zinc-600">{ago(item.created_at)}</span>
+                        <span className="mt-0.5 block text-[11px] text-panel-faint">{ago(item.created_at)}</span>
                       </span>
                     </span>
                   </>
                 );
 
                 return (
-                  <li key={item.id} className="border-b border-zinc-800/30 last:border-0">
+                  <li key={item.id} className="border-b border-panel-line/30 last:border-0">
                     {href ? (
                       <Link
                         href={href}
                         onClick={() => { void markRead(item); setOpen(false); }}
-                        className="block px-4 py-3 transition-colors hover:bg-zinc-800/40"
+                        className="block px-4 py-3 transition-colors hover:bg-panel-raised/40"
                       >
                         {body}
                       </Link>
@@ -183,7 +183,7 @@ export function NotificationCenter() {
                       <button
                         type="button"
                         onClick={() => void markRead(item)}
-                        className="block w-full px-4 py-3 text-left transition-colors hover:bg-zinc-800/40"
+                        className="block w-full px-4 py-3 text-left transition-colors hover:bg-panel-raised/40"
                       >
                         {body}
                       </button>
@@ -197,7 +197,7 @@ export function NotificationCenter() {
           <Link
             href="/admin/notifications"
             onClick={() => setOpen(false)}
-            className="block border-t border-zinc-800/50 px-4 py-2.5 text-center text-xs text-zinc-400 transition-colors hover:bg-zinc-800/40 hover:text-zinc-200"
+            className="block border-t border-panel-line/50 px-4 py-2.5 text-center text-xs text-panel-body transition-colors hover:bg-panel-raised/40 hover:text-panel-strong"
           >
             View all
           </Link>

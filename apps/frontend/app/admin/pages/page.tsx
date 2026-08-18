@@ -112,17 +112,17 @@ export default function PagesPage() {
 
   const columns: Column<Page>[] = [
     { key: 'title', header: 'Title', sortable: true, render: (r) => <span className="font-medium">{r.title}</span> },
-    { key: 'slug', header: 'Slug', render: (r) => <span className="text-xs text-zinc-500">/{r.slug}</span> },
+    { key: 'slug', header: 'Slug', render: (r) => <span className="text-xs text-panel-muted">/{r.slug}</span> },
     { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-    { key: 'created_by_name', header: 'Author', render: (r) => <span className="text-xs text-zinc-400">{r.created_by_name || '—'}</span> },
-    { key: 'updated_at', header: 'Updated', render: (r) => <span className="text-xs text-zinc-500">{new Date(r.updated_at).toLocaleDateString()}</span> },
+    { key: 'created_by_name', header: 'Author', render: (r) => <span className="text-xs text-panel-body">{r.created_by_name || '—'}</span> },
+    { key: 'updated_at', header: 'Updated', render: (r) => <span className="text-xs text-panel-muted">{new Date(r.updated_at).toLocaleDateString()}</span> },
     { key: 'actions', header: '', className: 'w-[200px]', render: (r) => (
       <div className="flex gap-1">
         <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); openEdit(r); }}>Edit</Button>
         <Link
           href={`/admin/pages/${r.id}/content`}
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800"
+          className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-panel-line-2 bg-panel-raised/50 px-3 py-1.5 text-xs font-medium text-panel-body transition-colors hover:bg-panel-raised"
         >
           Text
         </Link>
@@ -152,7 +152,7 @@ export default function PagesPage() {
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           {/* Only offered for a saved page: image slots are keyed to its id. */}
           {editId && (
-            <div className="flex gap-1 border-b border-zinc-800" role="tablist" aria-label="Page editor sections">
+            <div className="flex gap-1 border-b border-panel-line" role="tablist" aria-label="Page editor sections">
               {([['content', 'Details & SEO'], ['images', 'Images']] as const).map(([key, label]) => {
                 const active = modalTab === key;
                 return (
@@ -164,7 +164,7 @@ export default function PagesPage() {
                     className={`-mb-px rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                       active
                         ? 'border-emerald-500 text-emerald-400'
-                        : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                        : 'border-transparent text-panel-muted hover:text-panel-body'
                     }`}
                   >
                     {label}
@@ -190,29 +190,29 @@ export default function PagesPage() {
               site renders. The old textarea here wrote pages.content, which
               nothing reads — text typed into it silently went nowhere. */}
           {editId && (
-            <div className="rounded-lg border border-zinc-800 bg-[#0c0c14] p-4">
-              <p className="text-sm text-zinc-300">Page text</p>
-              <p className="mt-1 text-xs text-zinc-500">
+            <div className="rounded-lg border border-panel-line bg-panel-sunken p-4">
+              <p className="text-sm text-panel-body">Page text</p>
+              <p className="mt-1 text-xs text-panel-muted">
                 Headings and paragraphs for this page are edited as sections, so they can be
                 reordered and hidden individually.
               </p>
               <Link
                 href={`/admin/pages/${editId}/content`}
-                className="mt-3 inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+                className="mt-3 inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-panel-line-2 bg-panel-raised/50 px-4 py-2 text-sm font-medium text-panel-strong transition-colors hover:bg-panel-raised"
               >
                 Edit page text →
               </Link>
             </div>
           )}
           <FormField label="Status">
-            <select {...register('status')} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
+            <select {...register('status')} className="w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong">
               <option value="draft">Draft</option>
               <option value="published">Published</option>
               <option value="archived">Archived</option>
             </select>
           </FormField>
-          <div className="border-t border-zinc-800/50 pt-4">
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">SEO Metadata</p>
+          <div className="border-t border-panel-line/50 pt-4">
+            <p className="text-xs text-panel-muted uppercase tracking-wider mb-3">SEO Metadata</p>
             <div className="space-y-3">
               <FormField label="Meta Title" error={errors.meta_title?.message}><Input {...register('meta_title')} /></FormField>
               <FormField label="Meta Description"><Textarea {...register('meta_description')} rows={2} /></FormField>

@@ -157,7 +157,7 @@ export function ImageUploader({
 
   return (
     <div className="space-y-2">
-      {label && <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">{label}</p>}
+      {label && <p className="text-xs font-medium uppercase tracking-wider text-panel-body">{label}</p>}
 
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -172,7 +172,7 @@ export function ImageUploader({
         } ${
           dragging
             ? 'border-emerald-500 bg-emerald-500/10'
-            : 'border-zinc-700 bg-[#0c0c14] hover:border-zinc-600'
+            : 'border-panel-line-2 bg-panel-sunken hover:border-panel-line-2'
         }`}
       >
         {preview && !busy ? (
@@ -180,7 +180,7 @@ export function ImageUploader({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt={previewAlt} className="h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity hover:opacity-100">
-              <span className="rounded-lg bg-zinc-900/90 px-3 py-1.5 text-xs text-zinc-200">Replace</span>
+              <span className="rounded-lg bg-panel-surface/90 px-3 py-1.5 text-xs text-panel-strong">Replace</span>
               {onRemove && (
                 <button
                   type="button"
@@ -194,8 +194,8 @@ export function ImageUploader({
           </>
         ) : busy ? (
           <div className="w-full px-6 text-center">
-            <p className="mb-2 text-sm text-zinc-300">Uploading… {progress}%</p>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+            <p className="mb-2 text-sm text-panel-body">Uploading… {progress}%</p>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-panel-raised">
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all duration-200"
                 style={{ width: `${progress}%` }}
@@ -205,10 +205,10 @@ export function ImageUploader({
         ) : (
           <div className="px-4 text-center">
             <p className="text-2xl" aria-hidden="true">⬆</p>
-            <p className="mt-1 text-sm text-zinc-300">
+            <p className="mt-1 text-sm text-panel-body">
               Drop {multiple ? 'images' : 'an image'} here
             </p>
-            <p className="mt-0.5 text-xs text-zinc-500">or click to browse · max {formatBytes(maxSize)}</p>
+            <p className="mt-0.5 text-xs text-panel-muted">or click to browse · max {formatBytes(maxSize)}</p>
           </div>
         )}
       </div>
@@ -245,7 +245,7 @@ export function ImageGallery({ images, onDelete, onReorder }: ImageGalleryProps)
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
   if (images.length === 0) {
-    return <p className="text-sm text-zinc-500">No images yet.</p>;
+    return <p className="text-sm text-panel-muted">No images yet.</p>;
   }
 
   const commit = (from: number, to: number) => {
@@ -273,10 +273,10 @@ export function ImageGallery({ images, onDelete, onReorder }: ImageGalleryProps)
             setDragIndex(null);
             setOverIndex(null);
           }}
-          className={`group relative overflow-hidden rounded-lg border bg-[#0c0c14] transition-all ${
+          className={`group relative overflow-hidden rounded-lg border bg-panel-sunken transition-all ${
             overIndex === index && dragIndex !== index
               ? 'border-emerald-500 ring-2 ring-emerald-500/40'
-              : 'border-zinc-800'
+              : 'border-panel-line'
           } ${dragIndex === index ? 'opacity-40' : ''} ${onReorder ? 'cursor-move' : ''}`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -291,7 +291,7 @@ export function ImageGallery({ images, onDelete, onReorder }: ImageGalleryProps)
             ×
           </button>
 
-          <figcaption className="truncate px-2 py-1.5 text-xs text-zinc-400" title={image.alt_text ?? ''}>
+          <figcaption className="truncate px-2 py-1.5 text-xs text-panel-body" title={image.alt_text ?? ''}>
             {image.alt_text || image.title}
           </figcaption>
         </figure>
@@ -325,14 +325,14 @@ export function MediaLibrary({
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="aspect-4/3 animate-pulse rounded-lg bg-zinc-800/50" />
+          <div key={i} className="aspect-4/3 animate-pulse rounded-lg bg-panel-raised/50" />
         ))}
       </div>
     );
   }
 
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-zinc-500">{emptyMessage}</p>;
+    return <p className="py-8 text-center text-sm text-panel-muted">{emptyMessage}</p>;
   }
 
   return (
@@ -342,8 +342,8 @@ export function MediaLibrary({
         return (
           <div
             key={item.id}
-            className={`group relative overflow-hidden rounded-xl border bg-[#0c0c14] transition-all ${
-              selected ? 'border-emerald-500 ring-2 ring-emerald-500/40' : 'border-zinc-800 hover:border-zinc-700'
+            className={`group relative overflow-hidden rounded-xl border bg-panel-sunken transition-all ${
+              selected ? 'border-emerald-500 ring-2 ring-emerald-500/40' : 'border-panel-line hover:border-panel-line-2'
             }`}
           >
             <button
@@ -368,11 +368,11 @@ export function MediaLibrary({
             )}
 
             <div className="space-y-1 p-3">
-              <p className="truncate text-sm font-medium text-zinc-200" title={item.title}>{item.title}</p>
-              <p className="truncate text-xs text-zinc-500" title={item.alt_text ?? ''}>
+              <p className="truncate text-sm font-medium text-panel-strong" title={item.title}>{item.title}</p>
+              <p className="truncate text-xs text-panel-muted" title={item.alt_text ?? ''}>
                 {item.alt_text || <span className="text-amber-500">No alt text</span>}
               </p>
-              <p className="text-xs text-zinc-600">
+              <p className="text-xs text-panel-faint">
                 {item.width && item.height ? `${item.width}×${item.height} · ` : ''}
                 {formatBytes(item.file_size)}
                 {item.created_at ? ` · ${new Date(item.created_at).toLocaleDateString()}` : ''}

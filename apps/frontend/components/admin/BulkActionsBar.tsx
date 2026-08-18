@@ -78,7 +78,7 @@ export function BulkActionsBar({
   return (
     <>
       <div className="flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 sm:flex-row sm:items-center">
-        <p className="text-sm text-zinc-200">{plural} selected</p>
+        <p className="text-sm text-panel-strong">{plural} selected</p>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
           {actions.map((action) => (
             <Button

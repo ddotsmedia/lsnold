@@ -236,15 +236,15 @@ export default function PartnersPage() {
       </div>
 
       {!canDrag && partners.length > 1 && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-panel-muted">
           Switch to “Custom order” with no search to drag partners into position.
         </p>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-zinc-800/50 bg-[#111119]">
+      <div className="overflow-hidden rounded-xl border border-panel-line/50 bg-panel-surface">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-800/50 text-left text-xs uppercase tracking-wider text-zinc-500">
+            <tr className="border-b border-panel-line/50 text-left text-xs uppercase tracking-wider text-panel-muted">
               <th className="w-10 px-4 py-3" />
               <th className="w-20 px-4 py-3">Logo</th>
               <th className="px-4 py-3">Name</th>
@@ -256,15 +256,15 @@ export default function PartnersPage() {
           <tbody>
             {loading ? (
               Array.from({ length: 4 }, (_, i) => (
-                <tr key={i} className="border-b border-zinc-800/30">
+                <tr key={i} className="border-b border-panel-line/30">
                   <td colSpan={6} className="px-4 py-4">
-                    <div className="h-10 animate-pulse rounded bg-zinc-800/50" />
+                    <div className="h-10 animate-pulse rounded bg-panel-raised/50" />
                   </td>
                 </tr>
               ))
             ) : partners.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-zinc-500">
+                <td colSpan={6} className="px-4 py-10 text-center text-panel-muted">
                   {search ? 'No partners match that search.' : 'No partners yet. Use “+ Add Partner” to add the first one.'}
                 </td>
               </tr>
@@ -282,8 +282,8 @@ export default function PartnersPage() {
                     if (from !== null) void commitOrder(from, index);
                     dragRef.current = null; setDragIndex(null); setOverIndex(null);
                   }}
-                  className={`border-b border-zinc-800/30 transition-colors ${
-                    overIndex === index && dragIndex !== index ? 'bg-emerald-500/10' : 'hover:bg-zinc-900/40'
+                  className={`border-b border-panel-line/30 transition-colors ${
+                    overIndex === index && dragIndex !== index ? 'bg-emerald-500/10' : 'hover:bg-panel-surface/40'
                   } ${dragIndex === index ? 'opacity-40' : ''}`}
                 >
                   <td className="px-4 py-3">
@@ -299,7 +299,7 @@ export default function PartnersPage() {
                         aria-label={`Select ${partner.name}`}
                         className="h-4 w-4 accent-emerald-500"
                       />
-                      {canDrag && <span className="cursor-move text-zinc-600" aria-hidden="true">⠿</span>}
+                      {canDrag && <span className="cursor-move text-panel-faint" aria-hidden="true">⠿</span>}
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -308,18 +308,18 @@ export default function PartnersPage() {
                       <img
                         src={partner.logo_url}
                         alt={partner.name}
-                        className="h-12 w-12 rounded-lg border border-zinc-800 bg-white object-contain p-1"
+                        className="h-12 w-12 rounded-lg border border-panel-line bg-white object-contain p-1"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-xs text-zinc-600">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-panel-line bg-panel-surface text-xs text-panel-faint">
                         —
                       </div>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-zinc-200">{partner.name}</span>
+                    <span className="font-medium text-panel-strong">{partner.name}</span>
                     {partner.description && (
-                      <p className="mt-0.5 max-w-xs truncate text-xs text-zinc-500">{partner.description}</p>
+                      <p className="mt-0.5 max-w-xs truncate text-xs text-panel-muted">{partner.description}</p>
                     )}
                   </td>
                   <td className="hidden px-4 py-3 md:table-cell">
@@ -333,14 +333,14 @@ export default function PartnersPage() {
                         {partner.website_url.replace(/^https?:\/\//, '').slice(0, 28)}
                       </a>
                     ) : (
-                      <span className="text-xs text-zinc-600">—</span>
+                      <span className="text-xs text-panel-faint">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full border px-2 py-0.5 text-xs ${
                       partner.is_active
                         ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                        : 'border-zinc-500/30 bg-zinc-500/10 text-zinc-400'
+                        : 'border-zinc-500/30 bg-zinc-500/10 text-panel-body'
                     }`}>
                       {partner.is_active ? 'Active' : 'Hidden'}
                     </span>
@@ -415,14 +415,14 @@ export default function PartnersPage() {
 
           {saving && (
             <div>
-              <p className="mb-1 text-xs text-zinc-400">Saving… {progress}%</p>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+              <p className="mb-1 text-xs text-panel-body">Saving… {progress}%</p>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-panel-raised">
                 <div className="h-full rounded-full bg-emerald-500 transition-all duration-200" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={closeModal} disabled={saving}>Cancel</Button>
             <Button onClick={submit} disabled={saving}>
               {saving ? 'Saving…' : editing ? 'Save Changes' : 'Add Partner'}

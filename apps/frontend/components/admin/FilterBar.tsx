@@ -95,12 +95,12 @@ export function FilterBar({
   const active = Object.entries(filters).filter(([, v]) => v).length;
 
   return (
-    <div className="space-y-3 rounded-xl border border-zinc-800/50 bg-[#111119] p-4">
+    <div className="space-y-3 rounded-xl border border-panel-line/50 bg-panel-surface p-4">
       <QuickFilters filters={filters} onChange={onChange} statuses={statuses} />
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">From</span>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-panel-muted">From</span>
           <input
             type="date"
             value={filters.dateFrom ?? ''}
@@ -108,23 +108,23 @@ export function FilterBar({
             // broken, so each bound limits the other.
             max={filters.dateTo || undefined}
             onChange={(e) => set('dateFrom', e.target.value)}
-            className="min-h-12 rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+            className="min-h-12 rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-strong focus:border-emerald-500/50 focus:outline-none"
           />
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">To</span>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-panel-muted">To</span>
           <input
             type="date"
             value={filters.dateTo ?? ''}
             min={filters.dateFrom || undefined}
             onChange={(e) => set('dateTo', e.target.value)}
-            className="min-h-12 rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+            className="min-h-12 rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-strong focus:border-emerald-500/50 focus:outline-none"
           />
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Rows</span>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-panel-muted">Rows</span>
           <Select
             value={String(pageSize)}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
@@ -139,7 +139,7 @@ export function FilterBar({
 
         {presets.length > 0 && (
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Saved</span>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-panel-muted">Saved</span>
             <Select
               value=""
               onChange={(e) => {
@@ -174,14 +174,14 @@ export function FilterBar({
       </div>
 
       {naming && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-800/50 pt-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-panel-line/50 pt-3">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') void save(); }}
             placeholder="e.g. Pending this week"
             maxLength={80}
-            className="min-h-12 flex-1 rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+            className="min-h-12 flex-1 rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-strong focus:border-emerald-500/50 focus:outline-none"
           />
           <Button size="sm" onClick={() => void save()}>Save</Button>
           <Button size="sm" variant="secondary" onClick={() => setNaming(false)}>Cancel</Button>
@@ -189,20 +189,20 @@ export function FilterBar({
       )}
 
       {presets.length > 0 && (
-        <div className="flex flex-wrap gap-1 border-t border-zinc-800/50 pt-3">
+        <div className="flex flex-wrap gap-1 border-t border-panel-line/50 pt-3">
           {presets.map((preset) => (
             <span
               key={preset.id}
-              className="inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-800/40 py-0.5 pl-3 pr-1 text-xs text-zinc-300"
+              className="inline-flex items-center gap-1 rounded-full border border-panel-line bg-panel-raised/40 py-0.5 pl-3 pr-1 text-xs text-panel-body"
             >
-              <button type="button" onClick={() => onChange(preset.filters)} className="hover:text-zinc-100">
+              <button type="button" onClick={() => onChange(preset.filters)} className="hover:text-panel-strong">
                 {preset.name}
               </button>
               <button
                 type="button"
                 onClick={() => void remove(preset)}
                 aria-label={`Delete preset ${preset.name}`}
-                className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-panel-muted hover:bg-panel-raised-2 hover:text-panel-strong"
               >
                 ×
               </button>

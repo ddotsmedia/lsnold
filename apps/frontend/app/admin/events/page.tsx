@@ -130,7 +130,7 @@ function StatusPill({ published }: { published: boolean }) {
     <span className={`text-xs px-2 py-0.5 rounded-full border ${
       published
         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-        : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/30'
+        : 'bg-zinc-500/10 text-panel-body border-zinc-500/30'
     }`}>
       {published ? 'Published' : 'Draft'}
     </span>
@@ -512,7 +512,7 @@ export default function NewsAndEventsPage() {
 
   const newsColumns: Column<NewsItem>[] = [
     { key: 'title', header: 'Title', sortable: true, render: (r) => <span className="font-medium">{r.title}</span> },
-    { key: 'published_date', header: 'Date', render: (r) => <span className="text-xs text-zinc-400">{formatDate(r.published_date)}</span> },
+    { key: 'published_date', header: 'Date', render: (r) => <span className="text-xs text-panel-body">{formatDate(r.published_date)}</span> },
     { key: 'is_published', header: 'Status', render: (r) => <StatusPill published={r.is_published} /> },
     {
       key: 'actions', header: '', className: 'w-[150px]',
@@ -523,7 +523,7 @@ export default function NewsAndEventsPage() {
   const eventColumns: Column<EventItem>[] = [
     {
       key: 'drag', header: '', className: 'w-8',
-      render: () => <span className="cursor-grab select-none text-zinc-600" aria-hidden>⠿</span>,
+      render: () => <span className="cursor-grab select-none text-panel-faint" aria-hidden>⠿</span>,
     },
     {
       key: 'title', header: 'Title', sortable: true,
@@ -537,11 +537,11 @@ export default function NewsAndEventsPage() {
         </span>
       ),
     },
-    { key: 'event_date', header: 'Date', render: (r) => <span className="text-xs text-zinc-400">{formatDate(r.event_date)}</span> },
+    { key: 'event_date', header: 'Date', render: (r) => <span className="text-xs text-panel-body">{formatDate(r.event_date)}</span> },
     {
       key: 'event_type', header: 'Type',
       render: (r) => (
-        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">
+        <span className="text-xs px-2 py-0.5 rounded-full bg-panel-raised text-panel-body">
           {r.event_type || 'General'}
         </span>
       ),
@@ -551,11 +551,11 @@ export default function NewsAndEventsPage() {
       render: (r) => {
         const booked = r.current_registrations ?? 0;
         if (r.capacity == null) {
-          return <span className="text-xs text-zinc-500">{booked} · no limit</span>;
+          return <span className="text-xs text-panel-muted">{booked} · no limit</span>;
         }
         const full = booked >= r.capacity;
         return (
-          <span className={`text-xs ${full ? 'text-amber-400' : 'text-zinc-400'}`}>
+          <span className={`text-xs ${full ? 'text-amber-400' : 'text-panel-body'}`}>
             {booked} / {r.capacity}{full ? ' · full' : ''}
           </span>
         );
@@ -578,7 +578,7 @@ export default function NewsAndEventsPage() {
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-zinc-800" role="tablist" aria-label="Content type">
+      <div className="flex gap-1 border-b border-panel-line" role="tablist" aria-label="Content type">
         {TABS.map((t) => {
           const active = tab === t.key;
           return (
@@ -590,13 +590,13 @@ export default function NewsAndEventsPage() {
               className={`relative px-5 py-3 text-sm font-medium transition-colors duration-200 border-b-2 -mb-px focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-t-lg ${
                 active
                   ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'
+                  : 'border-transparent text-panel-muted hover:text-panel-body hover:border-panel-line-2'
               }`}
             >
               {t.label}
               {t.count > 0 && (
                 <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full transition-colors ${
-                  active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-zinc-800 text-zinc-500'
+                  active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-panel-raised text-panel-muted'
                 }`}>
                   {t.count}
                 </span>
@@ -643,7 +643,7 @@ export default function NewsAndEventsPage() {
         ) : (
           <>
           {events.length > 1 && (
-            <p className="mb-2 text-xs text-zinc-500">
+            <p className="mb-2 text-xs text-panel-muted">
               Drag a row to change the order events appear in on the public page.
             </p>
           )}
@@ -726,7 +726,7 @@ export default function NewsAndEventsPage() {
                       <img
                         src={newsImagePreview}
                         alt="Featured image preview"
-                        className="h-40 w-full rounded-lg border border-zinc-800 object-cover"
+                        className="h-40 w-full rounded-lg border border-panel-line object-cover"
                       />
                       <button
                         type="button"
@@ -743,9 +743,9 @@ export default function NewsAndEventsPage() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => pickNewsImage(e.target.files?.[0])}
-                    className="block w-full cursor-pointer rounded-lg border border-zinc-800 bg-[#0c0c14] p-2 text-sm text-zinc-300 file:mr-3 file:rounded file:border-0 file:bg-zinc-800 file:px-3 file:py-1 file:text-xs file:text-zinc-200"
+                    className="block w-full cursor-pointer rounded-lg border border-panel-line bg-panel-sunken p-2 text-sm text-panel-body file:mr-3 file:rounded file:border-0 file:bg-panel-raised file:px-3 file:py-1 file:text-xs file:text-panel-strong"
                   />
-                  <p className="text-xs text-zinc-600">
+                  <p className="text-xs text-panel-faint">
                     Shown on the public News section. Landscape works best — around 1200×600. Max 10 MB.
                     {newsImageFile && !editId && ' Uploaded once the item is created.'}
                   </p>
@@ -819,7 +819,7 @@ export default function NewsAndEventsPage() {
                   placeholder="Leave blank for unlimited"
                 />
                 {editId && (
-                  <p className="mt-1 text-xs text-zinc-600">
+                  <p className="mt-1 text-xs text-panel-faint">
                     {events.find((e) => e.id === editId)?.current_registrations ?? 0} booked so far.
                     Bookings are counted automatically and cannot exceed this number.
                   </p>
@@ -837,7 +837,7 @@ export default function NewsAndEventsPage() {
                         <img
                           src={eventForm.image_url}
                           alt=""
-                          className="h-36 w-full rounded-lg border border-zinc-800 object-cover"
+                          className="h-36 w-full rounded-lg border border-panel-line object-cover"
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                         <button
@@ -855,9 +855,9 @@ export default function NewsAndEventsPage() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => void uploadEventImage(e.target.files?.[0])}
-                      className="block w-full cursor-pointer rounded-lg border border-zinc-800 bg-[#0c0c14] p-2 text-sm text-zinc-300 file:mr-3 file:rounded file:border-0 file:bg-zinc-800 file:px-3 file:py-1 file:text-xs file:text-zinc-200"
+                      className="block w-full cursor-pointer rounded-lg border border-panel-line bg-panel-sunken p-2 text-sm text-panel-body file:mr-3 file:rounded file:border-0 file:bg-panel-raised file:px-3 file:py-1 file:text-xs file:text-panel-strong"
                     />
-                    <p className="text-xs text-zinc-600">Uploaded to Cloudinary. Max 10 MB.</p>
+                    <p className="text-xs text-panel-faint">Uploaded to Cloudinary. Max 10 MB.</p>
                   </div>
                 </FormField>
               ) : (
@@ -874,14 +874,14 @@ export default function NewsAndEventsPage() {
                 <img
                   src={eventForm.image_url.trim()}
                   alt=""
-                  className="h-28 w-full rounded-lg border border-zinc-800 object-cover"
+                  className="h-28 w-full rounded-lg border border-panel-line object-cover"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               )}
             </>
           )}
 
-          <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={closeModal} disabled={saving}>Cancel</Button>
             <Button onClick={save} disabled={saving}>
               {saving

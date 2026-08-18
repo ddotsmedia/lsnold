@@ -106,15 +106,15 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-6">
-      <nav className="flex gap-1 border-b border-zinc-800" aria-label="Booking views">
+      <nav className="flex gap-1 border-b border-panel-line" aria-label="Booking views">
         <span aria-current="page" className="-mb-px border-b-2 border-emerald-500 px-4 py-3 text-sm font-medium text-emerald-400">Table</span>
-        <Link href="/admin/bookings/calendar" className="-mb-px border-b-2 border-transparent px-4 py-3 text-sm font-medium text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300">Calendar</Link>
+        <Link href="/admin/bookings/calendar" className="-mb-px border-b-2 border-transparent px-4 py-3 text-sm font-medium text-panel-muted transition-colors hover:border-panel-line-2 hover:text-panel-body">Calendar</Link>
       </nav>
 
       {/* Says whether the list is updating by itself. Without it a quiet
           screen is ambiguous: nothing new, or a dropped connection. */}
-      <p className="flex items-center gap-2 text-xs text-zinc-500">
-        <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-zinc-600'}`} aria-hidden="true" />
+      <p className="flex items-center gap-2 text-xs text-panel-muted">
+        <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-panel-raised-2'}`} aria-hidden="true" />
         {live ? 'Live — new entries appear here as they arrive' : 'Not live — reload to see new entries'}
       </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">

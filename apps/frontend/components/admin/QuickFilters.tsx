@@ -80,7 +80,7 @@ export function QuickFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Quick</span>
+      <span className="text-[11px] font-medium uppercase tracking-wider text-panel-muted">Quick</span>
       {pills.map((pill) => {
         const active = isActive(pill);
         return (
@@ -92,7 +92,7 @@ export function QuickFilters({
             className={`min-h-12 rounded-full border px-4 text-xs transition-colors ${
               active
                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                : 'border-zinc-800 text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
+                : 'border-panel-line text-panel-body hover:bg-panel-raised/40 hover:text-panel-strong'
             }`}
           >
             {pill.label}

@@ -84,8 +84,8 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-medium text-zinc-100">Notifications</h2>
-          <p className="text-xs text-zinc-500">
+          <h2 className="text-lg font-medium text-panel-strong">Notifications</h2>
+          <p className="text-xs text-panel-muted">
             {unread > 0 ? `${unread} unread` : 'Nothing unread'}
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
             className={`min-h-12 rounded-lg border px-4 text-sm transition-colors ${
               filter === f.key
                 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                : 'border-zinc-800 text-zinc-400 hover:bg-zinc-800/40'
+                : 'border-panel-line text-panel-body hover:bg-panel-raised/40'
             }`}
           >
             {f.label}
@@ -112,10 +112,10 @@ export default function NotificationsPage() {
 
       {loading ? (
         <div className="space-y-2">
-          {[0, 1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-zinc-800/40" />)}
+          {[0, 1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-panel-raised/40" />)}
         </div>
       ) : visible.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#111119] p-10 text-center text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-surface p-10 text-center text-sm text-panel-muted">
           Nothing here.
         </p>
       ) : (
@@ -127,7 +127,7 @@ export default function NotificationsPage() {
                 key={item.id}
                 className={`flex items-start gap-3 rounded-xl border p-4 ${
                   item.read_at
-                    ? 'border-zinc-800/50 bg-[#111119]'
+                    ? 'border-panel-line/50 bg-panel-surface'
                     : 'border-emerald-500/20 bg-emerald-500/5'
                 }`}
               >
@@ -135,9 +135,9 @@ export default function NotificationsPage() {
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-zinc-200">{item.title}</p>
-                  {item.message && <p className="text-xs text-zinc-500">{item.message}</p>}
-                  <p className="mt-1 text-[11px] text-zinc-600">
+                  <p className="text-sm text-panel-strong">{item.title}</p>
+                  {item.message && <p className="text-xs text-panel-muted">{item.message}</p>}
+                  <p className="mt-1 text-[11px] text-panel-faint">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default function NotificationsPage() {
                     <Link
                       href={href}
                       onClick={() => void markRead(item)}
-                      className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 text-xs text-zinc-300 hover:bg-zinc-800"
+                      className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-panel-line-2 bg-panel-raised/50 px-3 text-xs text-panel-body hover:bg-panel-raised"
                     >
                       Open
                     </Link>

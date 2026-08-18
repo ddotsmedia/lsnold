@@ -96,8 +96,8 @@ export default function AssistantPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-xl font-semibold text-zinc-100">Assistant</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-xl font-semibold text-panel-strong">Assistant</h1>
+        <p className="mt-1 text-sm text-panel-muted">
           Ask about the nursery&rsquo;s figures. It sees totals only — never a child&rsquo;s
           name, a parent&rsquo;s contact, or any individual record.
         </p>
@@ -111,10 +111,10 @@ export default function AssistantPage() {
         </div>
       )}
 
-      <div className="min-h-75 space-y-4 rounded-xl border border-zinc-800/50 bg-[#111119] p-4">
+      <div className="min-h-75 space-y-4 rounded-xl border border-panel-line/50 bg-panel-surface p-4">
         {turns.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="mb-4 text-sm text-zinc-500">Try one of these:</p>
+            <p className="mb-4 text-sm text-panel-muted">Try one of these:</p>
             <div className="mx-auto flex max-w-lg flex-col gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -122,7 +122,7 @@ export default function AssistantPage() {
                   type="button"
                   onClick={() => void send(s)}
                   disabled={busy || configured === false}
-                  className="min-h-12 rounded-lg border border-zinc-800 px-3 py-2 text-left text-sm text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40"
+                  className="min-h-12 rounded-lg border border-panel-line px-3 py-2 text-left text-sm text-panel-body transition-colors hover:border-panel-line-2 hover:text-panel-strong disabled:opacity-40"
                 >
                   {s}
                 </button>
@@ -137,13 +137,13 @@ export default function AssistantPage() {
               </p>
 
               {turn.answer && (
-                <div className="max-w-[85%] rounded-lg rounded-bl-sm bg-zinc-800/50 px-3 py-2">
+                <div className="max-w-[85%] rounded-lg rounded-bl-sm bg-panel-raised/50 px-3 py-2">
                   {/* Plain text, deliberately: rendering model output as HTML
                       would be an injection route for anything that reaches the
                       figures. whitespace-pre-wrap keeps its paragraphing. */}
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{turn.answer}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-panel-strong">{turn.answer}</p>
                   {turn.meta && (
-                    <p className="mt-2 text-[10px] text-zinc-600">
+                    <p className="mt-2 text-[10px] text-panel-faint">
                       {turn.meta.model} · {turn.meta.took_ms} ms ·{' '}
                       {turn.meta.input_tokens + turn.meta.output_tokens} tokens
                     </p>
@@ -158,7 +158,7 @@ export default function AssistantPage() {
               )}
 
               {!turn.answer && !turn.error && (
-                <p className="text-sm text-zinc-600">Thinking…</p>
+                <p className="text-sm text-panel-faint">Thinking…</p>
               )}
             </article>
           ))
@@ -175,7 +175,7 @@ export default function AssistantPage() {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask about bookings, registrations, traffic or activity…"
           disabled={busy || configured === false}
-          className="min-h-12 flex-1 rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-emerald-500/50 focus:outline-none disabled:opacity-40"
+          className="min-h-12 flex-1 rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-strong placeholder-panel-faint focus:border-emerald-500/50 focus:outline-none disabled:opacity-40"
         />
         <Button type="submit" disabled={busy || question.trim().length < 3 || configured === false}>
           {busy ? 'Asking…' : 'Ask'}

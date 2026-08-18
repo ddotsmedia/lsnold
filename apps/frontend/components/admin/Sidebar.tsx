@@ -35,19 +35,19 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-[#0c0c14] border-r border-zinc-800/50 z-40 transition-all duration-300 flex flex-col ${
+      className={`fixed left-0 top-0 h-screen bg-panel-sunken border-r border-panel-line/50 z-40 transition-all duration-300 flex flex-col ${
         collapsed ? 'w-[68px]' : 'w-[260px]'
       }`}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-zinc-800/50 gap-3">
+      <div className="h-16 flex items-center px-4 border-b border-panel-line/50 gap-3">
         <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
           LS
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-sm font-semibold text-zinc-100 truncate">Little Smarties</p>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Admin Panel</p>
+            <p className="text-sm font-semibold text-panel-strong truncate">Little Smarties</p>
+            <p className="text-[10px] text-panel-muted uppercase tracking-widest">Admin Panel</p>
           </div>
         )}
       </div>
@@ -64,11 +64,11 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group ${
                   active
                     ? 'bg-emerald-500/10 text-emerald-400'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    : 'text-panel-body hover:text-panel-strong hover:bg-panel-raised/50'
                 }`}
                 title={collapsed ? item.label : undefined}
               >
-                <span className={`text-base shrink-0 ${active ? 'text-emerald-400' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                <span className={`text-base shrink-0 ${active ? 'text-emerald-400' : 'text-panel-muted group-hover:text-panel-body'}`}>
                   {item.icon}
                 </span>
                 {!collapsed && <span className="truncate">{item.label}</span>}
@@ -79,17 +79,17 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       </nav>
 
       {/* User / Collapse */}
-      <div className="border-t border-zinc-800/50 p-3 space-y-2">
+      <div className="border-t border-panel-line/50 p-3 space-y-2">
         {!collapsed && user && (
           <div className="px-2 py-1.5">
-            <p className="text-xs text-zinc-300 truncate">{user.name}</p>
-            <p className="text-[10px] text-zinc-600 truncate">{user.email}</p>
+            <p className="text-xs text-panel-body truncate">{user.name}</p>
+            <p className="text-[10px] text-panel-faint truncate">{user.email}</p>
           </div>
         )}
         <div className="flex items-center gap-1">
           <button
             onClick={onToggle}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-panel-muted hover:text-panel-body hover:bg-panel-raised/50 transition-colors"
             title={collapsed ? 'Expand' : 'Collapse'}
           >
             {collapsed ? '▸' : '◂'}

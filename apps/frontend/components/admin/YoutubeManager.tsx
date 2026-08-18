@@ -141,22 +141,22 @@ export function YoutubeManager() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-panel-muted">
           Videos shown on the public gallery page. Nothing is uploaded — YouTube hosts the file.
         </p>
         <Button onClick={openNew}>Add video</Button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-panel-muted">Loading…</p>
       ) : videos.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-6 text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-sunken p-6 text-sm text-panel-muted">
           No videos yet.
         </p>
       ) : (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {videos.map((v) => (
-            <li key={v.id} className="overflow-hidden rounded-xl border border-zinc-800/50 bg-[#0c0c14]">
+            <li key={v.id} className="overflow-hidden rounded-xl border border-panel-line/50 bg-panel-sunken">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={v.thumbnail_url || `https://img.youtube.com/vi/${v.youtube_id}/hqdefault.jpg`}
@@ -165,13 +165,13 @@ export function YoutubeManager() {
                 className="aspect-video w-full object-cover"
               />
               <div className="p-4">
-                <p className="truncate text-sm font-medium text-zinc-200">{v.title}</p>
-                <p className="mt-0.5 truncate text-xs text-zinc-500">{v.youtube_id}</p>
+                <p className="truncate text-sm font-medium text-panel-strong">{v.title}</p>
+                <p className="mt-0.5 truncate text-xs text-panel-muted">{v.youtube_id}</p>
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
                     onClick={() => openEdit(v)}
-                    className="min-h-11 flex-1 rounded-lg bg-zinc-800 text-sm text-zinc-200 hover:bg-zinc-700"
+                    className="min-h-11 flex-1 rounded-lg bg-panel-raised text-sm text-panel-strong hover:bg-panel-raised-2"
                   >
                     Edit
                   </button>
@@ -204,15 +204,15 @@ export function YoutubeManager() {
           </FormField>
 
           {pending && (
-            <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-2">
+            <div className="flex items-center gap-3 rounded-lg border border-panel-line bg-panel-surface/60 p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://img.youtube.com/vi/${pending}/default.jpg`}
                 alt=""
                 className="h-12 w-20 rounded object-cover"
               />
-              <span className="text-xs text-zinc-400">
-                Video id <span className="font-mono text-zinc-300">{pending}</span>
+              <span className="text-xs text-panel-body">
+                Video id <span className="font-mono text-panel-body">{pending}</span>
               </span>
             </div>
           )}

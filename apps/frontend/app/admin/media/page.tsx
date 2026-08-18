@@ -85,9 +85,9 @@ interface PageMediaResponse {
  */
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
-      <h3 className="text-sm font-medium text-zinc-300">{title}</h3>
-      {hint && <p className="mt-0.5 text-xs text-zinc-500">{hint}</p>}
+    <div className="rounded-xl border border-panel-line/50 bg-panel-surface p-6">
+      <h3 className="text-sm font-medium text-panel-body">{title}</h3>
+      {hint && <p className="mt-0.5 text-xs text-panel-muted">{hint}</p>}
       <div className="mt-4">{children}</div>
     </div>
   );
@@ -267,7 +267,7 @@ export default function MediaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-1 overflow-x-auto border-b border-zinc-800" role="tablist" aria-label="Media sections">
+      <div className="flex gap-1 overflow-x-auto border-b border-panel-line" role="tablist" aria-label="Media sections">
         {TABS.map((t) => {
           const active = tab === t.key;
           return (
@@ -279,7 +279,7 @@ export default function MediaPage() {
               className={`-mb-px shrink-0 rounded-t-lg border-b-2 px-5 py-3 text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
                 active
                   ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                  : 'border-transparent text-panel-muted hover:border-panel-line-2 hover:text-panel-body'
               }`}
             >
               {t.label}
@@ -317,7 +317,7 @@ export default function MediaPage() {
                 className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                   ageSlug === group.slug
                     ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-400'
-                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
+                    : 'border-panel-line bg-panel-surface/40 text-panel-body hover:text-panel-strong'
                 }`}
               >
                 {group.name}
@@ -451,7 +451,7 @@ export default function MediaPage() {
           <div className="space-y-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={editing.url} alt={editing.alt_text ?? ''} className="h-40 w-full rounded-lg object-cover" />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-panel-muted">
               {editing.width}×{editing.height} · {formatBytes(editing.file_size)} · {editing.mime_type}
             </p>
             <FormField label="Title">
@@ -471,7 +471,7 @@ export default function MediaPage() {
                 onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
               />
             </FormField>
-            <div className="flex justify-between gap-2 border-t border-zinc-800/50 pt-4">
+            <div className="flex justify-between gap-2 border-t border-panel-line/50 pt-4">
               <Button
                 variant="danger"
                 onClick={() =>

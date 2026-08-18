@@ -35,7 +35,7 @@ interface DashboardData {
 function TopPagesChart({ pages }: { pages: Array<{ path: string; count: number }> }) {
   if (pages.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-panel-muted">
         No data available yet — page views appear here once visitors browse the site.
       </p>
     );
@@ -49,16 +49,16 @@ function TopPagesChart({ pages }: { pages: Array<{ path: string; count: number }
     <div className="space-y-2.5">
       {pages.map((page) => (
         <div key={page.path} className="flex items-center gap-3">
-          <span className="w-40 shrink-0 truncate text-sm text-zinc-400" title={page.path}>
+          <span className="w-40 shrink-0 truncate text-sm text-panel-body" title={page.path}>
             {page.path}
           </span>
-          <div className="h-5 flex-1 overflow-hidden rounded bg-zinc-800/60">
+          <div className="h-5 flex-1 overflow-hidden rounded bg-panel-raised/60">
             <div
               className="h-full rounded bg-gradient-to-r from-emerald-500/70 to-emerald-400 transition-all duration-500"
               style={{ width: `${Math.max((page.count / max) * 100, 2)}%` }}
             />
           </div>
-          <span className="w-12 shrink-0 text-right text-sm font-medium tabular-nums text-zinc-200">
+          <span className="w-12 shrink-0 text-right text-sm font-medium tabular-nums text-panel-strong">
             {page.count}
           </span>
         </div>
@@ -86,9 +86,9 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className={`rounded-xl border border-zinc-800/50 bg-[#111119] p-6 ${className}`}>
-      <h3 className="text-sm font-medium text-zinc-200">{title}</h3>
-      {hint && <p className="mb-4 text-xs text-zinc-500">{hint}</p>}
+    <section className={`rounded-xl border border-panel-line/50 bg-panel-surface p-6 ${className}`}>
+      <h3 className="text-sm font-medium text-panel-strong">{title}</h3>
+      {hint && <p className="mb-4 text-xs text-panel-muted">{hint}</p>}
       {children}
     </section>
   );
@@ -151,12 +151,12 @@ export default function DashboardPage() {
 
   if (!data) {
     return (
-      <div className="rounded-xl border border-zinc-800/50 bg-[#111119] p-8 text-center">
-        <p className="text-sm text-zinc-300">No data available</p>
-        <p className="mt-1 text-xs text-zinc-500">{error ?? 'The dashboard could not be loaded.'}</p>
+      <div className="rounded-xl border border-panel-line/50 bg-panel-surface p-8 text-center">
+        <p className="text-sm text-panel-body">No data available</p>
+        <p className="mt-1 text-xs text-panel-muted">{error ?? 'The dashboard could not be loaded.'}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 rounded-lg border border-zinc-700 bg-zinc-800/50 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800"
+          className="mt-4 rounded-lg border border-panel-line-2 bg-panel-raised/50 px-4 py-2 text-sm text-panel-body transition-colors hover:bg-panel-raised"
         >
           Try again
         </button>
@@ -222,10 +222,10 @@ export default function DashboardPage() {
         )},
 
         { key: 'top-pages', title: 'Top visited pages', render: () => (
-      <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
+      <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
         <div className="mb-4 flex items-baseline justify-between">
-          <h3 className="text-sm font-medium text-zinc-300">Top Visited Pages</h3>
-          <span className="text-xs text-zinc-500">{data.analytics.viewsWeek} views this week</span>
+          <h3 className="text-sm font-medium text-panel-body">Top Visited Pages</h3>
+          <span className="text-xs text-panel-muted">{data.analytics.viewsWeek} views this week</span>
         </div>
         <TopPagesChart pages={data.visitedPages} />
       </div>
@@ -233,8 +233,8 @@ export default function DashboardPage() {
 
         { key: 'status', title: 'Registration and booking status', render: () => (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Registration Status</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Registration Status</h3>
           <div className="space-y-3">
             {[
               { label: 'Approved', value: data.registrations.approved, color: 'bg-emerald-500' },
@@ -243,9 +243,9 @@ export default function DashboardPage() {
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-3">
                 <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                <span className="text-sm text-zinc-400 flex-1">{item.label}</span>
-                <span className="text-sm font-medium text-zinc-200 tabular-nums">{item.value}</span>
-                <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <span className="text-sm text-panel-body flex-1">{item.label}</span>
+                <span className="text-sm font-medium text-panel-strong tabular-nums">{item.value}</span>
+                <div className="w-24 h-1.5 bg-panel-raised rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${item.color}`}
                     style={{ width: `${data.registrations.total > 0 ? (item.value / data.registrations.total) * 100 : 0}%` }}
@@ -256,8 +256,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Booking Status</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Booking Status</h3>
           <div className="space-y-3">
             {[
               { label: 'Confirmed', value: data.bookings.confirmed, color: 'bg-emerald-500' },
@@ -266,9 +266,9 @@ export default function DashboardPage() {
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-3">
                 <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                <span className="text-sm text-zinc-400 flex-1">{item.label}</span>
-                <span className="text-sm font-medium text-zinc-200 tabular-nums">{item.value}</span>
-                <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <span className="text-sm text-panel-body flex-1">{item.label}</span>
+                <span className="text-sm font-medium text-panel-strong tabular-nums">{item.value}</span>
+                <div className="w-24 h-1.5 bg-panel-raised rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${item.color}`}
                     style={{ width: `${data.bookings.total > 0 ? (item.value / data.bookings.total) * 100 : 0}%` }}
@@ -282,19 +282,19 @@ export default function DashboardPage() {
         )},
 
         { key: 'activity', title: 'Recent activity', render: () => (
-      <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-        <h3 className="text-sm font-medium text-zinc-300 mb-4">Recent Activity</h3>
+      <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+        <h3 className="text-sm font-medium text-panel-body mb-4">Recent Activity</h3>
         {data.recentActivity.length === 0 ? (
-          <p className="text-sm text-zinc-500">No recent activity</p>
+          <p className="text-sm text-panel-muted">No recent activity</p>
         ) : (
           <div className="space-y-3">
             {data.recentActivity.map((act) => (
               <div key={act.id} className="flex items-center gap-3 text-sm">
                 <StatusBadge status={act.action} />
-                <span className="text-zinc-400">{act.admin_name || 'System'}</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-300">{act.entity_type}</span>
-                <span className="text-zinc-600 text-xs ml-auto">
+                <span className="text-panel-body">{act.admin_name || 'System'}</span>
+                <span className="text-panel-faint">·</span>
+                <span className="text-panel-body">{act.entity_type}</span>
+                <span className="text-panel-faint text-xs ml-auto">
                   {new Date(act.created_at).toLocaleString()}
                 </span>
               </div>

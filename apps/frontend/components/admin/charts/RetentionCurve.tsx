@@ -39,20 +39,20 @@ export function RetentionCurve({ days = 90 }: { days?: number }) {
   }, [days]);
 
   if (error) return <p className="p-6 text-sm text-red-400">{error}</p>;
-  if (!data) return <div className="h-75 animate-pulse rounded-xl bg-zinc-800/40" />;
+  if (!data) return <div className="h-75 animate-pulse rounded-xl bg-panel-raised/40" />;
 
   const measured = data.buckets.filter((b) => b.rate !== null);
   const anyEligible = data.buckets.some((b) => b.eligible > 0);
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-panel-muted">
         Measuring return visits since {new Date(data.measuring_since).toLocaleDateString()}.
         Visitors are only counted towards a bucket once they are old enough to have reached it.
       </p>
 
       {!anyEligible ? (
-        <p className="rounded-lg border border-zinc-800 bg-[#0c0c14] p-6 text-center text-sm text-zinc-500">
+        <p className="rounded-lg border border-panel-line bg-panel-sunken p-6 text-center text-sm text-panel-muted">
           Nobody has been tracked long enough yet. The first bucket fills a day after
           the first visit, and the curve builds from there.
         </p>
@@ -101,7 +101,7 @@ export function RetentionCurve({ days = 90 }: { days?: number }) {
 
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-left text-zinc-500">
+          <tr className="text-left text-panel-muted">
             <th className="py-1">Window</th>
             <th className="py-1">Eligible</th>
             <th className="py-1">Returned</th>
@@ -110,7 +110,7 @@ export function RetentionCurve({ days = 90 }: { days?: number }) {
         </thead>
         <tbody>
           {data.buckets.map((b) => (
-            <tr key={b.label} className="border-t border-zinc-800/50 text-zinc-400">
+            <tr key={b.label} className="border-t border-panel-line/50 text-panel-body">
               <td className="py-1.5">{b.label}</td>
               <td className="py-1.5 tabular-nums">{b.eligible}</td>
               <td className="py-1.5 tabular-nums">{b.returned}</td>

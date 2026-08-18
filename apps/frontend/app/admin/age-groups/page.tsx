@@ -140,7 +140,7 @@ function SlotUploader({
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-zinc-400">{label}</p>
+      <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-panel-body">{label}</p>
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -152,12 +152,12 @@ function SlotUploader({
         aria-label={image ? `Replace the ${label}` : `Upload a ${label}`}
         className={`relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors ${
           compact ? 'h-28' : 'h-36'
-        } ${dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-700 bg-[#0c0c14] hover:border-zinc-600'}`}
+        } ${dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-panel-line-2 bg-panel-sunken hover:border-panel-line-2'}`}
       >
         {busy ? (
           <div className="w-full px-4 text-center">
-            <p className="mb-1.5 text-xs text-zinc-300">{progress > 0 ? `${progress}%` : 'Working…'}</p>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+            <p className="mb-1.5 text-xs text-panel-body">{progress > 0 ? `${progress}%` : 'Working…'}</p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-panel-raised">
               <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -166,7 +166,7 @@ function SlotUploader({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={image.url} alt={image.alt_text ?? ''} className="h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity hover:opacity-100">
-              <span className="rounded bg-zinc-900/90 px-2 py-1 text-xs text-zinc-200">Replace</span>
+              <span className="rounded bg-panel-surface/90 px-2 py-1 text-xs text-panel-strong">Replace</span>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); void remove(); }}
@@ -177,7 +177,7 @@ function SlotUploader({
             </div>
           </>
         ) : (
-          <p className="px-3 text-center text-xs text-zinc-500">Drop an image or click</p>
+          <p className="px-3 text-center text-xs text-panel-muted">Drop an image or click</p>
         )}
       </div>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => void send(e.target.files)} />
@@ -343,7 +343,7 @@ export default function AgeGroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-1 border-b border-zinc-800" role="tablist" aria-label="Age group sections">
+      <div className="flex gap-1 border-b border-panel-line" role="tablist" aria-label="Age group sections">
         {([['programmes', 'Programmes & Images'], ['records', 'Age Group Records']] as const).map(([key, label]) => {
           const active = tab === key;
           return (
@@ -353,7 +353,7 @@ export default function AgeGroupsPage() {
               aria-selected={active}
               onClick={() => setTab(key)}
               className={`-mb-px rounded-t-lg border-b-2 px-5 py-3 text-sm font-medium transition-colors ${
-                active ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                active ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-panel-muted hover:text-panel-body'
               }`}
             >
               {label}
@@ -372,7 +372,7 @@ export default function AgeGroupsPage() {
                 className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
                   selected === p.slug
                     ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-400'
-                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
+                    : 'border-panel-line bg-panel-surface/40 text-panel-body hover:text-panel-strong'
                 }`}
               >
                 <span className="block font-medium">{p.name}</span>
@@ -391,12 +391,12 @@ export default function AgeGroupsPage() {
             </div>
           ) : imagesLoading ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {[0, 1, 2].map((i) => <div key={i} className="h-32 animate-pulse rounded-lg bg-zinc-800/40" />)}
+              {[0, 1, 2].map((i) => <div key={i} className="h-32 animate-pulse rounded-lg bg-panel-raised/40" />)}
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
-                <h3 className="mb-4 text-sm font-medium text-zinc-300">{current?.name ?? 'Programme'} — key images</h3>
+              <div className="rounded-xl border border-panel-line/50 bg-panel-surface p-6">
+                <h3 className="mb-4 text-sm font-medium text-panel-body">{current?.name ?? 'Programme'} — key images</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <SlotUploader slug={selected} imageType="hero" label="Hero" image={images?.hero ?? null}
                     onDone={(m) => void refresh(m)} onError={fail} />
@@ -407,11 +407,11 @@ export default function AgeGroupsPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
+              <div className="rounded-xl border border-panel-line/50 bg-panel-surface p-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-300">Gallery</h3>
-                    <p className="text-xs text-zinc-500">Shown on the public page. Drag to reorder.</p>
+                    <h3 className="text-sm font-medium text-panel-body">Gallery</h3>
+                    <p className="text-xs text-panel-muted">Shown on the public page. Drag to reorder.</p>
                   </div>
                   <Button onClick={() => galleryInputRef.current?.click()} disabled={galleryBusy}>
                     {galleryBusy ? 'Uploading…' : '+ Add images'}
@@ -427,7 +427,7 @@ export default function AgeGroupsPage() {
                 </div>
 
                 {(images?.gallery.length ?? 0) === 0 ? (
-                  <p className="text-sm text-zinc-500">No gallery images yet.</p>
+                  <p className="text-sm text-panel-muted">No gallery images yet.</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     {images!.gallery.map((image, index) => (
@@ -443,10 +443,10 @@ export default function AgeGroupsPage() {
                           if (from !== null) void commitOrder(from, index);
                           dragRef.current = null; setDragIndex(null); setOverIndex(null);
                         }}
-                        className={`group relative cursor-move overflow-hidden rounded-lg border bg-[#0c0c14] transition-all ${
+                        className={`group relative cursor-move overflow-hidden rounded-lg border bg-panel-sunken transition-all ${
                           overIndex === index && dragIndex !== index
                             ? 'border-emerald-500 ring-2 ring-emerald-500/40'
-                            : 'border-zinc-800'
+                            : 'border-panel-line'
                         } ${dragIndex === index ? 'opacity-40' : ''}`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -459,7 +459,7 @@ export default function AgeGroupsPage() {
                         >
                           ×
                         </button>
-                        <figcaption className="truncate px-2 py-1.5 text-xs text-zinc-500">
+                        <figcaption className="truncate px-2 py-1.5 text-xs text-panel-muted">
                           {image.alt_text || image.title}
                         </figcaption>
                       </figure>
@@ -473,7 +473,7 @@ export default function AgeGroupsPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="max-w-2xl text-xs text-zinc-500">
+            <p className="max-w-2xl text-xs text-panel-muted">
               Rows in the age_groups table, referenced by registrations. These are separate from the
               programmes above and are not what the public page shows.
             </p>
@@ -489,12 +489,12 @@ export default function AgeGroupsPage() {
               <Button variant="secondary" onClick={() => void loadRecords()} className="mt-3">Try again</Button>
             </div>
           ) : recordsLoading ? (
-            <div className="h-32 animate-pulse rounded-xl bg-zinc-800/40" />
+            <div className="h-32 animate-pulse rounded-xl bg-panel-raised/40" />
           ) : (
-            <div className="overflow-hidden rounded-xl border border-zinc-800/50 bg-[#111119]">
+            <div className="overflow-hidden rounded-xl border border-panel-line/50 bg-panel-surface">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800/50 text-left text-xs uppercase tracking-wider text-zinc-500">
+                  <tr className="border-b border-panel-line/50 text-left text-xs uppercase tracking-wider text-panel-muted">
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Age range</th>
                     <th className="w-40 px-4 py-3" />
@@ -502,11 +502,11 @@ export default function AgeGroupsPage() {
                 </thead>
                 <tbody>
                   {records.length === 0 ? (
-                    <tr><td colSpan={3} className="px-4 py-8 text-center text-zinc-500">No age group records.</td></tr>
+                    <tr><td colSpan={3} className="px-4 py-8 text-center text-panel-muted">No age group records.</td></tr>
                   ) : records.map((r) => (
-                    <tr key={r.id} className="border-b border-zinc-800/30 hover:bg-zinc-900/40">
-                      <td className="px-4 py-3 font-medium text-zinc-200">{r.name}</td>
-                      <td className="px-4 py-3 text-xs text-zinc-400">
+                    <tr key={r.id} className="border-b border-panel-line/30 hover:bg-panel-surface/40">
+                      <td className="px-4 py-3 font-medium text-panel-strong">{r.name}</td>
+                      <td className="px-4 py-3 text-xs text-panel-body">
                         {r.min_age_months}–{r.max_age_months} months
                       </td>
                       <td className="px-4 py-3">
@@ -557,7 +557,7 @@ export default function AgeGroupsPage() {
                 onChange={(e) => setRecordForm((f) => ({ ...f, max_age_months: Number(e.target.value) }))} />
             </FormField>
           </div>
-          <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={() => setShowRecordModal(false)}>Cancel</Button>
             <Button onClick={saveRecord}>{editId ? 'Save Changes' : 'Create'}</Button>
           </div>

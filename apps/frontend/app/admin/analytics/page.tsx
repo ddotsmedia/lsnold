@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" /></div>;
   }
 
-  if (!overview) return <p className="text-zinc-500">Failed to load analytics</p>;
+  if (!overview) return <p className="text-panel-muted">Failed to load analytics</p>;
 
   const maxViews = Math.max(...(timeSeries?.data.map((d) => d.views) || [1]));
 
@@ -70,8 +70,8 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <section className="rounded-xl border border-zinc-800/50 bg-[#111119]">
-        <nav className="flex gap-1 overflow-x-auto border-b border-zinc-800 px-2" aria-label="Analytics views">
+      <section className="rounded-xl border border-panel-line/50 bg-panel-surface">
+        <nav className="flex gap-1 overflow-x-auto border-b border-panel-line px-2" aria-label="Analytics views">
           {(['overview','funnel','cohorts','retention'] as const).map((key) => (
             <button
               key={key}
@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
               className={`-mb-px min-h-12 whitespace-nowrap border-b-2 px-4 text-sm font-medium capitalize transition-colors ${
                 tab === key
                   ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                  : 'border-transparent text-panel-muted hover:border-panel-line-2 hover:text-panel-body'
               }`}
             >
               {key}
@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
         </nav>
         <div className="p-6">
           {tab === 'overview' && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-panel-muted">
               Traffic figures are below. The other tabs cover conversion and return visits.
             </p>
           )}
@@ -110,8 +110,8 @@ export default function AnalyticsPage() {
 
       {/* Views chart (simple bar chart with CSS) */}
       {timeSeries && timeSeries.data.length > 0 && (
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Page Views Over Time</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Page Views Over Time</h3>
           <div className="flex items-end gap-[2px] h-40">
             {timeSeries.data.map((d, i) => (
               <div
@@ -119,13 +119,13 @@ export default function AnalyticsPage() {
                 className="flex-1 bg-emerald-500/30 hover:bg-emerald-500/50 rounded-t transition-colors relative group min-w-[3px]"
                 style={{ height: `${Math.max(2, (d.views / maxViews) * 100)}%` }}
               >
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-panel-surface border border-panel-line rounded px-2 py-1 text-[10px] text-panel-body whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
                   {new Date(d.period).toLocaleDateString()}: {d.views} views
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-[10px] text-zinc-600">
+          <div className="flex justify-between mt-2 text-[10px] text-panel-faint">
             <span>{timeSeries.data[0] ? new Date(timeSeries.data[0].period).toLocaleDateString() : ''}</span>
             <span>{timeSeries.data.length > 0 ? new Date(timeSeries.data[timeSeries.data.length - 1]!.period).toLocaleDateString() : ''}</span>
           </div>
@@ -134,22 +134,22 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Pages */}
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Top Pages</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Top Pages</h3>
           <div className="space-y-2">
             {overview.topPages.slice(0, 10).map((p, i) => (
               <div key={i} className="flex items-center gap-3 text-sm">
-                <span className="text-zinc-600 w-5 text-right tabular-nums">{i + 1}</span>
-                <span className="text-zinc-300 flex-1 truncate">{p.page_path}</span>
-                <span className="text-zinc-500 tabular-nums">{p.views}</span>
+                <span className="text-panel-faint w-5 text-right tabular-nums">{i + 1}</span>
+                <span className="text-panel-body flex-1 truncate">{p.page_path}</span>
+                <span className="text-panel-muted tabular-nums">{p.views}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Device Breakdown */}
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Devices</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Devices</h3>
           <div className="space-y-3">
             {overview.deviceBreakdown.map((d) => {
               const pct = overview.totalViews > 0 ? (d.count / overview.totalViews) * 100 : 0;
@@ -157,9 +157,9 @@ export default function AnalyticsPage() {
               return (
                 <div key={d.device_type} className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${colors[d.device_type] || 'bg-zinc-500'}`} />
-                  <span className="text-sm text-zinc-400 flex-1 capitalize">{d.device_type}</span>
-                  <span className="text-sm text-zinc-300 tabular-nums">{pct.toFixed(1)}%</span>
-                  <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <span className="text-sm text-panel-body flex-1 capitalize">{d.device_type}</span>
+                  <span className="text-sm text-panel-body tabular-nums">{pct.toFixed(1)}%</span>
+                  <div className="w-24 h-1.5 bg-panel-raised rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${colors[d.device_type] || 'bg-zinc-500'}`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
@@ -169,28 +169,28 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Referrers */}
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Top Referrers</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Top Referrers</h3>
           <div className="space-y-2">
             {overview.referrers.slice(0, 10).map((r, i) => (
               <div key={i} className="flex items-center gap-3 text-sm">
-                <span className="text-zinc-600 w-5 text-right tabular-nums">{i + 1}</span>
-                <span className="text-zinc-300 flex-1 truncate">{r.referrer}</span>
-                <span className="text-zinc-500 tabular-nums">{r.count}</span>
+                <span className="text-panel-faint w-5 text-right tabular-nums">{i + 1}</span>
+                <span className="text-panel-body flex-1 truncate">{r.referrer}</span>
+                <span className="text-panel-muted tabular-nums">{r.count}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Browsers */}
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Browsers</h3>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6">
+          <h3 className="text-sm font-medium text-panel-body mb-4">Browsers</h3>
           <div className="space-y-2">
             {browsers.slice(0, 10).map((b, i) => (
               <div key={i} className="flex items-center gap-3 text-sm">
-                <span className="text-zinc-600 w-5 text-right tabular-nums">{i + 1}</span>
-                <span className="text-zinc-300 flex-1">{b.browser}</span>
-                <span className="text-zinc-500 tabular-nums">{b.count}</span>
+                <span className="text-panel-faint w-5 text-right tabular-nums">{i + 1}</span>
+                <span className="text-panel-body flex-1">{b.browser}</span>
+                <span className="text-panel-muted tabular-nums">{b.count}</span>
               </div>
             ))}
           </div>
@@ -198,13 +198,13 @@ export default function AnalyticsPage() {
 
         {/* Countries */}
         {countries.length > 0 && (
-          <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6 lg:col-span-2">
-            <h3 className="text-sm font-medium text-zinc-300 mb-4">Countries</h3>
+          <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6 lg:col-span-2">
+            <h3 className="text-sm font-medium text-panel-body mb-4">Countries</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {countries.slice(0, 20).map((c, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <span className="text-zinc-400 flex-1">{c.country}</span>
-                  <span className="text-zinc-500 tabular-nums">{c.count}</span>
+                  <span className="text-panel-body flex-1">{c.country}</span>
+                  <span className="text-panel-muted tabular-nums">{c.count}</span>
                 </div>
               ))}
             </div>

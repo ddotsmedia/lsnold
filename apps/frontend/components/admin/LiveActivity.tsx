@@ -61,12 +61,12 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
   }, [newestId]);
 
   return (
-    <section className="rounded-xl border border-zinc-800/50 bg-[#111119] p-6">
+    <section className="rounded-xl border border-panel-line/50 bg-panel-surface p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-zinc-300">Live activity</h3>
-        <span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+        <h3 className="text-sm font-medium text-panel-body">Live activity</h3>
+        <span className="flex items-center gap-1.5 text-[11px] text-panel-muted">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-zinc-600'}`}
+            className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-panel-raised-2'}`}
             aria-hidden="true"
           />
           {connected ? 'Connected' : 'Offline'}
@@ -74,7 +74,7 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
       </div>
 
       {entries.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-600">
+        <p className="py-6 text-center text-sm text-panel-faint">
           {connected
             ? 'Watching. Anything an admin does will appear here.'
             : 'Not connected — the feed will fill once the connection is up.'}
@@ -88,16 +88,16 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
                 entry.id === newestId ? 'bg-emerald-500/10' : ''
               }`}
             >
-              <span className="text-zinc-300">
+              <span className="text-panel-body">
                 {entry.actor_name ?? 'Someone'}{' '}
-                <span className="text-zinc-500">
+                <span className="text-panel-muted">
                   {ACTION_WORDS[entry.action] ?? entry.action}
                 </span>{' '}
                 a {readableType(entry.entity_type)}
               </span>
               <time
                 dateTime={entry.created_at}
-                className="ml-auto shrink-0 text-[11px] tabular-nums text-zinc-600"
+                className="ml-auto shrink-0 text-[11px] tabular-nums text-panel-faint"
               >
                 {new Date(entry.created_at).toLocaleTimeString([], {
                   hour: '2-digit',

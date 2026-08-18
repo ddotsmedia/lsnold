@@ -1,5 +1,71 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Admin panel theme.
+
+   The panel was written with its colours hardcoded — bg-[#111119], text-zinc-500
+   and so on — which meant a theme toggle had nothing to flip. These tokens give
+   each surface and text weight a name, defined once per theme, so the same
+   markup renders light or dark.
+
+   Only the panel uses them. The public site is a fixed light design and is
+   deliberately untouched: families do not get a theme switch, and inverting the
+   nursery's own pages was never the ask.
+   --------------------------------------------------------------------------- */
+
+/* Tailwind 4 has no darkMode option; the variant is declared here. Matching
+   .dark and its descendants rather than a media query, because the toggle sets
+   the class and an explicit choice must beat the operating system's. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Light. Chosen so text keeps roughly the contrast it had when dark: the
+     panel is near-white, raised surfaces step down, and text steps up. */
+  --panel-base: #f4f4f5;
+  --panel-sunken: #fafafa;
+  --panel-surface: #ffffff;
+  --panel-raised: #e4e4e7;
+  --panel-raised-2: #d4d4d8;
+  --panel-line: #e4e4e7;
+  --panel-line-2: #d4d4d8;
+  --panel-strong: #18181b;
+  --panel-body: #3f3f46;
+  --panel-muted: #71717a;
+  --panel-faint: #a1a1aa;
+}
+
+.dark {
+  /* The panel exactly as it looked before any of this, so dark is unchanged. */
+  --panel-base: #0a0a0f;
+  --panel-sunken: #0c0c14;
+  --panel-surface: #111119;
+  --panel-raised: #27272a;
+  --panel-raised-2: #3f3f46;
+  --panel-line: #27272a;
+  --panel-line-2: #3f3f46;
+  --panel-strong: #f4f4f5;
+  --panel-body: #d4d4d8;
+  --panel-muted: #71717a;
+  --panel-faint: #52525b;
+}
+
+/* `inline` keeps the var() reference in the generated CSS instead of resolving
+   it at build time — without it every utility would bake in the light value and
+   the toggle would change nothing. */
+@theme inline {
+  --color-panel-base: var(--panel-base);
+  --color-panel-sunken: var(--panel-sunken);
+  --color-panel-surface: var(--panel-surface);
+  --color-panel-raised: var(--panel-raised);
+  --color-panel-raised-2: var(--panel-raised-2);
+  --color-panel-line: var(--panel-line);
+  --color-panel-line-2: var(--panel-line-2);
+  --color-panel-strong: var(--panel-strong);
+  --color-panel-body: var(--panel-body);
+  --color-panel-muted: var(--panel-muted);
+  --color-panel-faint: var(--panel-faint);
+}
+
 @theme {
   --animate-float: float 6s ease-in-out infinite;
   --animate-fade-in: fade-in 200ms ease-out both;

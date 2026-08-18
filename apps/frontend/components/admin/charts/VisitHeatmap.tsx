@@ -71,7 +71,7 @@ export function VisitHeatmap({ days = 30 }: { days?: number }) {
   if (error) {
     return <Note>Could not load visit times.</Note>;
   }
-  if (!data) return <div className="h-70 animate-pulse rounded-lg bg-zinc-800/40" />;
+  if (!data) return <div className="h-70 animate-pulse rounded-lg bg-panel-raised/40" />;
   if (data.cells.length === 0) {
     return <Note>No visits recorded in the last {data.days} days.</Note>;
   }
@@ -79,7 +79,7 @@ export function VisitHeatmap({ days = 30 }: { days?: number }) {
   return (
     <>
       <EChart option={option} height={280} ariaLabel="Site visits by weekday and hour" />
-      <p className="mt-1 text-[11px] text-zinc-600">
+      <p className="mt-1 text-[11px] text-panel-faint">
         Last {data.days} days. Busiest hour saw {data.peak} visits.
       </p>
     </>
@@ -88,7 +88,7 @@ export function VisitHeatmap({ days = 30 }: { days?: number }) {
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-70 items-center justify-center rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-500">
+    <div className="flex h-70 items-center justify-center rounded-lg border border-dashed border-panel-line p-6 text-center text-sm text-panel-muted">
       <p>{children}</p>
     </div>
   );

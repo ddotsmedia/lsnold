@@ -54,7 +54,7 @@ export function PartnerUpload({ onSelect, currentUrl, maxSize = 5 * 1024 * 1024 
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">Logo</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-panel-body">Logo</p>
 
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -66,7 +66,7 @@ export function PartnerUpload({ onSelect, currentUrl, maxSize = 5 * 1024 * 1024 
         tabIndex={0}
         aria-label="Choose a logo image"
         className={`flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors ${
-          dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-700 bg-[#0c0c14] hover:border-zinc-600'
+          dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-panel-line-2 bg-panel-sunken hover:border-panel-line-2'
         }`}
       >
         {shown ? (
@@ -79,8 +79,8 @@ export function PartnerUpload({ onSelect, currentUrl, maxSize = 5 * 1024 * 1024 
         ) : (
           <div className="px-4 text-center">
             <p className="text-2xl" aria-hidden="true">⬆</p>
-            <p className="mt-1 text-sm text-zinc-300">Drop a logo here</p>
-            <p className="mt-0.5 text-xs text-zinc-500">or click to browse · max {formatBytes(maxSize)}</p>
+            <p className="mt-1 text-sm text-panel-body">Drop a logo here</p>
+            <p className="mt-0.5 text-xs text-panel-muted">or click to browse · max {formatBytes(maxSize)}</p>
           </div>
         )}
       </div>

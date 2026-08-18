@@ -91,7 +91,7 @@ export default function RolesPage() {
   };
 
   if (loading) {
-    return <div className="h-64 animate-pulse rounded-xl bg-zinc-800/40" />;
+    return <div className="h-64 animate-pulse rounded-xl bg-panel-raised/40" />;
   }
 
   if (loadError) {
@@ -109,25 +109,25 @@ export default function RolesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-medium text-zinc-100">Roles &amp; permissions</h2>
-        <p className="mt-1 text-xs text-zinc-500">
+        <h2 className="text-lg font-medium text-panel-strong">Roles &amp; permissions</h2>
+        <p className="mt-1 text-xs text-panel-muted">
           Every account has one role, set on the Users screen. This decides what each role may do.
           Admin always keeps everything.
         </p>
       </div>
 
       {/* Scrolls inside itself rather than pushing the page sideways. */}
-      <div className="overflow-x-auto rounded-xl border border-zinc-800/50 bg-[#111119]">
+      <div className="overflow-x-auto rounded-xl border border-panel-line/50 bg-panel-surface">
         <table className="w-full min-w-150 text-sm">
           <thead>
-            <tr className="border-b border-zinc-800/50">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
+            <tr className="border-b border-panel-line/50">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-panel-muted">
                 Permission
               </th>
               {roles.map((role) => (
-                <th key={role.id} className="px-4 py-3 text-center text-xs font-medium text-zinc-400">
-                  <span className="block capitalize text-zinc-200">{role.name}</span>
-                  <span className="text-[11px] font-normal text-zinc-600">
+                <th key={role.id} className="px-4 py-3 text-center text-xs font-medium text-panel-body">
+                  <span className="block capitalize text-panel-strong">{role.name}</span>
+                  <span className="text-[11px] font-normal text-panel-faint">
                     {role.user_count} {role.user_count === 1 ? 'account' : 'accounts'}
                   </span>
                 </th>
@@ -137,20 +137,20 @@ export default function RolesPage() {
           <tbody>
             {groups.map((group) => (
               <>
-                <tr key={`h-${group}`} className="bg-zinc-900/40">
+                <tr key={`h-${group}`} className="bg-panel-surface/40">
                   <td
                     colSpan={roles.length + 1}
-                    className="px-4 py-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500"
+                    className="px-4 py-1.5 text-[11px] font-medium uppercase tracking-wider text-panel-muted"
                   >
                     {group}
                   </td>
                 </tr>
                 {permissions.filter((p) => groupOf(p.name) === group).map((permission) => (
-                  <tr key={permission.id} className="border-b border-zinc-800/30">
+                  <tr key={permission.id} className="border-b border-panel-line/30">
                     <td className="px-4 py-2">
-                      <code className="text-[11px] text-zinc-400">{permission.name}</code>
+                      <code className="text-[11px] text-panel-body">{permission.name}</code>
                       {permission.description && (
-                        <p className="text-[11px] text-zinc-600">{permission.description}</p>
+                        <p className="text-[11px] text-panel-faint">{permission.description}</p>
                       )}
                     </td>
                     {roles.map((role) => {
@@ -181,7 +181,7 @@ export default function RolesPage() {
               {roles.map((role) => (
                 <td key={role.id} className="px-4 py-3 text-center">
                   {role.name === 'admin' ? (
-                    <span className="text-[11px] text-zinc-600">Always full access</span>
+                    <span className="text-[11px] text-panel-faint">Always full access</span>
                   ) : (
                     <Button
                       size="sm"

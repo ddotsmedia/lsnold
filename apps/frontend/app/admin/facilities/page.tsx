@@ -77,14 +77,14 @@ function BulletEditor({
 
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">{label}</p>
-      <p className="mb-2 text-xs text-zinc-600">{hint}</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-panel-body">{label}</p>
+      <p className="mb-2 text-xs text-panel-faint">{hint}</p>
 
       {values.length > 0 && (
         <ul className="mb-2 space-y-1.5">
           {values.map((value, index) => (
-            <li key={`${value}-${index}`} className="flex items-center gap-2 rounded-lg bg-[#0c0c14] px-3 py-2">
-              <span className="flex-1 text-sm text-zinc-300">{value}</span>
+            <li key={`${value}-${index}`} className="flex items-center gap-2 rounded-lg bg-panel-sunken px-3 py-2">
+              <span className="flex-1 text-sm text-panel-body">{value}</span>
               <button
                 type="button"
                 onClick={() => onChange(values.filter((_, i) => i !== index))}
@@ -270,10 +270,10 @@ export default function FacilitiesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-panel-body">
             {loading ? 'Loading…' : `${data.length} facilit${data.length === 1 ? 'y' : 'ies'}`}
           </p>
-          <p className="text-xs text-zinc-600">Drag the rows to change the order they appear on the site.</p>
+          <p className="text-xs text-panel-faint">Drag the rows to change the order they appear on the site.</p>
         </div>
         <Button onClick={openCreate}>+ Add Facility</Button>
       </div>
@@ -286,10 +286,10 @@ export default function FacilitiesPage() {
         </div>
       ) : loading ? (
         <div className="space-y-2">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-zinc-800/40" />)}
+          {[0, 1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-panel-raised/40" />)}
         </div>
       ) : data.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#111119] p-10 text-center text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-surface p-10 text-center text-sm text-panel-muted">
           No facilities yet. Use “+ Add Facility” to create the first one.
         </p>
       ) : (
@@ -307,27 +307,27 @@ export default function FacilitiesPage() {
                 if (from !== null) void commitOrder(from, index);
                 dragRef.current = null; setDragIndex(null); setOverIndex(null);
               }}
-              className={`flex cursor-move items-center gap-4 rounded-xl border bg-[#111119] p-4 transition-all ${
+              className={`flex cursor-move items-center gap-4 rounded-xl border bg-panel-surface p-4 transition-all ${
                 overIndex === index && dragIndex !== index
                   ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                  : 'border-zinc-800/50'
+                  : 'border-panel-line/50'
               } ${dragIndex === index ? 'opacity-40' : ''}`}
             >
-              <span className="text-zinc-600" aria-hidden="true">⠿</span>
+              <span className="text-panel-faint" aria-hidden="true">⠿</span>
 
               {facility.images?.[0] ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={facility.images[0].url} alt="" className="h-12 w-16 shrink-0 rounded object-cover" />
               ) : (
-                <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded bg-zinc-900 text-2xl">
+                <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded bg-panel-surface text-2xl">
                   {facility.icon || '🏫'}
                 </span>
               )}
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-zinc-200">{facility.name}</p>
-                <p className="truncate text-xs text-zinc-500">{facility.description}</p>
-                <p className="mt-0.5 text-xs text-zinc-600">
+                <p className="truncate font-medium text-panel-strong">{facility.name}</p>
+                <p className="truncate text-xs text-panel-muted">{facility.description}</p>
+                <p className="mt-0.5 text-xs text-panel-faint">
                   {facility.features?.length ?? 0} features · {facility.amenities?.length ?? 0} amenities ·{' '}
                   {facility.images?.length ?? 0} images
                 </p>
@@ -350,7 +350,7 @@ export default function FacilitiesPage() {
       >
         <div className="max-h-[72vh] space-y-4 overflow-y-auto pr-2">
           {editing && (
-            <div className="flex gap-1 border-b border-zinc-800" role="tablist" aria-label="Facility sections">
+            <div className="flex gap-1 border-b border-panel-line" role="tablist" aria-label="Facility sections">
               {([['details', 'Details'], ['images', 'Images']] as const).map(([key, label]) => (
                 <button
                   key={key}
@@ -360,7 +360,7 @@ export default function FacilitiesPage() {
                   className={`-mb-px rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                     modalTab === key
                       ? 'border-emerald-500 text-emerald-400'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      : 'border-transparent text-panel-muted hover:text-panel-body'
                   }`}
                 >
                   {label}
@@ -372,7 +372,7 @@ export default function FacilitiesPage() {
           {editing && modalTab === 'images' ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-panel-muted">
                   Shown in the facility&rsquo;s gallery on the public page. The first is used as its thumbnail.
                 </p>
                 <Button onClick={() => imageInputRef.current?.click()} disabled={uploading}>
@@ -389,13 +389,13 @@ export default function FacilitiesPage() {
               </div>
 
               {(editing.images?.length ?? 0) === 0 ? (
-                <p className="py-6 text-center text-sm text-zinc-500">
+                <p className="py-6 text-center text-sm text-panel-muted">
                   No images yet. The public page shows tinted placeholders until you add some.
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {editing.images.map((image) => (
-                    <figure key={image.assignment_id} className="group relative overflow-hidden rounded-lg border border-zinc-800">
+                    <figure key={image.assignment_id} className="group relative overflow-hidden rounded-lg border border-panel-line">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={image.url} alt={image.alt_text ?? ''} className="aspect-4/3 w-full object-cover" />
                       {image.is_primary && (
@@ -437,7 +437,7 @@ export default function FacilitiesPage() {
                         aria-label={`Use ${icon}`}
                         aria-pressed={form.icon === icon}
                         className={`h-8 w-8 rounded text-lg transition-colors ${
-                          form.icon === icon ? 'bg-emerald-500/25 ring-1 ring-emerald-500' : 'hover:bg-zinc-800'
+                          form.icon === icon ? 'bg-emerald-500/25 ring-1 ring-emerald-500' : 'hover:bg-panel-raised'
                         }`}
                       >
                         {icon}
@@ -474,7 +474,7 @@ export default function FacilitiesPage() {
                 />
               </FormField>
 
-              <div className="border-t border-zinc-800/50 pt-4">
+              <div className="border-t border-panel-line/50 pt-4">
                 <BulletEditor
                   label="Features"
                   hint="Shown on the card in the facilities grid."
@@ -483,7 +483,7 @@ export default function FacilitiesPage() {
                 />
               </div>
 
-              <div className="border-t border-zinc-800/50 pt-4">
+              <div className="border-t border-panel-line/50 pt-4">
                 <BulletEditor
                   label="Amenities"
                   hint="Shown in the detail panel when the facility is opened."
@@ -492,7 +492,7 @@ export default function FacilitiesPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+              <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
                 <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saving}>Cancel</Button>
                 <Button onClick={save} disabled={saving}>
                   {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create'}

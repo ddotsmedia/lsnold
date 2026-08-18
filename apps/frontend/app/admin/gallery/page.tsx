@@ -141,13 +141,13 @@ export default function GalleryPage() {
   return (
     <div className="space-y-6">
       {/* Tab switcher */}
-      <div className="flex gap-2 border-b border-zinc-800">
+      <div className="flex gap-2 border-b border-panel-line">
         <button
           onClick={() => setActiveTab('images')}
           className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
             activeTab === 'images'
               ? 'text-emerald-400 border-emerald-500'
-              : 'text-zinc-400 border-transparent hover:text-zinc-300'
+              : 'text-panel-body border-transparent hover:text-panel-body'
           }`}
         >
           Images ({categories.reduce((s, c) => s + c.image_count, 0)})
@@ -157,7 +157,7 @@ export default function GalleryPage() {
           className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
             activeTab === 'videos'
               ? 'text-emerald-400 border-emerald-500'
-              : 'text-zinc-400 border-transparent hover:text-zinc-300'
+              : 'text-panel-body border-transparent hover:text-panel-body'
           }`}
         >
           Videos ({videos.length})
@@ -167,7 +167,7 @@ export default function GalleryPage() {
           className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
             activeTab === 'youtube'
               ? 'text-emerald-400 border-emerald-500'
-              : 'text-zinc-400 border-transparent hover:text-zinc-300'
+              : 'text-panel-body border-transparent hover:text-panel-body'
           }`}
         >
           YouTube Videos
@@ -184,7 +184,7 @@ export default function GalleryPage() {
             <button
               onClick={() => { setSelectedCat(''); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                !selectedCat ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                !selectedCat ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-panel-body border-panel-line hover:border-panel-line-2'
               }`}
             >
               All ({categories.reduce((s, c) => s + c.image_count, 0)})
@@ -194,12 +194,12 @@ export default function GalleryPage() {
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border group relative ${
-                  selectedCat === cat.id ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                  selectedCat === cat.id ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-panel-body border-panel-line hover:border-panel-line-2'
                 }`}
               >
                 {cat.name} ({cat.image_count})
                 <span
-                  className="hidden group-hover:inline ml-2 text-zinc-500 hover:text-red-400"
+                  className="hidden group-hover:inline ml-2 text-panel-muted hover:text-red-400"
                   onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: 'cat', id: cat.id }); }}
                 >×</span>
               </button>
@@ -211,7 +211,7 @@ export default function GalleryPage() {
 
           {/* Actions */}
           <div className="flex justify-between items-center">
-            <p className="text-sm text-zinc-500">{pagination.total} images</p>
+            <p className="text-sm text-panel-muted">{pagination.total} images</p>
             <Button onClick={() => setShowUpload(true)}>Upload Images</Button>
           </div>
 
@@ -221,12 +221,12 @@ export default function GalleryPage() {
               <div className="w-8 h-8 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
             </div>
           ) : images.length === 0 ? (
-            <div className="text-center py-16 text-zinc-500">No images found. Upload some to get started.</div>
+            <div className="text-center py-16 text-panel-muted">No images found. Upload some to get started.</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {images.map((img) => (
-                <div key={img.id} className="group relative bg-[#111119] rounded-xl border border-zinc-800/50 overflow-hidden">
-                  <div className="aspect-square bg-zinc-900">
+                <div key={img.id} className="group relative bg-panel-surface rounded-xl border border-panel-line/50 overflow-hidden">
+                  <div className="aspect-square bg-panel-surface">
                     <img
                       src={img.image_url}
                       alt={img.title}
@@ -235,12 +235,12 @@ export default function GalleryPage() {
                     />
                   </div>
                   <div className="p-2.5">
-                    <p className="text-xs text-zinc-300 truncate">{img.title}</p>
-                    <p className="text-[10px] text-zinc-600 truncate">{img.category_name}</p>
+                    <p className="text-xs text-panel-body truncate">{img.title}</p>
+                    <p className="text-[10px] text-panel-faint truncate">{img.category_name}</p>
                   </div>
                   <button
                     onClick={() => setConfirmDelete({ type: 'img', id: img.id })}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-zinc-400 hover:text-red-400 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-panel-body hover:text-red-400 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
                   </button>
@@ -252,7 +252,7 @@ export default function GalleryPage() {
           {pagination.totalPages > 1 && (
             <div className="flex justify-center gap-2 pt-4">
               <Button size="sm" variant="secondary" onClick={() => fetchImages(pagination.page - 1)} disabled={pagination.page <= 1}>‹ Prev</Button>
-              <span className="text-xs text-zinc-500 flex items-center">Page {pagination.page} of {pagination.totalPages}</span>
+              <span className="text-xs text-panel-muted flex items-center">Page {pagination.page} of {pagination.totalPages}</span>
               <Button size="sm" variant="secondary" onClick={() => fetchImages(pagination.page + 1)} disabled={pagination.page >= pagination.totalPages}>Next ›</Button>
             </div>
           )}
@@ -277,7 +277,7 @@ export default function GalleryPage() {
         <div className="space-y-6">
           {/* Actions */}
           <div className="flex justify-between items-center">
-            <p className="text-sm text-zinc-500">{videos.length} videos</p>
+            <p className="text-sm text-panel-muted">{videos.length} videos</p>
             <Button onClick={() => setShowVideoUpload(true)}>+ Upload Video</Button>
           </div>
 
@@ -287,12 +287,12 @@ export default function GalleryPage() {
               <div className="w-8 h-8 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
             </div>
           ) : videos.length === 0 ? (
-            <div className="text-center py-16 text-zinc-500">No videos yet. Upload one to get started.</div>
+            <div className="text-center py-16 text-panel-muted">No videos yet. Upload one to get started.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {videos.map((video) => (
-                <div key={video.id} className="group relative bg-[#111119] rounded-xl border border-zinc-800/50 overflow-hidden">
-                  <div className="aspect-video bg-zinc-900">
+                <div key={video.id} className="group relative bg-panel-surface rounded-xl border border-panel-line/50 overflow-hidden">
+                  <div className="aspect-video bg-panel-surface">
                     <video
                       src={video.video_url}
                       poster={video.thumbnail_url}
@@ -301,13 +301,13 @@ export default function GalleryPage() {
                     />
                   </div>
                   <div className="p-3">
-                    <p className="text-sm text-zinc-300 font-medium truncate">{video.title}</p>
-                    <p className="text-xs text-zinc-600 truncate mt-1">{video.description}</p>
-                    <p className="text-xs text-zinc-500 mt-2">{new Date(video.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-panel-body font-medium truncate">{video.title}</p>
+                    <p className="text-xs text-panel-faint truncate mt-1">{video.description}</p>
+                    <p className="text-xs text-panel-muted mt-2">{new Date(video.created_at).toLocaleDateString()}</p>
                   </div>
                   <button
                     onClick={() => deleteVideo(video.id)}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-zinc-400 hover:text-red-400 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-panel-body hover:text-red-400 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
                   </button>
@@ -331,14 +331,14 @@ export default function GalleryPage() {
       <Modal open={showUpload} onClose={() => setShowUpload(false)} title="Upload Images">
         <div className="space-y-4">
           <FormField label="Category">
-            <select value={uploadCat} onChange={(e) => setUploadCat(e.target.value)} className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300">
+            <select value={uploadCat} onChange={(e) => setUploadCat(e.target.value)} className="w-full px-3 py-2 bg-panel-surface border border-panel-line rounded-lg text-sm text-panel-body">
               {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </FormField>
           <FormField label="Title"><Input value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} placeholder="Optional" /></FormField>
           <FormField label="Description"><Input value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} placeholder="Optional" /></FormField>
           <FormField label="Images">
-            <input ref={fileRef} type="file" multiple accept="image/*" className="w-full text-sm text-zinc-500 file:mr-3 file:px-3 file:py-1.5 file:bg-emerald-500/10 file:text-emerald-400 file:border file:border-emerald-500/30 file:rounded" />
+            <input ref={fileRef} type="file" multiple accept="image/*" className="w-full text-sm text-panel-muted file:mr-3 file:px-3 file:py-1.5 file:bg-emerald-500/10 file:text-emerald-400 file:border file:border-emerald-500/30 file:rounded" />
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setShowUpload(false)}>Cancel</Button>

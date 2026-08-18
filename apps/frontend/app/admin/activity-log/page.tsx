@@ -49,7 +49,7 @@ function DiffTable({ log }: { log: Activity }) {
 
   if (keys.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-panel-muted">
         No field-level values were recorded for this action.
       </p>
     );
@@ -59,16 +59,16 @@ function DiffTable({ log }: { log: Activity }) {
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-zinc-800 text-xs uppercase tracking-wide text-zinc-500">
+          <tr className="border-b border-panel-line text-xs uppercase tracking-wide text-panel-muted">
             <th className="py-2 pr-4">Field</th>
             <th className="py-2 pr-4">Before</th>
             <th className="py-2">After</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-800/60">
+        <tbody className="divide-y divide-panel-line/60">
           {keys.map((k) => (
             <tr key={k} className="align-top">
-              <td className="py-2 pr-4 font-medium text-zinc-300">{k}</td>
+              <td className="py-2 pr-4 font-medium text-panel-body">{k}</td>
               <td className="py-2 pr-4 text-red-300/80 break-all">{render(log.old_values?.[k])}</td>
               <td className="py-2 text-emerald-300/90 break-all">{render(log.new_values?.[k])}</td>
             </tr>
@@ -121,22 +121,22 @@ export default function ActivityLogPage() {
 
   const columns: Column<Activity>[] = [
     { key: 'created_at', header: 'Time', render: (r) => (
-      <span className="text-xs text-zinc-400 tabular-nums whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</span>
+      <span className="text-xs text-panel-body tabular-nums whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</span>
     )},
     { key: 'admin_name', header: 'User', render: (r) => (
       <div>
-        <span className="text-sm text-zinc-300">{r.admin_name || 'System'}</span>
-        {r.admin_email && <span className="block text-[10px] text-zinc-600">{r.admin_email}</span>}
+        <span className="text-sm text-panel-body">{r.admin_name || 'System'}</span>
+        {r.admin_email && <span className="block text-[10px] text-panel-faint">{r.admin_email}</span>}
       </div>
     )},
     { key: 'action', header: 'Action', render: (r) => <StatusBadge status={r.action} /> },
     { key: 'entity_type', header: 'Entity', render: (r) => (
-      <span className="text-sm text-zinc-400">{r.entity_type}{r.entity_id ? ` #${r.entity_id.slice(0, 8)}` : ''}</span>
+      <span className="text-sm text-panel-body">{r.entity_type}{r.entity_id ? ` #${r.entity_id.slice(0, 8)}` : ''}</span>
     )},
     { key: 'details', header: 'Changes', render: (r) => {
       const count = changedKeys(r.old_values, r.new_values).length;
       const hasAnything = count > 0 || r.details || r.ip_address;
-      if (!hasAnything) return <span className="text-zinc-600">—</span>;
+      if (!hasAnything) return <span className="text-panel-faint">—</span>;
       return (
         <button
           type="button"
@@ -233,29 +233,29 @@ export default function ActivityLogPage() {
 
             {selected.details && Object.keys(selected.details).length > 0 && (
               <div>
-                <h3 className="mb-1 text-xs uppercase tracking-wide text-zinc-500">Details</h3>
-                <pre className="overflow-x-auto rounded bg-zinc-900 p-3 text-xs text-zinc-300">
+                <h3 className="mb-1 text-xs uppercase tracking-wide text-panel-muted">Details</h3>
+                <pre className="overflow-x-auto rounded bg-panel-surface p-3 text-xs text-panel-body">
                   {JSON.stringify(selected.details, null, 2)}
                 </pre>
               </div>
             )}
 
-            <dl className="grid grid-cols-1 gap-2 border-t border-zinc-800 pt-4 text-xs sm:grid-cols-2">
+            <dl className="grid grid-cols-1 gap-2 border-t border-panel-line pt-4 text-xs sm:grid-cols-2">
               <div>
-                <dt className="text-zinc-500">When</dt>
-                <dd className="text-zinc-300">{new Date(selected.created_at).toLocaleString()}</dd>
+                <dt className="text-panel-muted">When</dt>
+                <dd className="text-panel-body">{new Date(selected.created_at).toLocaleString()}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500">By</dt>
-                <dd className="text-zinc-300">{selected.admin_name || 'System'}</dd>
+                <dt className="text-panel-muted">By</dt>
+                <dd className="text-panel-body">{selected.admin_name || 'System'}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500">IP address</dt>
-                <dd className="text-zinc-300">{selected.ip_address || '—'}</dd>
+                <dt className="text-panel-muted">IP address</dt>
+                <dd className="text-panel-body">{selected.ip_address || '—'}</dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-zinc-500">User agent</dt>
-                <dd className="break-all text-zinc-400">{selected.user_agent || '—'}</dd>
+                <dt className="text-panel-muted">User agent</dt>
+                <dd className="break-all text-panel-body">{selected.user_agent || '—'}</dd>
               </div>
             </dl>
           </div>

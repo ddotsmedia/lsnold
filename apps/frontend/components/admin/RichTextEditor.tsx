@@ -112,7 +112,7 @@ export function RichTextEditor({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose-admin w-full px-4 py-3 text-sm text-zinc-200 focus:outline-none',
+        class: 'prose-admin w-full px-4 py-3 text-sm text-panel-strong focus:outline-none',
         role: 'textbox',
         'aria-multiline': 'true',
         'aria-label': 'Section content',
@@ -176,10 +176,10 @@ export function RichTextEditor({
   }, [editor]);
 
   return (
-    <div className="rounded-lg border border-zinc-800 focus-within:border-emerald-500/50">
+    <div className="rounded-lg border border-panel-line focus-within:border-emerald-500/50">
       {/* Wraps rather than scrolls, so every control stays reachable on a
           narrow screen. Each button meets the 48px touch minimum. */}
-      <div className="flex flex-wrap gap-1 border-b border-zinc-800 p-2">
+      <div className="flex flex-wrap gap-1 border-b border-panel-line p-2">
         {ITEMS.map((item, index) => (
           <button
             key={item.label}
@@ -192,7 +192,7 @@ export function RichTextEditor({
             className={`${BUTTON_BASE} ${item.className ?? ''} ${
               state?.active[index]
                 ? 'bg-emerald-500/20 text-emerald-400'
-                : 'text-zinc-300 hover:bg-zinc-800'
+                : 'text-panel-body hover:bg-panel-raised'
             }`}
           >
             {item.label}
@@ -207,7 +207,7 @@ export function RichTextEditor({
           disabled={!editor}
           onClick={toggleLink}
           className={`${BUTTON_BASE} underline ${
-            state?.isLink ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'
+            state?.isLink ? 'bg-emerald-500/20 text-emerald-400' : 'text-panel-body hover:bg-panel-raised'
           }`}
         >
           Link
@@ -219,7 +219,7 @@ export function RichTextEditor({
           aria-label="Remove formatting"
           disabled={!editor}
           onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}
-          className={`${BUTTON_BASE} ml-auto text-zinc-500 hover:bg-zinc-800`}
+          className={`${BUTTON_BASE} ml-auto text-panel-muted hover:bg-panel-raised`}
         >
           Clear
         </button>
@@ -227,7 +227,7 @@ export function RichTextEditor({
 
       <div className="relative">
         {state?.isEmpty && (
-          <p className="pointer-events-none absolute left-4 top-3 text-sm text-zinc-600">
+          <p className="pointer-events-none absolute left-4 top-3 text-sm text-panel-faint">
             {placeholder}
           </p>
         )}

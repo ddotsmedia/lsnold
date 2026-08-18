@@ -40,7 +40,7 @@ const formatWhen = (iso: string | null) =>
 function PublishBadge({ section }: { section: Section }) {
   const state = publishState(section);
   const styles: Record<PublishState, string> = {
-    draft: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-400',
+    draft: 'border-zinc-500/30 bg-zinc-500/10 text-panel-body',
     published: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
     scheduled: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
   };
@@ -125,12 +125,12 @@ function SectionPreview({
   return (
     <div className={className}>
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Preview</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-panel-muted">Preview</p>
         {stale && <p className="text-[11px] text-amber-400">Preview is behind</p>}
       </div>
       {/* White ground and the public stylesheet, because that is what a visitor
           sees. A dark preview would misrepresent every colour on the page. */}
-      <div className="h-full max-h-125 overflow-y-auto rounded-lg border border-zinc-800 bg-white p-4">
+      <div className="h-full max-h-125 overflow-y-auto rounded-lg border border-panel-line bg-white p-4">
         {title && <h2 className="mb-3 text-xl font-bold text-gray-800">{title}</h2>}
         {safeHtml ? (
           <div
@@ -354,7 +354,7 @@ export default function PageContentEditor() {
   if (loading) {
     return (
       <div className="space-y-3">
-        {[0, 1, 2].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl bg-zinc-800/40" />)}
+        {[0, 1, 2].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl bg-panel-raised/40" />)}
       </div>
     );
   }
@@ -363,19 +363,19 @@ export default function PageContentEditor() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link href="/admin/pages" className="text-xs text-zinc-500 underline hover:text-zinc-300">
+          <Link href="/admin/pages" className="text-xs text-panel-muted underline hover:text-panel-body">
             ← All pages
           </Link>
-          <h2 className="mt-1 text-lg font-medium text-zinc-100">
+          <h2 className="mt-1 text-lg font-medium text-panel-strong">
             {page ? `${page.title} — text` : 'Page text'}
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-panel-muted">
             A section appears on the public page once it has text and is visible. Empty sections are
             ignored, so the page keeps its built-in wording until you write something.
             {page?.path && (
               <>
                 {' '}
-                <a href={page.path} target="_blank" rel="noopener noreferrer" className="underline hover:text-zinc-300">
+                <a href={page.path} target="_blank" rel="noopener noreferrer" className="underline hover:text-panel-body">
                   View page →
                 </a>
               </>
@@ -397,7 +397,7 @@ export default function PageContentEditor() {
           taking up room above the list. */}
       {selected.size > 0 && (
         <div className="flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 sm:flex-row sm:items-center">
-          <p className="text-sm text-zinc-300">
+          <p className="text-sm text-panel-body">
             {selected.size} section{selected.size === 1 ? '' : 's'} selected
           </p>
           <div className="flex flex-wrap gap-2 sm:ml-auto">
@@ -411,7 +411,7 @@ export default function PageContentEditor() {
       )}
 
       {sections.length === 0 && !loadError ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#111119] p-10 text-center text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-surface p-10 text-center text-sm text-panel-muted">
           No sections yet. Use “+ Add Section” to create one.
         </p>
       ) : (
@@ -429,22 +429,22 @@ export default function PageContentEditor() {
                 if (from !== null) void commitOrder(from, index);
                 dragRef.current = null; setDragIndex(null); setOverIndex(null);
               }}
-              className={`rounded-xl border bg-[#111119] p-5 transition-all ${
+              className={`rounded-xl border bg-panel-surface p-5 transition-all ${
                 overIndex === index && dragIndex !== index
                   ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                  : 'border-zinc-800/50'
+                  : 'border-panel-line/50'
               } ${dragIndex === index ? 'opacity-40' : ''}`}
             >
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {editingId === null && (
                   <span className="flex items-center gap-1">
-                    <span className="hidden cursor-move text-zinc-600 sm:inline" aria-hidden="true">⠿</span>
+                    <span className="hidden cursor-move text-panel-faint sm:inline" aria-hidden="true">⠿</span>
                     <button
                       type="button"
                       onClick={() => void moveSection(index, 'up')}
                       disabled={index === 0}
                       aria-label={`Move ${section.section_key} up`}
-                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent"
+                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-panel-line text-panel-body transition-colors hover:bg-panel-raised hover:text-panel-strong disabled:opacity-30 disabled:hover:bg-transparent"
                     >
                       ▲
                     </button>
@@ -453,7 +453,7 @@ export default function PageContentEditor() {
                       onClick={() => void moveSection(index, 'down')}
                       disabled={index === sections.length - 1}
                       aria-label={`Move ${section.section_key} down`}
-                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30 disabled:hover:bg-transparent"
+                      className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-panel-line text-panel-body transition-colors hover:bg-panel-raised hover:text-panel-strong disabled:opacity-30 disabled:hover:bg-transparent"
                     >
                       ▼
                     </button>
@@ -470,12 +470,12 @@ export default function PageContentEditor() {
                     />
                   </label>
                 )}
-                <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-400">
+                <code className="rounded bg-panel-raised px-1.5 py-0.5 text-[11px] text-panel-body">
                   {section.section_key}
                 </code>
                 <PublishBadge section={section} />
                 {!section.is_visible && (
-                  <span className="rounded-full border border-zinc-500/30 bg-zinc-500/10 px-2 py-0.5 text-[11px] text-zinc-400">
+                  <span className="rounded-full border border-zinc-500/30 bg-zinc-500/10 px-2 py-0.5 text-[11px] text-panel-body">
                     Hidden
                   </span>
                 )}
@@ -484,7 +484,7 @@ export default function PageContentEditor() {
                     Empty — not shown on the site
                   </span>
                 )}
-                <span className="ml-auto text-[11px] text-zinc-600">
+                <span className="ml-auto text-[11px] text-panel-faint">
                   {section.updated_by_name ? `${section.updated_by_name} · ` : ''}
                   {new Date(section.updated_at).toLocaleDateString()}
                 </span>
@@ -526,12 +526,12 @@ export default function PageContentEditor() {
                 </div>
               ) : (
                 <div>
-                  {section.title && <h3 className="mb-2 text-base font-semibold text-zinc-200">{section.title}</h3>}
+                  {section.title && <h3 className="mb-2 text-base font-semibold text-panel-strong">{section.title}</h3>}
                   {isEmpty(section.content) ? (
-                    <p className="mb-3 text-sm text-zinc-600">No text yet.</p>
+                    <p className="mb-3 text-sm text-panel-faint">No text yet.</p>
                   ) : (
                     <div
-                      className="prose-admin mb-3 text-sm text-zinc-400"
+                      className="prose-admin mb-3 text-sm text-panel-body"
                       // Server-sanitised against an allowlist before storage.
                       dangerouslySetInnerHTML={{ __html: section.content ?? '' }}
                     />
@@ -583,11 +583,11 @@ export default function PageContentEditor() {
                   </div>
 
                   {scheduling === section.id && (
-                    <div className="mt-3 flex flex-col gap-2 rounded-lg border border-zinc-800 bg-[#0c0c14] p-3 sm:flex-row sm:items-end">
+                    <div className="mt-3 flex flex-col gap-2 rounded-lg border border-panel-line bg-panel-sunken p-3 sm:flex-row sm:items-end">
                       <div className="flex-1">
                         <label
                           htmlFor={`schedule-${section.id}`}
-                          className="mb-1 block text-xs font-medium uppercase tracking-wider text-zinc-400"
+                          className="mb-1 block text-xs font-medium uppercase tracking-wider text-panel-body"
                         >
                           Publish at
                         </label>
@@ -597,7 +597,7 @@ export default function PageContentEditor() {
                           value={scheduleAt}
                           min={toLocalInput(new Date())}
                           onChange={(e) => setScheduleAt(e.target.value)}
-                          className="min-h-12 w-full rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+                          className="min-h-12 w-full rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-strong focus:border-emerald-500/50 focus:outline-none"
                         />
                       </div>
                       <div className="flex gap-2">
@@ -614,21 +614,21 @@ export default function PageContentEditor() {
       )}
 
       {deletedSections.length > 0 && (
-        <div className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-5">
+        <div className="rounded-xl border border-panel-line/50 bg-panel-sunken p-5">
           <button
             onClick={() => setShowDeleted((v) => !v)}
-            className="text-sm text-zinc-400 hover:text-zinc-200"
+            className="text-sm text-panel-body hover:text-panel-strong"
           >
             {showDeleted ? '▾' : '▸'} Deleted sections ({deletedSections.length})
           </button>
           {showDeleted && (
             <ul className="mt-3 space-y-2">
               {deletedSections.map((section) => (
-                <li key={section.id} className="flex items-center gap-3 rounded-lg bg-[#111119] px-3 py-2">
-                  <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-500">
+                <li key={section.id} className="flex items-center gap-3 rounded-lg bg-panel-surface px-3 py-2">
+                  <code className="rounded bg-panel-raised px-1.5 py-0.5 text-[11px] text-panel-muted">
                     {section.section_key}
                   </code>
-                  <span className="flex-1 truncate text-sm text-zinc-400">{section.title || '—'}</span>
+                  <span className="flex-1 truncate text-sm text-panel-body">{section.title || '—'}</span>
                   <Button size="sm" variant="secondary" onClick={() => void restore(section)}>Restore</Button>
                 </li>
               ))}
@@ -654,7 +654,7 @@ export default function PageContentEditor() {
               maxLength={255}
             />
           </FormField>
-          <div className="flex justify-end gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={() => setShowNew(false)}>Cancel</Button>
             <Button onClick={() => void create()}>Add</Button>
           </div>

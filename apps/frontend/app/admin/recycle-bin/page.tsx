@@ -98,8 +98,8 @@ export default function RecycleBinPage() {
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-100">Recycle bin</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold text-panel-strong">Recycle bin</h1>
+        <p className="mt-1 text-sm text-panel-muted">
           Deleted items are kept, not destroyed. Restore anything removed by mistake.
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function RecycleBinPage() {
             className={`min-h-11 rounded-lg px-4 text-sm font-medium transition-colors ${
               tab === t.key
                 ? 'bg-emerald-500/15 text-emerald-400'
-                : 'bg-zinc-800/50 text-zinc-400 hover:text-zinc-200'
+                : 'bg-panel-raised/50 text-panel-body hover:text-panel-strong'
             }`}
           >
             {t.label} ({counts[t.key]})
@@ -124,9 +124,9 @@ export default function RecycleBinPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-panel-muted">Loading…</p>
       ) : counts[tab] === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-6 text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-sunken p-6 text-sm text-panel-muted">
           Nothing deleted here.
         </p>
       ) : tab === 'images' ? (
@@ -134,7 +134,7 @@ export default function RecycleBinPage() {
           {images.map((img) => (
             <li
               key={img.id}
-              className="overflow-hidden rounded-xl border border-zinc-800/50 bg-[#0c0c14]"
+              className="overflow-hidden rounded-xl border border-panel-line/50 bg-panel-sunken"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -144,9 +144,9 @@ export default function RecycleBinPage() {
                 className="aspect-video w-full object-cover opacity-60"
               />
               <div className="p-4">
-                <p className="truncate text-sm font-medium text-zinc-200">{img.title}</p>
-                <p className="text-xs text-zinc-500">{img.category_name || 'Uncategorised'}</p>
-                <p className="mt-1 text-[11px] text-zinc-600">Deleted {when(img.deleted_at)}</p>
+                <p className="truncate text-sm font-medium text-panel-strong">{img.title}</p>
+                <p className="text-xs text-panel-muted">{img.category_name || 'Uncategorised'}</p>
+                <p className="mt-1 text-[11px] text-panel-faint">Deleted {when(img.deleted_at)}</p>
                 <button
                   type="button"
                   disabled={busy === img.id}
@@ -164,12 +164,12 @@ export default function RecycleBinPage() {
           {categories.map((c) => (
             <li
               key={c.id}
-              className="flex flex-col gap-3 rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border border-panel-line/50 bg-panel-sunken p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
-                <p className="text-sm font-medium text-zinc-200">{c.name}</p>
-                <p className="text-xs text-zinc-500">/{c.slug} · deleted {when(c.deleted_at)}</p>
-                <p className="mt-1 text-[11px] text-zinc-600">
+                <p className="text-sm font-medium text-panel-strong">{c.name}</p>
+                <p className="text-xs text-panel-muted">/{c.slug} · deleted {when(c.deleted_at)}</p>
+                <p className="mt-1 text-[11px] text-panel-faint">
                   Restoring also brings back the images that were in it.
                 </p>
               </div>
@@ -189,11 +189,11 @@ export default function RecycleBinPage() {
           {events.map((e) => (
             <li
               key={e.id}
-              className="flex flex-col gap-3 rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border border-panel-line/50 bg-panel-sunken p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
-                <p className="text-sm font-medium text-zinc-200">{e.title}</p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-sm font-medium text-panel-strong">{e.title}</p>
+                <p className="text-xs text-panel-muted">
                   {e.event_date ? e.event_date.slice(0, 10) : 'No date'} · deleted {when(e.deleted_at)}
                 </p>
               </div>

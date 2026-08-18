@@ -45,7 +45,7 @@ export function CohortHeatmap({ months = 6 }: { months?: number }) {
   }, [months]);
 
   if (error) return <p className="p-6 text-sm text-red-400">{error}</p>;
-  if (!data) return <div className="h-75 animate-pulse rounded-xl bg-zinc-800/40" />;
+  if (!data) return <div className="h-75 animate-pulse rounded-xl bg-panel-raised/40" />;
 
   // [x, y, value] triples; nulls are left out so ECharts draws a gap.
   const points: Array<[number, number, number]> = [];
@@ -57,14 +57,14 @@ export function CohortHeatmap({ months = 6 }: { months?: number }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-panel-muted">
         Grouped by the month a visitor first arrived, counting from{' '}
         {new Date(data.measuring_since).toLocaleDateString()}. Blank cells are months
         that have not happened yet for that cohort.
       </p>
 
       {points.length === 0 ? (
-        <p className="rounded-lg border border-zinc-800 bg-[#0c0c14] p-6 text-center text-sm text-zinc-500">
+        <p className="rounded-lg border border-panel-line bg-panel-sunken p-6 text-center text-sm text-panel-muted">
           No cohort has completed a month yet. The first row fills once this month
           ends and its visitors have had a chance to return.
         </p>

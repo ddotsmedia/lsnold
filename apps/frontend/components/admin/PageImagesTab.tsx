@@ -153,13 +153,13 @@ function SlotCard({
   };
 
   return (
-    <div className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-4">
+    <div className="rounded-xl border border-panel-line/50 bg-panel-sunken p-4">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-zinc-300">{label}</p>
-          <p className="text-xs text-zinc-600">{hint}</p>
+          <p className="text-sm font-medium text-panel-body">{label}</p>
+          <p className="text-xs text-panel-faint">{hint}</p>
         </div>
-        <code className="shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-500">{slot}</code>
+        <code className="shrink-0 rounded bg-panel-raised px-1.5 py-0.5 text-[10px] text-panel-muted">{slot}</code>
       </div>
 
       <div
@@ -172,13 +172,13 @@ function SlotCard({
         tabIndex={0}
         aria-label={image ? `Replace the ${label} image` : `Upload a ${label} image`}
         className={`relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors ${
-          dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-700 hover:border-zinc-600'
+          dragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-panel-line-2 hover:border-panel-line-2'
         }`}
       >
         {busy ? (
           <div className="w-full px-5 text-center">
-            <p className="mb-2 text-xs text-zinc-300">{progress > 0 ? `Uploading… ${progress}%` : 'Working…'}</p>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+            <p className="mb-2 text-xs text-panel-body">{progress > 0 ? `Uploading… ${progress}%` : 'Working…'}</p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-panel-raised">
               <div className="h-full rounded-full bg-emerald-500 transition-all duration-200" style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -187,7 +187,7 @@ function SlotCard({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={image.url} alt={image.alt_text ?? ''} className="h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity hover:opacity-100">
-              <span className="rounded-lg bg-zinc-900/90 px-3 py-1.5 text-xs text-zinc-200">Replace</span>
+              <span className="rounded-lg bg-panel-surface/90 px-3 py-1.5 text-xs text-panel-strong">Replace</span>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); void remove(); }}
@@ -200,13 +200,13 @@ function SlotCard({
         ) : (
           <div className="px-4 text-center">
             <p className="text-xl" aria-hidden="true">⬆</p>
-            <p className="mt-0.5 text-xs text-zinc-400">Drop an image or click</p>
+            <p className="mt-0.5 text-xs text-panel-body">Drop an image or click</p>
           </div>
         )}
       </div>
 
       {image && !busy && (
-        <p className="mt-2 truncate text-[11px] text-zinc-600">
+        <p className="mt-2 truncate text-[11px] text-panel-faint">
           {image.width && image.height ? `${image.width}×${image.height}` : ''}
           {image.file_size ? ` · ${formatBytes(image.file_size)}` : ''}
           {image.alt_text ? ` · ${image.alt_text}` : ''}
@@ -263,7 +263,7 @@ export function PageImagesTab({
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {visibleSlots.map((s) => <div key={s.key} className="h-52 animate-pulse rounded-xl bg-zinc-800/40" />)}
+        {visibleSlots.map((s) => <div key={s.key} className="h-52 animate-pulse rounded-xl bg-panel-raised/40" />)}
       </div>
     );
   }
@@ -280,7 +280,7 @@ export function PageImagesTab({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-panel-muted">
         These images appear on the public page. Removing one falls back to the page&rsquo;s original
         gradient. Images stay in the Media Library after removal.
       </p>

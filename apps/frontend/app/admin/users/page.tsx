@@ -61,8 +61,8 @@ export default function UsersPage() {
   const columns: Column<User>[] = [
     { key: 'name', header: 'Name', render: (r) => <span className="font-medium">{r.name}</span> },
     { key: 'email', header: 'Email' },
-    { key: 'role', header: 'Role', render: (r) => r.role ? <StatusBadge status={r.role} /> : <span className="text-xs text-zinc-600">No access</span> },
-    { key: 'created_at', header: 'Joined', render: (r) => <span className="text-xs text-zinc-500">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: 'role', header: 'Role', render: (r) => r.role ? <StatusBadge status={r.role} /> : <span className="text-xs text-panel-faint">No access</span> },
+    { key: 'created_at', header: 'Joined', render: (r) => <span className="text-xs text-panel-muted">{new Date(r.created_at).toLocaleDateString()}</span> },
     { key: 'actions', header: '', className: 'w-[120px]', render: (r) => (
       r.role ? (
         <Button size="sm" variant="danger" onClick={(e) => { e.stopPropagation(); setConfirmRevoke(r.id); }}>Revoke</Button>
@@ -85,7 +85,7 @@ export default function UsersPage() {
           <FormField label="Email"><Input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} /></FormField>
           <FormField label="Password"><Input type="password" value={inviteForm.password} onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })} placeholder="Min. 8 characters" /></FormField>
           <FormField label="Role">
-            <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
+            <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })} className="w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong">
               <option value="viewer">Viewer — read-only</option>
               <option value="editor">Editor — content and bookings</option>
               <option value="admin">Admin — full access, including users</option>

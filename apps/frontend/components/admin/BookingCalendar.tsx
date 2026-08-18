@@ -174,11 +174,11 @@ export function BookingCalendar({
     }
   };
 
-  if (loading) return <div className="h-150 animate-pulse rounded-xl bg-zinc-800/40" />;
+  if (loading) return <div className="h-150 animate-pulse rounded-xl bg-panel-raised/40" />;
 
   return (
-    <div className="rounded-xl border border-zinc-800/50 bg-[#111119] p-4">
-      <div className="mb-3 flex flex-wrap gap-3 text-xs text-zinc-500">
+    <div className="rounded-xl border border-panel-line/50 bg-panel-surface p-4">
+      <div className="mb-3 flex flex-wrap gap-3 text-xs text-panel-muted">
         {Object.entries(STATUS_COLOURS).map(([status, colour]) => (
           <span key={status} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: colour }} aria-hidden="true" />

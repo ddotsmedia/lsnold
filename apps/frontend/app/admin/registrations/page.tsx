@@ -92,7 +92,7 @@ export default function RegistrationsPage() {
       render: (r) => (
         <span>
           <span className="font-medium">{r.child_name}</span>
-          <span className="block text-[11px] text-zinc-500">{r.parent_name}</span>
+          <span className="block text-[11px] text-panel-muted">{r.parent_name}</span>
         </span>
       ),
     },
@@ -100,7 +100,7 @@ export default function RegistrationsPage() {
     { key: 'parent_phone', header: 'Phone' },
     { key: 'age_group_name', header: 'Age Group' },
     { key: 'status', header: 'Status', sortable: true, render: (r) => <StatusBadge status={r.status} /> },
-    { key: 'created_at', header: 'Date', sortable: true, render: (r) => <span className="text-xs text-zinc-500">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: 'created_at', header: 'Date', sortable: true, render: (r) => <span className="text-xs text-panel-muted">{new Date(r.created_at).toLocaleDateString()}</span> },
     {
       key: 'actions', header: '', className: 'w-[180px]',
       render: (r) => (
@@ -121,8 +121,8 @@ export default function RegistrationsPage() {
     <div className="space-y-6">
       {/* Says whether the list is updating by itself. Without it a quiet
           screen is ambiguous: nothing new, or a dropped connection. */}
-      <p className="flex items-center gap-2 text-xs text-zinc-500">
-        <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-zinc-600'}`} aria-hidden="true" />
+      <p className="flex items-center gap-2 text-xs text-panel-muted">
+        <span className={`inline-block h-2 w-2 rounded-full ${live ? 'bg-emerald-500' : 'bg-panel-raised-2'}`} aria-hidden="true" />
         {live ? 'Live — new entries appear here as they arrive' : 'Not live — reload to see new entries'}
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-between">

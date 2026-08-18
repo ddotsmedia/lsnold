@@ -56,29 +56,29 @@ export function ConversionFunnel({ days = 30 }: { days?: number }) {
   }, [data]);
 
   if (error) return <Note>Could not load the funnel.</Note>;
-  if (!data) return <div className="h-50 animate-pulse rounded-lg bg-zinc-800/40" />;
+  if (!data) return <div className="h-50 animate-pulse rounded-lg bg-panel-raised/40" />;
 
   return (
     <>
       <EChart option={option} height={200} ariaLabel="Visitor to registration funnel" />
       <ul className="mt-2 space-y-1">
         {data.stages.slice(1).map((stage, index) => (
-          <li key={stage.stage} className="flex justify-between text-[11px] text-zinc-500">
+          <li key={stage.stage} className="flex justify-between text-[11px] text-panel-muted">
             <span>{data.stages[index]!.stage} → {stage.stage}</span>
-            <span className={stage.conversion === null ? 'text-zinc-600' : 'text-zinc-300'}>
+            <span className={stage.conversion === null ? 'text-panel-faint' : 'text-panel-body'}>
               {stage.conversion === null ? 'no data' : `${stage.conversion}%`}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-1 text-[11px] text-zinc-600">Last {data.days} days.</p>
+      <p className="mt-1 text-[11px] text-panel-faint">Last {data.days} days.</p>
     </>
   );
 }
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-50 items-center justify-center rounded-lg border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-500">
+    <div className="flex h-50 items-center justify-center rounded-lg border border-dashed border-panel-line p-6 text-center text-sm text-panel-muted">
       <p>{children}</p>
     </div>
   );

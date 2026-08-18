@@ -9,14 +9,14 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
   confirmed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
-  draft: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+  draft: 'bg-zinc-500/10 text-panel-body border-zinc-500/20',
   published: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   archived: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${STATUS_STYLES[status] || 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${STATUS_STYLES[status] || 'bg-panel-raised text-panel-body border-panel-line-2'}`}>
       {status}
     </span>
   );
@@ -47,9 +47,9 @@ export function StatCard({
 
   return (
     <div className={`bg-gradient-to-br ${accents[accent]} rounded-xl border p-5 transition-shadow duration-500 ${className}`}>
-      <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-zinc-100 tabular-nums">{value}</p>
-      {sublabel && <p className="text-xs text-zinc-500 mt-1">{sublabel}</p>}
+      <p className="text-xs text-panel-muted uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-panel-strong tabular-nums">{value}</p>
+      {sublabel && <p className="text-xs text-panel-muted mt-1">{sublabel}</p>}
     </div>
   );
 }
@@ -73,10 +73,10 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-[#111119] rounded-2xl border border-zinc-800/50 ${maxWidth} w-full shadow-2xl`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/50">
-          <h2 className="text-base font-semibold text-zinc-100">{title}</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-lg transition-colors">×</button>
+      <div className={`relative bg-panel-surface rounded-2xl border border-panel-line/50 ${maxWidth} w-full shadow-2xl`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-panel-line/50">
+          <h2 className="text-base font-semibold text-panel-strong">{title}</h2>
+          <button onClick={onClose} className="text-panel-muted hover:text-panel-body text-lg transition-colors">×</button>
         </div>
         <div className="p-6">{children}</div>
       </div>
@@ -106,9 +106,9 @@ export function ConfirmDialog({
 
   return (
     <Modal open={open} onClose={onClose} title={title} maxWidth="max-w-sm">
-      <p className="text-sm text-zinc-400 mb-6">{message}</p>
+      <p className="text-sm text-panel-body mb-6">{message}</p>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="inline-flex min-h-12 min-w-12 items-center justify-center px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
+        <button onClick={onClose} className="inline-flex min-h-12 min-w-12 items-center justify-center px-4 py-2 text-sm text-panel-body hover:text-panel-strong rounded-lg border border-panel-line hover:border-panel-line-2 transition-colors">
           Cancel
         </button>
         <button
@@ -143,9 +143,9 @@ export function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+        className="w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong placeholder-panel-faint focus:outline-none focus:border-emerald-500/50 transition-colors"
       />
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 text-xs">⌕</span>
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-panel-faint text-xs">⌕</span>
     </div>
   );
 }
@@ -166,7 +166,7 @@ export function FilterSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-[#0c0c14] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none cursor-pointer"
+      className="bg-panel-sunken border border-panel-line rounded-lg px-3 py-2.5 text-sm text-panel-strong focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none cursor-pointer"
     >
       <option value="">{allLabel}</option>
       {options.map((opt) => (
@@ -201,7 +201,7 @@ export function FormField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">{label}</label>
+      <label className="block text-xs font-medium text-panel-body uppercase tracking-wider">{label}</label>
       {children}
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
@@ -212,7 +212,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors ${props.className || ''}`}
+      className={`w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong placeholder-panel-faint focus:outline-none focus:border-emerald-500/50 transition-colors ${props.className || ''}`}
     />
   );
 }
@@ -221,7 +221,7 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return (
     <textarea
       {...props}
-      className={`w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors resize-y min-h-[100px] ${props.className || ''}`}
+      className={`w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong placeholder-panel-faint focus:outline-none focus:border-emerald-500/50 transition-colors resize-y min-h-[100px] ${props.className || ''}`}
     />
   );
 }
@@ -237,7 +237,7 @@ export function Select({
   return (
     <select
       {...props}
-      className={`w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer ${props.className || ''}`}
+      className={`w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer ${props.className || ''}`}
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -258,9 +258,9 @@ export function Button({
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const variants = {
     primary: 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-emerald-500/30',
-    secondary: 'bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 border-zinc-700',
+    secondary: 'bg-panel-raised/50 text-panel-body hover:bg-panel-raised border-panel-line-2',
     danger: 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/30',
-    ghost: 'bg-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 border-transparent',
+    ghost: 'bg-transparent text-panel-body hover:text-panel-strong hover:bg-panel-raised/50 border-transparent',
   };
   // 48px floor on both sizes: below that a control is hard to hit accurately on
   // a touch screen, and the admin panel is used from phones. `sm` still reads

@@ -120,14 +120,14 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
   // Waits for the saved order before painting, so widgets do not visibly jump
   // from the default arrangement into the saved one.
   if (!loaded) {
-    return <div className="h-96 animate-pulse rounded-xl bg-zinc-800/40" />;
+    return <div className="h-96 animate-pulse rounded-xl bg-panel-raised/40" />;
   }
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-2">
         {editing && (
-          <p className="mr-auto text-xs text-zinc-500">
+          <p className="mr-auto text-xs text-panel-muted">
             Drag a widget, or use the arrows, to change the order. Changes save as you make them.
           </p>
         )}
@@ -164,13 +164,13 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
             {/* Only while editing: above the widget, never covering a chart. */}
             {editing && (
             <div className="mb-1 flex items-center gap-1">
-              <span className="cursor-grab select-none text-zinc-600" aria-hidden="true">⠿</span>
+              <span className="cursor-grab select-none text-panel-faint" aria-hidden="true">⠿</span>
               <button
                 type="button"
                 onClick={() => move(index, index - 1)}
                 disabled={index === 0}
                 aria-label={`Move ${widget.title} up`}
-                className="flex min-h-12 min-w-12 items-center justify-center rounded text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30"
+                className="flex min-h-12 min-w-12 items-center justify-center rounded text-panel-muted hover:bg-panel-raised hover:text-panel-strong disabled:opacity-30"
               >
                 ▲
               </button>
@@ -179,11 +179,11 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
                 onClick={() => move(index, index + 1)}
                 disabled={index === visible.length - 1}
                 aria-label={`Move ${widget.title} down`}
-                className="flex min-h-12 min-w-12 items-center justify-center rounded text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30"
+                className="flex min-h-12 min-w-12 items-center justify-center rounded text-panel-muted hover:bg-panel-raised hover:text-panel-strong disabled:opacity-30"
               >
                 ▼
               </button>
-              <span className="text-[11px] text-zinc-600">{widget.title}</span>
+              <span className="text-[11px] text-panel-faint">{widget.title}</span>
             </div>
             )}
             {widget.render()}
@@ -193,13 +193,13 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
 
       <Modal open={customising} onClose={() => setCustomising(false)} title="Customise dashboard">
         <div className="space-y-2">
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-panel-muted">
             Choose what appears. Hiding a widget keeps its position for when you bring it back.
           </p>
           {arranged.map((widget) => (
             <label
               key={widget.key}
-              className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-zinc-800/40"
+              className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-panel-raised/40"
             >
               <input
                 type="checkbox"
@@ -207,10 +207,10 @@ export function DashboardWidgets({ widgets }: { widgets: Widget[] }) {
                 onChange={() => toggleHidden(widget.key)}
                 className="h-4 w-4 accent-emerald-500"
               />
-              <span className="text-sm text-zinc-200">{widget.title}</span>
+              <span className="text-sm text-panel-strong">{widget.title}</span>
             </label>
           ))}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800/50 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-panel-line/50 pt-4">
             <Button
               variant="ghost"
               onClick={resetToDefault}

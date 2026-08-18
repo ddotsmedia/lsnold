@@ -137,10 +137,10 @@ export default function SocialMediaSettingsPage() {
     <div className="p-4 md:p-6">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Social media</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-2xl font-semibold text-panel-strong">Social media</h1>
+          <p className="mt-1 text-sm text-panel-muted">
             These links appear in the website footer. A link set to
-            <span className="mx-1 font-mono text-zinc-400">#</span>
+            <span className="mx-1 font-mono text-panel-body">#</span>
             or marked inactive is hidden from visitors.
           </p>
         </div>
@@ -148,35 +148,35 @@ export default function SocialMediaSettingsPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-panel-muted">Loading…</p>
       ) : links.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-6 text-sm text-zinc-500">
+        <p className="rounded-xl border border-panel-line/50 bg-panel-sunken p-6 text-sm text-panel-muted">
           No social links yet.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-800/50 bg-[#0c0c14]">
+        <div className="overflow-hidden rounded-xl border border-panel-line/50 bg-panel-sunken">
           {/* Cards on mobile, table from md up */}
-          <ul className="divide-y divide-zinc-800/50 md:hidden">
+          <ul className="divide-y divide-panel-line/50 md:hidden">
             {links.map((l) => (
               <li key={l.id} className="p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium capitalize text-zinc-200">{l.platform}</span>
+                  <span className="font-medium capitalize text-panel-strong">{l.platform}</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] uppercase ${
                       l.active && l.url !== '#'
                         ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-zinc-700/30 text-zinc-400'
+                        : 'bg-panel-raised-2/30 text-panel-body'
                     }`}
                   >
                     {l.url === '#' ? 'not set' : l.active ? 'live' : 'hidden'}
                   </span>
                 </div>
-                <p className="mt-1 break-all text-xs text-zinc-500">{l.url}</p>
+                <p className="mt-1 break-all text-xs text-panel-muted">{l.url}</p>
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
                     onClick={() => openEdit(l)}
-                    className="min-h-11 flex-1 rounded-lg bg-zinc-800 text-sm text-zinc-200"
+                    className="min-h-11 flex-1 rounded-lg bg-panel-raised text-sm text-panel-strong"
                   >
                     Edit
                   </button>
@@ -193,7 +193,7 @@ export default function SocialMediaSettingsPage() {
           </ul>
 
           <table className="hidden w-full text-left text-sm md:table">
-            <thead className="border-b border-zinc-800/50 text-xs uppercase tracking-wide text-zinc-500">
+            <thead className="border-b border-panel-line/50 text-xs uppercase tracking-wide text-panel-muted">
               <tr>
                 <th className="px-4 py-3">Platform</th>
                 <th className="px-4 py-3">URL</th>
@@ -202,18 +202,18 @@ export default function SocialMediaSettingsPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/50">
+            <tbody className="divide-y divide-panel-line/50">
               {links.map((l) => (
                 <tr key={l.id}>
-                  <td className="px-4 py-3 capitalize text-zinc-200">{l.platform}</td>
-                  <td className="max-w-xs truncate px-4 py-3 text-zinc-400">{l.url}</td>
-                  <td className="px-4 py-3 text-zinc-400">{l.display_order}</td>
+                  <td className="px-4 py-3 capitalize text-panel-strong">{l.platform}</td>
+                  <td className="max-w-xs truncate px-4 py-3 text-panel-body">{l.url}</td>
+                  <td className="px-4 py-3 text-panel-body">{l.display_order}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] uppercase ${
                         l.active && l.url !== '#'
                           ? 'bg-emerald-500/10 text-emerald-400'
-                          : 'bg-zinc-700/30 text-zinc-400'
+                          : 'bg-panel-raised-2/30 text-panel-body'
                       }`}
                     >
                       {l.url === '#' ? 'not set' : l.active ? 'live' : 'hidden'}
@@ -252,7 +252,7 @@ export default function SocialMediaSettingsPage() {
             <select
               value={form.platform}
               onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value as Platform }))}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-sm text-zinc-100"
+              className="w-full rounded-lg border border-panel-line-2 bg-panel-surface p-2 text-sm text-panel-strong"
             >
               {PLATFORMS.map((p) => (
                 <option key={p} value={p} className="capitalize">
@@ -279,12 +279,12 @@ export default function SocialMediaSettingsPage() {
             />
           </FormField>
 
-          <label className="flex min-h-11 items-center gap-3 text-sm text-zinc-300">
+          <label className="flex min-h-11 items-center gap-3 text-sm text-panel-body">
             <input
               type="checkbox"
               checked={form.active}
               onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
-              className="h-5 w-5 rounded border-zinc-600 bg-zinc-900"
+              className="h-5 w-5 rounded border-panel-line-2 bg-panel-surface"
             />
             Show in footer
           </label>

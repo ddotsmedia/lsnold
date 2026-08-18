@@ -81,7 +81,7 @@ export function ExportMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-lg border border-zinc-800 bg-[#111119] shadow-2xl"
+          className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-lg border border-panel-line bg-panel-surface shadow-2xl"
         >
           {items.map((item) => (
             <button
@@ -89,10 +89,10 @@ export function ExportMenu({
               role="menuitem"
               onClick={() => void run(item.format)}
               disabled={busy !== null}
-              className="flex min-h-12 w-full flex-col justify-center px-4 py-2 text-left transition-colors hover:bg-zinc-800 disabled:opacity-50"
+              className="flex min-h-12 w-full flex-col justify-center px-4 py-2 text-left transition-colors hover:bg-panel-raised disabled:opacity-50"
             >
-              <span className="text-sm text-zinc-200">{item.label}</span>
-              <span className="text-[11px] text-zinc-500">{item.hint}</span>
+              <span className="text-sm text-panel-strong">{item.label}</span>
+              <span className="text-[11px] text-panel-muted">{item.hint}</span>
             </button>
           ))}
         </div>

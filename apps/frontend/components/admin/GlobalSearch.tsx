@@ -130,11 +130,11 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-12 items-center gap-2 rounded-lg border border-zinc-800 bg-[#0c0c14] px-3 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300"
+        className="flex min-h-12 items-center gap-2 rounded-lg border border-panel-line bg-panel-sunken px-3 text-sm text-panel-muted transition-colors hover:border-panel-line-2 hover:text-panel-body"
       >
         <span aria-hidden="true">⌕</span>
         <span className="hidden sm:inline">Search</span>
-        <kbd className="hidden rounded border border-zinc-700 px-1.5 text-[10px] sm:inline">⌘K</kbd>
+        <kbd className="hidden rounded border border-panel-line-2 px-1.5 text-[10px] sm:inline">⌘K</kbd>
       </button>
     );
   }
@@ -147,24 +147,24 @@ export function GlobalSearch() {
         role="dialog"
         aria-modal="true"
         aria-label="Search"
-        className="relative w-full max-w-xl overflow-hidden rounded-xl border border-zinc-800 bg-[#111119] shadow-2xl"
+        className="relative w-full max-w-xl overflow-hidden rounded-xl border border-panel-line bg-panel-surface shadow-2xl"
       >
-        <div className="flex items-center gap-2 border-b border-zinc-800/50 px-4">
-          <span className="text-zinc-600" aria-hidden="true">⌕</span>
+        <div className="flex items-center gap-2 border-b border-panel-line/50 px-4">
+          <span className="text-panel-faint" aria-hidden="true">⌕</span>
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search bookings, registrations, pages…"
-            className="min-h-14 flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none"
+            className="min-h-14 flex-1 bg-transparent text-sm text-panel-strong placeholder-panel-faint focus:outline-none"
           />
-          {loading && <span className="text-[11px] text-zinc-600">searching…</span>}
+          {loading && <span className="text-[11px] text-panel-faint">searching…</span>}
         </div>
 
         <div className="max-h-96 overflow-y-auto">
           {rows.length === 0 && !loading ? (
-            <p className="px-4 py-8 text-center text-sm text-zinc-600">
+            <p className="px-4 py-8 text-center text-sm text-panel-faint">
               {query.trim()
                 ? `Nothing matches “${query}”.`
                 : 'Type to search, or pick an action below.'}
@@ -174,7 +174,7 @@ export function GlobalSearch() {
               {rows.map((row, index) => {
                 const highlightedRow = index === highlighted;
                 const cls = `flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                  highlightedRow ? 'bg-zinc-800/60' : 'hover:bg-zinc-800/30'
+                  highlightedRow ? 'bg-panel-raised/60' : 'hover:bg-panel-raised/30'
                 }`;
 
                 if (row.kind === 'command') {
@@ -186,13 +186,13 @@ export function GlobalSearch() {
                         onMouseEnter={() => setHighlighted(index)}
                         className={cls}
                       >
-                        <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-600">
+                        <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-panel-faint">
                           {row.item.group}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-200">
+                        <span className="min-w-0 flex-1 truncate text-sm text-panel-strong">
                           {row.item.label}
                         </span>
-                        <span className="shrink-0 text-xs text-zinc-600" aria-hidden="true">↵</span>
+                        <span className="shrink-0 text-xs text-panel-faint" aria-hidden="true">↵</span>
                       </button>
                     </li>
                   );
@@ -207,17 +207,17 @@ export function GlobalSearch() {
                       onMouseEnter={() => setHighlighted(index)}
                       className={cls}
                     >
-                      <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-600">
+                      <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-panel-faint">
                         {TYPE_LABELS[result.type] ?? result.type}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-zinc-200">{result.title}</span>
+                        <span className="block truncate text-sm text-panel-strong">{result.title}</span>
                         {result.subtitle && (
-                          <span className="block truncate text-xs text-zinc-500">{result.subtitle}</span>
+                          <span className="block truncate text-xs text-panel-muted">{result.subtitle}</span>
                         )}
                       </span>
                       {result.badge && (
-                        <span className="shrink-0 rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] text-zinc-400">
+                        <span className="shrink-0 rounded-full border border-panel-line-2 px-2 py-0.5 text-[10px] text-panel-body">
                           {result.badge}
                         </span>
                       )}
@@ -230,7 +230,7 @@ export function GlobalSearch() {
         </div>
 
         {data && data.total > 0 && (
-          <div className="flex items-center justify-between border-t border-zinc-800/50 px-4 py-2 text-[11px] text-zinc-600">
+          <div className="flex items-center justify-between border-t border-panel-line/50 px-4 py-2 text-[11px] text-panel-faint">
             <span>
               {data.types.map((t) => `${TYPE_LABELS[t.type] ?? t.type} ${t.count}`).join(' · ')}
             </span>

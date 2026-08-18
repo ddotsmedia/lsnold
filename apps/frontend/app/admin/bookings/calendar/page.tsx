@@ -21,10 +21,10 @@ export default function BookingCalendarPage() {
 
   return (
     <div className="space-y-4">
-      <nav className="flex gap-1 border-b border-zinc-800" aria-label="Booking views">
+      <nav className="flex gap-1 border-b border-panel-line" aria-label="Booking views">
         <Link
           href="/admin/bookings"
-          className="-mb-px border-b-2 border-transparent px-4 py-3 text-sm font-medium text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300"
+          className="-mb-px border-b-2 border-transparent px-4 py-3 text-sm font-medium text-panel-muted transition-colors hover:border-panel-line-2 hover:text-panel-body"
         >
           Table
         </Link>

@@ -73,7 +73,7 @@ export default function NotificationSettingsPage() {
     } finally { setSaving(false); }
   };
 
-  if (loading) return <div className="h-96 animate-pulse rounded-xl bg-zinc-800/40" />;
+  if (loading) return <div className="h-96 animate-pulse rounded-xl bg-panel-raised/40" />;
 
   if (loadError || !settings) {
     return (
@@ -90,8 +90,8 @@ export default function NotificationSettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h2 className="text-lg font-medium text-zinc-100">Notifications</h2>
-        <p className="mt-1 text-xs text-zinc-500">
+        <h2 className="text-lg font-medium text-panel-strong">Notifications</h2>
+        <p className="mt-1 text-xs text-panel-muted">
           What we send, and what we are told about.
         </p>
       </div>
@@ -121,11 +121,11 @@ export default function NotificationSettingsPage() {
         </div>
       )}
 
-      <div className="divide-y divide-zinc-800/50 rounded-xl border border-zinc-800/50 bg-[#111119]">
+      <div className="divide-y divide-panel-line/50 rounded-xl border border-panel-line/50 bg-panel-surface">
         {TOGGLES.map((toggle) => (
           <label
             key={toggle.key}
-            className="flex min-h-12 cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-zinc-800/30"
+            className="flex min-h-12 cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-panel-raised/30"
           >
             <input
               type="checkbox"
@@ -136,8 +136,8 @@ export default function NotificationSettingsPage() {
               className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500"
             />
             <span className="flex-1">
-              <span className="block text-sm text-zinc-200">{toggle.label}</span>
-              <span className="block text-xs text-zinc-500">{toggle.hint}</span>
+              <span className="block text-sm text-panel-strong">{toggle.label}</span>
+              <span className="block text-xs text-panel-muted">{toggle.hint}</span>
               {unavailable(toggle.channel) && (
                 <span className="mt-1 block text-[11px] text-amber-400">
                   {toggle.channel === 'email' ? 'Email' : 'SMS'} is not configured — this will not
@@ -162,7 +162,7 @@ export default function NotificationSettingsPage() {
             { value: 'weekly', label: 'Weekly summary' },
           ]}
         />
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1 text-xs text-panel-muted">
           Only affects the alerts to us. A family always hears back straight away.
           {settings.digest_frequency !== 'immediate' && (
             <span className="mt-1 block text-amber-400">

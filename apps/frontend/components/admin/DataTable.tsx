@@ -84,11 +84,11 @@ export function DataTable<T = Record<string, unknown>>({
   };
 
   return (
-    <div className="bg-[#111119] rounded-xl border border-zinc-800/50 overflow-hidden">
+    <div className="bg-panel-surface rounded-xl border border-panel-line/50 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-800/50">
+            <tr className="border-b border-panel-line/50">
               {selectable && (
                 <th className="w-12 px-4 py-3">
                   <input
@@ -103,8 +103,8 @@ export function DataTable<T = Record<string, unknown>>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider ${
-                    col.sortable ? 'cursor-pointer hover:text-zinc-300 select-none' : ''
+                  className={`px-4 py-3 text-left text-xs font-medium text-panel-muted uppercase tracking-wider ${
+                    col.sortable ? 'cursor-pointer hover:text-panel-body select-none' : ''
                   } ${col.className || ''}`}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
                 >
@@ -129,7 +129,7 @@ export function DataTable<T = Record<string, unknown>>({
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-4 py-12 text-center text-zinc-500">
+                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-4 py-12 text-center text-panel-muted">
                   {emptyMessage}
                 </td>
               </tr>
@@ -140,8 +140,8 @@ export function DataTable<T = Record<string, unknown>>({
                 <tr
                   key={String((row as any)?.id ?? i)}
                   {...extra}
-                  className={`border-b border-zinc-800/30 transition-colors ${
-                    onRowClick ? 'cursor-pointer hover:bg-zinc-800/30' : ''
+                  className={`border-b border-panel-line/30 transition-colors ${
+                    onRowClick ? 'cursor-pointer hover:bg-panel-raised/30' : ''
                   } ${extra.className || ''}`}
                   onClick={onRowClick ? () => onRowClick(row) : extra.onClick}
                 >
@@ -158,7 +158,7 @@ export function DataTable<T = Record<string, unknown>>({
                     </td>
                   )}
                   {columns.map((col) => (
-                    <td key={col.key} className={`px-4 py-3 text-zinc-300 ${col.className || ''}`}>
+                    <td key={col.key} className={`px-4 py-3 text-panel-body ${col.className || ''}`}>
                       {col.render ? col.render(row) : ((row as any)[col.key] as ReactNode) ?? '—'}
                     </td>
                   ))}
@@ -171,22 +171,22 @@ export function DataTable<T = Record<string, unknown>>({
       </div>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800/50">
-          <p className="text-xs text-zinc-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-panel-line/50">
+          <p className="text-xs text-panel-muted">
             {pagination.total} total · Page {pagination.page} of {pagination.totalPages}
           </p>
           <div className="flex gap-1">
             <button
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="px-3 py-1.5 text-xs rounded-md border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs rounded-md border border-panel-line text-panel-body hover:text-panel-strong hover:border-panel-line-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               ‹ Prev
             </button>
             <button
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="px-3 py-1.5 text-xs rounded-md border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs rounded-md border border-panel-line text-panel-body hover:text-panel-strong hover:border-panel-line-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Next ›
             </button>

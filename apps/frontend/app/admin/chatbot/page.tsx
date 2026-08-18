@@ -50,7 +50,7 @@ const STATUS_OPTIONS = [
 const STATUS_STYLES: Record<ConversationStatus, string> = {
   active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
   escalated: 'bg-red-500/10 text-red-400 border-red-500/30',
-  closed: 'bg-zinc-700/30 text-zinc-400 border-zinc-600/30',
+  closed: 'bg-panel-raised-2/30 text-panel-body border-panel-line-2/30',
 };
 
 function formatWhen(value: string): string {
@@ -158,8 +158,8 @@ export default function ChatbotAdminPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-100">Chatbot</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold text-panel-strong">Chatbot</h1>
+        <p className="mt-1 text-sm text-panel-muted">
           Visitor conversations from the website chat. &ldquo;Needs reply&rdquo; means the bot could
           not answer.
         </p>
@@ -171,9 +171,9 @@ export default function ChatbotAdminPage() {
         {/* ---------------------------------------------------------------- */}
         <section
           aria-label="Conversations"
-          className="rounded-xl border border-zinc-800/50 bg-[#0c0c14]"
+          className="rounded-xl border border-panel-line/50 bg-panel-sunken"
         >
-          <div className="border-b border-zinc-800/50 p-3">
+          <div className="border-b border-panel-line/50 p-3">
             <FilterSelect
               value={statusFilter}
               onChange={setStatusFilter}
@@ -183,9 +183,9 @@ export default function ChatbotAdminPage() {
 
           <div className="max-h-[70vh] overflow-y-auto">
             {loadingList ? (
-              <p className="p-4 text-sm text-zinc-500">Loading…</p>
+              <p className="p-4 text-sm text-panel-muted">Loading…</p>
             ) : conversations.length === 0 ? (
-              <p className="p-4 text-sm text-zinc-500">No conversations yet.</p>
+              <p className="p-4 text-sm text-panel-muted">No conversations yet.</p>
             ) : (
               <ul>
                 {conversations.map((conversation) => {
@@ -195,12 +195,12 @@ export default function ChatbotAdminPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedId(conversation.id)}
-                        className={`w-full border-b border-zinc-800/50 px-4 py-3 text-left transition-colors ${
-                          active ? 'bg-emerald-500/10' : 'hover:bg-zinc-800/40'
+                        className={`w-full border-b border-panel-line/50 px-4 py-3 text-left transition-colors ${
+                          active ? 'bg-emerald-500/10' : 'hover:bg-panel-raised/40'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium text-zinc-200">
+                          <span className="truncate text-sm font-medium text-panel-strong">
                             {conversation.visitor_name || 'Anonymous visitor'}
                           </span>
                           <span
@@ -211,10 +211,10 @@ export default function ChatbotAdminPage() {
                             {conversation.status}
                           </span>
                         </div>
-                        <p className="mt-1 truncate text-xs text-zinc-500">
+                        <p className="mt-1 truncate text-xs text-panel-muted">
                           {conversation.last_message_preview || 'No messages'}
                         </p>
-                        <p className="mt-1 text-[10px] text-zinc-600">
+                        <p className="mt-1 text-[10px] text-panel-faint">
                           {formatWhen(conversation.last_message_at)} · {conversation.message_count} msg
                         </p>
                       </button>
@@ -231,23 +231,23 @@ export default function ChatbotAdminPage() {
         {/* ---------------------------------------------------------------- */}
         <section
           aria-label="Visitor details"
-          className="rounded-xl border border-zinc-800/50 bg-[#0c0c14] p-4"
+          className="rounded-xl border border-panel-line/50 bg-panel-sunken p-4"
         >
           {!detail ? (
-            <p className="text-sm text-zinc-500">Select a conversation.</p>
+            <p className="text-sm text-panel-muted">Select a conversation.</p>
           ) : (
             <>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-panel-body">
                 Visitor
               </h2>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="text-xs text-zinc-500">Name</dt>
-                  <dd className="text-zinc-200">{detail.visitor_name || '—'}</dd>
+                  <dt className="text-xs text-panel-muted">Name</dt>
+                  <dd className="text-panel-strong">{detail.visitor_name || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-zinc-500">Email</dt>
-                  <dd className="break-all text-zinc-200">
+                  <dt className="text-xs text-panel-muted">Email</dt>
+                  <dd className="break-all text-panel-strong">
                     {detail.visitor_email ? (
                       <a href={`mailto:${detail.visitor_email}`} className="hover:text-emerald-400">
                         {detail.visitor_email}
@@ -258,8 +258,8 @@ export default function ChatbotAdminPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-zinc-500">Phone</dt>
-                  <dd className="text-zinc-200">
+                  <dt className="text-xs text-panel-muted">Phone</dt>
+                  <dd className="text-panel-strong">
                     {detail.visitor_phone ? (
                       <a href={`tel:${detail.visitor_phone}`} className="hover:text-emerald-400">
                         {detail.visitor_phone}
@@ -270,7 +270,7 @@ export default function ChatbotAdminPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-zinc-500">Status</dt>
+                  <dt className="text-xs text-panel-muted">Status</dt>
                   <dd>
                     <span
                       className={`inline-block rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
@@ -282,8 +282,8 @@ export default function ChatbotAdminPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-zinc-500">Started</dt>
-                  <dd className="text-zinc-200">{formatWhen(detail.created_at)}</dd>
+                  <dt className="text-xs text-panel-muted">Started</dt>
+                  <dd className="text-panel-strong">{formatWhen(detail.created_at)}</dd>
                 </div>
               </dl>
 
@@ -305,17 +305,17 @@ export default function ChatbotAdminPage() {
         {/* ---------------------------------------------------------------- */}
         <section
           aria-label="Message thread"
-          className="flex min-h-[60vh] flex-col rounded-xl border border-zinc-800/50 bg-[#0c0c14]"
+          className="flex min-h-[60vh] flex-col rounded-xl border border-panel-line/50 bg-panel-sunken"
         >
           {!detail ? (
-            <p className="p-4 text-sm text-zinc-500">No conversation selected.</p>
+            <p className="p-4 text-sm text-panel-muted">No conversation selected.</p>
           ) : loadingDetail ? (
-            <p className="p-4 text-sm text-zinc-500">Loading messages…</p>
+            <p className="p-4 text-sm text-panel-muted">Loading messages…</p>
           ) : (
             <>
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {detail.messages.length === 0 && (
-                  <p className="text-sm text-zinc-500">No messages in this conversation.</p>
+                  <p className="text-sm text-panel-muted">No messages in this conversation.</p>
                 )}
                 {detail.messages.map((message) => {
                   const isVisitor = message.sender === 'visitor';
@@ -327,7 +327,7 @@ export default function ChatbotAdminPage() {
                       <div
                         className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
                           isVisitor
-                            ? 'bg-zinc-800 text-zinc-100'
+                            ? 'bg-panel-raised text-panel-strong'
                             : message.sender === 'admin'
                               ? 'bg-emerald-500/15 text-emerald-100'
                               : 'bg-blue-500/10 text-blue-100'
@@ -343,9 +343,9 @@ export default function ChatbotAdminPage() {
                 })}
               </div>
 
-              <div className="border-t border-zinc-800/50 p-3">
+              <div className="border-t border-panel-line/50 p-3">
                 {isClosed ? (
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-panel-muted">
                     This conversation is closed. Replies are disabled.
                   </p>
                 ) : (
@@ -359,7 +359,7 @@ export default function ChatbotAdminPage() {
                       value={reply}
                       onChange={(event) => setReply(event.target.value)}
                       placeholder="Type a reply…"
-                      className="flex-1 resize-none rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+                      className="flex-1 resize-none rounded-lg border border-panel-line-2 bg-panel-surface p-2 text-sm text-panel-strong placeholder-panel-faint focus:border-emerald-500 focus:outline-none"
                     />
                     <button
                       type="button"

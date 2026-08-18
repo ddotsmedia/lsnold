@@ -62,15 +62,15 @@ export default function SeoSettingsPage() {
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-zinc-800/50 pb-px">
+      <div className="flex gap-1 border-b border-panel-line/50 pb-px">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
               activeTab === tab.key
-                ? 'bg-[#111119] text-emerald-400 border border-zinc-800/50 border-b-transparent -mb-px'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'bg-panel-surface text-emerald-400 border border-panel-line/50 border-b-transparent -mb-px'
+                : 'text-panel-muted hover:text-panel-body'
             }`}
           >
             {tab.label}
@@ -80,8 +80,8 @@ export default function SeoSettingsPage() {
 
       {/* SEO Defaults */}
       {activeTab === 'seo' && (
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6 space-y-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Default meta tags for pages without custom SEO</p>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6 space-y-5">
+          <p className="text-xs text-panel-muted uppercase tracking-wider">Default meta tags for pages without custom SEO</p>
           <FormField label="Default Meta Title">
             <Input value={getVal('seo_defaults', 'meta_title')} onChange={(e) => setVal('seo_defaults', 'meta_title', e.target.value)} />
           </FormField>
@@ -97,8 +97,8 @@ export default function SeoSettingsPage() {
 
       {/* Analytics */}
       {activeTab === 'analytics' && (
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6 space-y-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Tracking code configuration</p>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6 space-y-5">
+          <p className="text-xs text-panel-muted uppercase tracking-wider">Tracking code configuration</p>
           <FormField label="Google Analytics Tracking ID">
             <Input value={getVal('analytics', 'ga_tracking_id')} onChange={(e) => setVal('analytics', 'ga_tracking_id', e.target.value)} placeholder="G-XXXXXXXXXX" />
           </FormField>
@@ -111,9 +111,9 @@ export default function SeoSettingsPage() {
                 type="checkbox"
                 checked={getVal('analytics', 'enable_server_analytics') === 'true'}
                 onChange={(e) => setVal('analytics', 'enable_server_analytics', String(e.target.checked))}
-                className="w-4 h-4 rounded bg-zinc-800 border-zinc-700"
+                className="w-4 h-4 rounded bg-panel-raised border-panel-line-2"
               />
-              <span className="text-sm text-zinc-400">Enable built-in page view tracking</span>
+              <span className="text-sm text-panel-body">Enable built-in page view tracking</span>
             </div>
           </FormField>
           <div className="flex justify-end"><Button onClick={() => save('analytics')} disabled={saving}>Save Analytics</Button></div>
@@ -122,8 +122,8 @@ export default function SeoSettingsPage() {
 
       {/* Robots.txt */}
       {activeTab === 'robots' && (
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6 space-y-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Custom robots.txt content</p>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6 space-y-5">
+          <p className="text-xs text-panel-muted uppercase tracking-wider">Custom robots.txt content</p>
           <FormField label="Robots.txt Content">
             <Textarea
               value={getVal('robots_txt', 'content')}
@@ -138,11 +138,11 @@ export default function SeoSettingsPage() {
 
       {/* Sitemap */}
       {activeTab === 'sitemap' && (
-        <div className="bg-[#111119] rounded-xl border border-zinc-800/50 p-6 space-y-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">Sitemap generation settings</p>
+        <div className="bg-panel-surface rounded-xl border border-panel-line/50 p-6 space-y-5">
+          <p className="text-xs text-panel-muted uppercase tracking-wider">Sitemap generation settings</p>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Change Frequency">
-              <select value={getVal('sitemap', 'change_frequency')} onChange={(e) => setVal('sitemap', 'change_frequency', e.target.value)} className="w-full bg-[#0c0c14] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200">
+              <select value={getVal('sitemap', 'change_frequency')} onChange={(e) => setVal('sitemap', 'change_frequency', e.target.value)} className="w-full bg-panel-sunken border border-panel-line rounded-lg px-4 py-2.5 text-sm text-panel-strong">
                 <option value="always">Always</option><option value="hourly">Hourly</option><option value="daily">Daily</option>
                 <option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option>
               </select>
