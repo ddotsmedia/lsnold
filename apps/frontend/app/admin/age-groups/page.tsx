@@ -49,9 +49,12 @@ interface AgeGroupRecord {
   description: string | null;
   min_age_months: number;
   max_age_months: number;
+  capacity: number | null;
 }
 
-const EMPTY_RECORD = { name: '', description: '', min_age_months: 0, max_age_months: 12 };
+// capacity is held as a string so the field can be genuinely empty; a number
+// state would coerce a cleared box to 0, which the server rejects.
+const EMPTY_RECORD = { name: '', description: '', min_age_months: 0, max_age_months: 12, capacity: '' };
 
 function authHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lsn_token') : null;
@@ -317,6 +320,7 @@ export default function AgeGroupsPage() {
         description: recordForm.description.trim() || null,
         min_age_months: Number(recordForm.min_age_months),
         max_age_months: Number(recordForm.max_age_months),
+        capacity: recordForm.capacity === '' ? null : Number(recordForm.capacity),
       };
       if (editId) await api(`/admin/content/age-groups/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       else await api('/admin/content/age-groups', { method: 'POST', body: JSON.stringify(body) });
@@ -518,6 +522,7 @@ export default function AgeGroupsPage() {
                               description: r.description ?? '',
                               min_age_months: r.min_age_months,
                               max_age_months: r.max_age_months,
+                              capacity: r.capacity === null ? '' : String(r.capacity),
                             });
                             setShowRecordModal(true);
                           }}>Edit</Button>
@@ -557,6 +562,23 @@ export default function AgeGroupsPage() {
                 onChange={(e) => setRecordForm((f) => ({ ...f, max_age_months: Number(e.target.value) }))} />
             </FormField>
           </div>
+
+          <FormField label="Capacity (children)">
+            <Input
+              type="number"
+              min={1}
+              placeholder="Leave blank if not known"
+              value={recordForm.capacity}
+              onChange={(e) => setRecordForm((f) => ({ ...f, capacity: e.target.value }))}
+            />
+            {/* Blank is a real answer here. The occupancy chart skips rooms
+                without one rather than assuming they have space, so a guess
+                would be worse than leaving it empty. */}
+            <p className="mt-1 text-xs text-panel-muted">
+              How many children this room can take. Used by the room occupancy
+              chart; rooms left blank are listed as not yet recorded.
+            </p>
+          </FormField>
           <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={() => setShowRecordModal(false)}>Cancel</Button>
             <Button onClick={saveRecord}>{editId ? 'Save Changes' : 'Create'}</Button>

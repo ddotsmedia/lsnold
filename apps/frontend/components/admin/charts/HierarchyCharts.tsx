@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { EChart } from './EChart';
 import { api } from '../../../lib/api';
+import { RoomOccupancyTreemap } from './RoomOccupancyTreemap';
 
 /**
  * Two nested breakdowns of what the panel actually records.
@@ -58,6 +59,11 @@ export function HierarchyCharts({ days = 30 }: { days?: number }) {
 
   return (
     <div className="space-y-8">
+      <section>
+        <h3 className="text-sm font-medium text-panel-strong">How full each room is</h3>
+        <RoomOccupancyTreemap />
+      </section>
+
       <section>
         <h3 className="text-sm font-medium text-panel-strong">Where visitors go</h3>
         <p className="mb-3 text-xs text-panel-muted">

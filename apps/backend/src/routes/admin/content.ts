@@ -72,6 +72,12 @@ const AgeGroupSchema = z.object({
   description: z.preprocess(blankToNull, z.string().trim().nullable().optional()),
   min_age_months: z.number().int().min(0),
   max_age_months: z.number().int().min(1),
+  // Null is 'not recorded', which the treemap treats as unknown rather than
+  // unlimited. Zero would be a slip, so it is rejected.
+  capacity: z.preprocess(
+    (v) => (v === '' || v === null ? null : v),
+    z.number().int().positive('Capacity must be at least 1').nullable().optional()
+  ),
 });
 
 const ReorderSchema = z.object({
@@ -426,8 +432,9 @@ async function createAgeGroup(db: Pool, req: AuthRequest, res: Response): Promis
   try {
     const data = AgeGroupSchema.parse(req.body);
     const result = await db.query(
-      'INSERT INTO age_groups (name, description, min_age_months, max_age_months) VALUES ($1, $2, $3, $4) RETURNING *',
-      [data.name, data.description ?? null, data.min_age_months, data.max_age_months]
+      `INSERT INTO age_groups (name, description, min_age_months, max_age_months, capacity)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [data.name, data.description ?? null, data.min_age_months, data.max_age_months, data.capacity ?? null]
     );
     await logActivity(db, req.userId, 'create', 'age_group', String(result.rows[0]?.id), { name: data.name });
     res.status(201).json(result.rows[0]);
@@ -449,7 +456,8 @@ async function updateAgeGroup(db: Pool, req: AuthRequest, res: Response): Promis
     if (data.name !== undefined) { sets.push(`name = $${idx++}`); params.push(data.name); }
     if (data.description !== undefined) { sets.push(`description = $${idx++}`); params.push(data.description ?? null); }
     if (data.min_age_months !== undefined) { sets.push(`min_age_months = $${idx++}`); params.push(data.min_age_months); }
-    if (data.max_age_months !== undefined) { sets.push(`max_age_months = $${idx++}`); params.push(data.max_age_months); }
+    if (data.max_age_months !== undefined) { sets.push(`max_age_months = ${idx++}`); params.push(data.max_age_months); }
+    if (data.capacity !== undefined) { sets.push(`capacity = $${idx++}`); params.push(data.capacity ?? null); }
 
     if (sets.length === 0) { res.status(400).json({ error: 'No fields to update' }); return; }
 

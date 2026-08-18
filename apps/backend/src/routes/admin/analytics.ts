@@ -716,6 +716,58 @@ async function getHierarchy(db: Pool, req: AuthRequest, res: Response): Promise<
   }
 }
 
+/**
+ * How full each room is.
+ *
+ * Rooms without a recorded capacity are returned separately rather than mixed
+ * in. A missing capacity is not the same as unlimited room, and sizing a
+ * rectangle by a number nobody entered would put a figure on a dashboard that
+ * everyone would come to trust.
+ *
+ * Only approved registrations count towards occupancy: a pending application is
+ * not a child in a room, and counting it would overstate how full the nursery
+ * is at exactly the moment that matters.
+ */
+async function getRoomOccupancy(db: Pool, _req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const result = await db.query(
+      `SELECT g.id, g.name, g.slug, g.capacity,
+              COUNT(r.id) FILTER (WHERE r.status = 'approved')::int AS enrolled,
+              COUNT(r.id) FILTER (WHERE r.status = 'pending')::int  AS pending
+         FROM age_groups g
+         LEFT JOIN registrations r
+           ON r.age_group_id = g.id AND r.deleted_at IS NULL
+        WHERE g.deleted_at IS NULL
+        GROUP BY g.id, g.name, g.slug, g.capacity, g.sort_order
+        ORDER BY g.sort_order, g.name`
+    );
+
+    const rows = result.rows as Array<{
+      id: string; name: string; slug: string;
+      capacity: number | null; enrolled: number; pending: number;
+    }>;
+
+    const measured = rows.filter((r) => r.capacity !== null && r.capacity > 0);
+
+    res.json({
+      rooms: measured.map((r) => ({
+        ...r,
+        // Capped for the colour scale only; the raw figures are still sent, so
+        // an over-full room reads as over-full rather than merely "100%".
+        fill_percent: Math.round((r.enrolled / (r.capacity as number)) * 1000) / 10,
+        places_left: (r.capacity as number) - r.enrolled,
+      })),
+      // Named so the screen can say which rooms are missing a capacity rather
+      // than silently drawing fewer rectangles than the nursery has rooms.
+      without_capacity: rows.filter((r) => r.capacity === null || r.capacity <= 0)
+        .map((r) => ({ id: r.id, name: r.name, enrolled: r.enrolled })),
+    });
+  } catch (error) {
+    console.error('getRoomOccupancy failed', error);
+    res.status(500).json({ error: 'Failed to read room occupancy' });
+  }
+}
+
 export function createAdminAnalyticsRouter(db: Pool): express.Router {
   const router = express.Router();
   const resolveAdmin = createResolveAdmin(db);
@@ -734,6 +786,7 @@ export function createAdminAnalyticsRouter(db: Pool): express.Router {
   router.get('/retention', requirePermission('view:analytics'), (req, res) => getRetention(db, req as AuthRequest, res));
   router.get('/cohorts', requirePermission('view:analytics'), (req, res) => getCohorts(db, req as AuthRequest, res));
   router.get('/hierarchy', requirePermission('view:analytics'), (req, res) => getHierarchy(db, req as AuthRequest, res));
+  router.get('/occupancy', requirePermission('view:analytics'), (req, res) => getRoomOccupancy(db, req as AuthRequest, res));
 
   return router;
 }
