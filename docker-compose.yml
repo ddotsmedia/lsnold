@@ -43,12 +43,16 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     ports:
-      # Bound to 127.0.0.1 deliberately. The brief published this on 3100, which
-      # is already taken on this host by another project's server, and which
-      # would have put a dashboard wired to children's names and parents' phone
-      # numbers on the public internet.
-      # Reach it over SSH:  ssh -L 3100:127.0.0.1:3100 root@<host>
-      - "127.0.0.1:3100:3000"
+      # Loopback only, and on 3130 rather than the 3100 the brief asked for.
+      #
+      # 3100 is already taken on this host by another project's server, so the
+      # container simply would not start there. Publishing it on any public
+      # interface is the bigger problem: Grafana's SQL panels run whatever query
+      # the logged-in user writes, against a database holding children's names,
+      # dates of birth and parents' phone numbers.
+      #
+      # Reach it over SSH:  ssh -L 3130:127.0.0.1:3130 root@<host>
+      - "127.0.0.1:3130:3000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
