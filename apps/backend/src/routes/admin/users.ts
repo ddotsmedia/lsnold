@@ -16,12 +16,10 @@ const InviteSchema = z.object({
   name: z.string().min(1).max(255),
   password: z.string().min(8),
   role: z.enum(['admin', 'editor', 'viewer']).optional(),
-  permissions: z.array(z.string()).optional(),
 });
 
 const RoleUpdateSchema = z.object({
   role: z.enum(['admin', 'editor', 'viewer']),
-  permissions: z.array(z.string()).optional(),
 });
 
 // ---------- Users ----------
@@ -52,10 +50,8 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
 
     const dataResult = await db.query(
       `SELECT u.id, u.email, u.name, u.phone, u.role, u.is_active, u.last_login_at,
-              u.password_reset_required, u.created_at, u.updated_at,
-              au.role as admin_role, au.permissions as admin_permissions
+              u.password_reset_required, u.created_at, u.updated_at
        FROM users u
-       LEFT JOIN admin_users au ON au.user_id = u.id
        ${where}
        ORDER BY ${orderBy}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
@@ -72,10 +68,9 @@ async function listUsers(db: Pool, req: AuthRequest, res: Response): Promise<voi
 async function getUser(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const result = await db.query(
-      `SELECT u.id, u.email, u.name, u.phone, u.role, u.created_at, u.updated_at,
-              au.role as admin_role, au.permissions as admin_permissions
+      `SELECT u.id, u.email, u.name, u.phone, u.role, u.is_active, u.last_login_at,
+              u.password_reset_required, u.created_at, u.updated_at
        FROM users u
-       LEFT JOIN admin_users au ON au.user_id = u.id
        WHERE u.id = $1`,
       [req.params.id]
     );
@@ -105,15 +100,8 @@ async function inviteAdmin(db: Pool, req: AuthRequest, res: Response): Promise<v
       );
       const userId = (userResult.rows[0] as { id: string }).id;
 
-      // Grant admin role
-      await client.query(
-        `INSERT INTO admin_users (user_id, role, permissions) VALUES ($1, $2, $3)
-         ON CONFLICT (user_id) DO UPDATE SET role = $2, permissions = $3`,
-        [userId, data.role || 'viewer', data.permissions || []]
-      );
-
-      // users.role is what resolveAdmin reads; without this the invited admin
-      // would be listed as one but get 403 from every admin endpoint.
+      // users.role is what resolveAdmin reads, and what the role_permissions
+      // table is keyed on, so it is the whole of granting access.
       await client.query('UPDATE users SET role = $1 WHERE id = $2', [data.role || 'viewer', userId]);
 
       await client.query('COMMIT');
@@ -148,17 +136,19 @@ async function updateRole(db: Pool, req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    // users.role is the authorization source of truth, and role_permissions is
+    // keyed on it, so setting it here is the whole of changing someone's role.
     const result = await db.query(
-      `INSERT INTO admin_users (user_id, role, permissions) VALUES ($1, $2, $3)
-       ON CONFLICT (user_id) DO UPDATE SET role = $2, permissions = $3
-       RETURNING *`,
-      [id, data.role, data.permissions || []]
+      `UPDATE users SET role = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, email, name, role, is_active`,
+      [data.role, id]
     );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return; }
 
-    // Keep users.role, the authorization source of truth, in step.
-    await db.query('UPDATE users SET role = $1 WHERE id = $2', [data.role, id]);
-
-    await logActivity(db, req.userId, 'update', 'admin_user', id, { role: data.role });
+    await logActivity(db, req.userId, 'update', 'user', id, {
+      newValues: { role: data.role }, req,
+    });
     res.json(result.rows[0]);
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ error: 'Validation failed', details: error.issues }); return; }
@@ -176,12 +166,23 @@ async function revokeAdmin(db: Pool, req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const result = await db.query('DELETE FROM admin_users WHERE user_id = $1 RETURNING id', [id]);
-    if (result.rows.length === 0) { res.status(404).json({ error: 'Admin user not found' }); return; }
-    // users.role decides isAdmin, so revoking must clear it there too —
-    // otherwise the account keeps full admin access.
-    await db.query("UPDATE users SET role = 'user' WHERE id = $1", [id]);
-    await logActivity(db, req.userId, 'delete', 'admin_user', id);
+    // users.role decides isAdmin, so clearing it is what actually revokes
+    // access. Refuses when the account had none, so the caller can tell the
+    // difference between revoking and doing nothing.
+    const result = await db.query(
+      `UPDATE users SET role = 'user', updated_at = NOW()
+        WHERE id = $1 AND role IS NOT NULL AND role <> 'user'
+        RETURNING id`,
+      [id]
+    );
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'No admin access to revoke' });
+      return;
+    }
+
+    await logActivity(db, req.userId, 'update', 'user', id, {
+      newValues: { role: 'user' }, req,
+    });
     res.status(204).send();
   } catch (error) {
     console.error('revokeAdmin failed', error);

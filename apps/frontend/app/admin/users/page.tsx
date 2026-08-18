@@ -13,7 +13,6 @@ interface User {
   id: string; email: string; name: string; phone: string;
   /** users.role — what actually decides access. */
   role: string | null;
-  admin_role: string | null; admin_permissions: string[] | null;
   created_at: string;
 }
 
