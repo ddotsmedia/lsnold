@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
+export interface SortTerm {
+  key: string;
+  dir: 'asc' | 'desc';
+}
+
 export interface Column<T> {
   key: string;
   header: string;
@@ -22,7 +27,10 @@ interface DataTableProps<T> {
     limit: number;
   };
   onPageChange?: (page: number) => void;
+  /** Single-column callback, kept for tables that have not moved over. */
   onSort?: (key: string, dir: 'asc' | 'desc') => void;
+  /** Every sort level, in priority order. */
+  onSortChange?: (sort: SortTerm[]) => void;
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
   /**
@@ -47,6 +55,7 @@ export function DataTable<T = Record<string, unknown>>({
   pagination,
   onPageChange,
   onSort,
+  onSortChange,
   onRowClick,
   emptyMessage = 'No data found',
   rowProps,
@@ -54,8 +63,7 @@ export function DataTable<T = Record<string, unknown>>({
   onSelectedChange,
   rowId = (row) => String((row as { id?: unknown })?.id ?? ''),
 }: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sort, setSort] = useState<SortTerm[]>([]);
 
   const selectable = Boolean(selected && onSelectedChange);
   const ids = data.map(rowId);
@@ -76,11 +84,35 @@ export function DataTable<T = Record<string, unknown>>({
     onSelectedChange?.(next);
   };
 
-  const handleSort = (key: string) => {
-    const newDir = sortKey === key && sortDir === 'desc' ? 'asc' : 'desc';
-    setSortKey(key);
-    setSortDir(newDir);
-    onSort?.(key, newDir);
+  /**
+   * Click sorts by one column; shift-click adds a column to the existing sort.
+   *
+   * Clicking a column already in a multi-sort cycles its own direction and
+   * leaves the rest alone, so a reader can flip one level without rebuilding
+   * the whole order. Plain clicking anything collapses back to one column,
+   * which is the way out of a sort that has grown confusing.
+   */
+  const handleSort = (key: string, additive: boolean) => {
+    setSort((current) => {
+      const existing = current.find((t) => t.key === key);
+      const flipped: SortTerm = {
+        key,
+        dir: existing?.dir === 'desc' ? 'asc' : 'desc',
+      };
+
+      const next = additive
+        ? existing
+          ? current.map((t) => (t.key === key ? flipped : t))
+          // Four levels is past the point where another tiebreaker changes
+          // anything a reader would notice.
+          : [...current, flipped].slice(-4)
+        : [flipped];
+
+      onSortChange?.(next);
+      // Kept so tables still using the single-column callback keep working.
+      onSort?.(key, flipped.dir);
+      return next;
+    });
   };
 
   return (
@@ -106,13 +138,24 @@ export function DataTable<T = Record<string, unknown>>({
                   className={`px-4 py-3 text-left text-xs font-medium text-panel-muted uppercase tracking-wider ${
                     col.sortable ? 'cursor-pointer hover:text-panel-body select-none' : ''
                   } ${col.className || ''}`}
-                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                  onClick={col.sortable ? (e) => handleSort(col.key, e.shiftKey) : undefined}
+                  title={col.sortable ? 'Click to sort. Shift-click to add a level.' : undefined}
                 >
                   <span className="flex items-center gap-1">
                     {col.header}
-                    {col.sortable && sortKey === col.key && (
-                      <span className="text-emerald-400">{sortDir === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {col.sortable && (() => {
+                      const at = sort.findIndex((t) => t.key === col.key);
+                      if (at === -1) return null;
+                      return (
+                        <span className="flex items-center gap-0.5 text-emerald-400">
+                          {sort[at]!.dir === 'asc' ? '↑' : '↓'}
+                          {/* Rank only when more than one column is sorted. */}
+                          {sort.length > 1 && (
+                            <span className="text-[10px] text-panel-muted">{at + 1}</span>
+                          )}
+                        </span>
+                      );
+                    })()}
                   </span>
                 </th>
               ))}

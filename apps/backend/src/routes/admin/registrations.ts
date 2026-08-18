@@ -7,6 +7,7 @@ import { createResolvePermissions, requirePermission, requirePanelAccess } from 
 import type { AuthRequest } from '../../middleware/auth.js';
 import { sendTabular, type Column } from '../../utils/tabular.js';
 import { logActivity } from '../../utils/activityLog.js';
+import { parseSort } from '../../utils/sorting.js';
 import { emitToRoom } from '../../realtime.js';
 import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
 
@@ -24,14 +25,13 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
     const search = req.query.search as string | undefined;
     const dateFrom = req.query.dateFrom as string | undefined;
     const dateTo = req.query.dateTo as string | undefined;
-    const sortBy = req.query.sortBy as string || 'created_at';
-    const sortDir = req.query.sortDir === 'asc' ? 'ASC' : 'DESC';
-
     // Same schema drift as the export had: this table has child_name and
     // parent_name, never first_name/last_name. Sorting or searching by the old
     // names raised "column does not exist" rather than returning nothing.
-    const allowedSorts = ['created_at', 'child_name', 'parent_name', 'parent_email', 'status'];
-    const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'created_at';
+    const ALLOWED_SORTS = [
+      'created_at', 'child_name', 'parent_name', 'parent_email', 'status', 'child_dob',
+    ] as const;
+    const { clause: orderBy, terms: sortTerms } = parseSort(req, ALLOWED_SORTS, 'created_at', 'r');
 
     const conditions: string[] = ['r.deleted_at IS NULL'];
     const params: unknown[] = [];
@@ -75,13 +75,14 @@ async function listRegistrations(db: Pool, req: AuthRequest, res: Response): Pro
        FROM registrations r
        LEFT JOIN age_groups ag ON r.age_group_id = ag.id
        ${where}
-       ORDER BY r.${safeSort} ${sortDir}
+       ORDER BY ${orderBy}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, limit, offset]
     );
 
     res.json({
       data: dataResult.rows,
+      sort: sortTerms,
       pagination: {
         page,
         limit,

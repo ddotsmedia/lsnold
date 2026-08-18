@@ -6,6 +6,8 @@ import { useRealtimeEvent } from '../../../lib/realtime';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
 import { BulkActionsBar } from '../../../components/admin/BulkActionsBar';
 import { FilterBar } from '../../../components/admin/FilterBar';
+import { ColumnSettings, readVisible } from '../../../components/admin/ColumnSettings';
+import type { SortTerm } from '../../../components/admin/DataTable';
 import Link from 'next/link';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
@@ -37,20 +39,36 @@ export default function BookingsPage() {
   const [confirm, setConfirm] = useState<{ id: string } | null>(null);
   const [range, setRange] = useState<Record<string, string>>({});
   const [pageSize, setPageSize] = useState(20);
+  const [sort, setSort] = useState<SortTerm[]>([]);
+  // Empty until the effect below reads storage; the table shows everything
+  // meanwhile rather than flashing a half-built header.
+  const [visible, setVisible] = useState<Set<string> | null>(null);
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Booking>>('/admin/tour-bookings', {
-        params: { page, limit: pageSize, search, status: statusFilter, ...range },
+        params: {
+          page, limit: pageSize, search, status: statusFilter, ...range,
+          sort: sort.map((t) => t.key + ':' + t.dir).join(',') || undefined,
+        },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { setToast({ message: 'Failed to load bookings', type: 'error' }); }
     finally { setLoading(false); }
-  }, [search, statusFilter, pageSize, range]);
+  }, [search, statusFilter, pageSize, range, sort]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Read after mount: localStorage is not available during SSR, and reading
+  // it in the initial state would make server and client disagree.
+  useEffect(() => {
+    setVisible(readVisible('bookings', columns.map((c) => ({ key: c.key, header: c.header }))));
+    // Columns are fixed for this page; re-reading on every render would undo
+    // a choice the moment it is made.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // A new tour booking arrives without a refresh. Only prepended when the
   // first page is showing and no search is active, so it cannot appear
@@ -133,13 +151,21 @@ export default function BookingsPage() {
             allLabel="All Status"
           />
         </div>
-        <ExportMenu
-          path="/admin/tour-bookings/export"
-          params={{ status: statusFilter, search, ...range }}
-          title="Tour bookings"
-          subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
-          onError={(message) => setToast({ message, type: 'error' })}
-        />
+        <div className="flex items-center gap-2">
+          <ColumnSettings
+            table="bookings"
+            columns={columns.map((c) => ({ key: c.key, header: c.header }))}
+            visible={visible ?? new Set(columns.map((c) => c.key))}
+            onChange={setVisible}
+          />
+          <ExportMenu
+            path="/admin/tour-bookings/export"
+            params={{ status: statusFilter, search, ...range }}
+            title="Tour bookings"
+            subtitle={statusFilter ? `Status: ${statusFilter}` : 'All statuses'}
+            onError={(message) => setToast({ message, type: 'error' })}
+          />
+        </div>
       </div>
 
       <FilterBar
@@ -165,7 +191,8 @@ export default function BookingsPage() {
       />
 
       <DataTable
-        columns={columns}
+        columns={visible ? columns.filter((c) => visible.has(c.key)) : columns}
+        onSortChange={setSort}
         selected={selected}
         onSelectedChange={setSelected}
         data={data}

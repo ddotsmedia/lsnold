@@ -12,6 +12,7 @@ import { TIME_SLOTS } from '../../controllers/bookingController.js';
 import { notifyReschedule } from '../../services/notify.js';
 import type { TourBooking } from '../../types/index.js';
 import { bulkStatus, bulkDelete, type BulkTarget } from '../../utils/bulk.js';
+import { parseSort } from '../../utils/sorting.js';
 
 const StatusSchema = z.object({
   status: z.enum(['pending', 'confirmed', 'cancelled']),
@@ -27,11 +28,8 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
     const search = req.query.search as string | undefined;
     const dateFrom = req.query.dateFrom as string | undefined;
     const dateTo = req.query.dateTo as string | undefined;
-    const sortBy = req.query.sortBy as string || 'preferred_date';
-    const sortDir = req.query.sortDir === 'asc' ? 'ASC' : 'DESC';
-
-    const allowedSorts = ['preferred_date', 'created_at', 'visitor_name', 'visitor_email', 'status'];
-    const safeSort = allowedSorts.includes(sortBy) ? sortBy : 'preferred_date';
+    const ALLOWED_SORTS = ['preferred_date', 'preferred_time', 'created_at', 'visitor_name', 'visitor_email', 'status'] as const;
+    const { clause: orderBy, terms: sortTerms } = parseSort(req, ALLOWED_SORTS, 'preferred_date');
 
     // Deleted rows are excluded everywhere; this is the base of every filter.
     const conditions: string[] = ['deleted_at IS NULL'];
@@ -71,13 +69,14 @@ async function listBookings(db: Pool, req: AuthRequest, res: Response): Promise<
 
     const dataResult = await db.query(
       `SELECT * FROM tour_bookings ${where}
-       ORDER BY ${safeSort} ${sortDir}
+       ORDER BY ${orderBy}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, limit, offset]
     );
 
     res.json({
       data: dataResult.rows,
+      sort: sortTerms,
       pagination: {
         page,
         limit,
