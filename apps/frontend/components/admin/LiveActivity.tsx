@@ -22,6 +22,8 @@ export interface LiveEntry {
   entity_id: string | null;
   created_at: string;
   actor_name: string | null;
+  /** Set for arrivals from the public forms, which read differently. */
+  submission?: boolean;
 }
 
 const ACTION_WORDS: Record<string, string> = {
@@ -39,19 +41,63 @@ function readableType(type: string): string {
   return type.replace(/_/g, ' ');
 }
 
+/** A booking or registration row, as broadcast to its own room. */
+interface SubmissionPayload {
+  id: string;
+  visitor_name?: string;
+  child_name?: string;
+  created_at?: string;
+}
+
 export function LiveActivity({ max = 8 }: { max?: number }) {
   const [entries, setEntries] = useState<LiveEntry[]>([]);
   // Marks the newest row so it can fade in without animating the whole list
   // every time something arrives.
   const [newestId, setNewestId] = useState<string | null>(null);
 
-  const connected = useRealtimeEvent<LiveEntry>('activity:log', (entry) => {
+  const add = (entry: LiveEntry) => {
     setEntries((prev) => {
       // The same action can arrive twice if a socket reconnects mid-write.
       if (prev.some((e) => e.id === entry.id)) return prev;
       return [entry, ...prev].slice(0, max);
     });
     setNewestId(entry.id);
+  };
+
+  const connected = useRealtimeEvent<LiveEntry>('activity:log', add);
+
+  /**
+   * Arrivals from the public forms, named.
+   *
+   * A name is shown here and not on the activity feed above because these come
+   * from the bookings and registrations rooms, which a socket only joins after
+   * proving it holds view:bookings or view:registrations. Anyone receiving this
+   * is already entitled to open the record. The activity room is gated on
+   * view:users instead, which is a different entitlement, so its payload stays
+   * thin.
+   */
+  useRealtimeEvent<SubmissionPayload>('booking:created', (row) => {
+    add({
+      id: `booking-${row.id}`,
+      action: 'create',
+      entity_type: 'tour booking',
+      submission: true,
+      entity_id: row.id,
+      created_at: row.created_at ?? new Date().toISOString(),
+      actor_name: row.visitor_name ?? null,
+    });
+  });
+
+  useRealtimeEvent<SubmissionPayload>('registration:created', (row) => {
+    add({
+      id: `registration-${row.id}`,
+      action: 'create',
+      entity_type: 'registration',
+      submission: true,
+      entity_id: row.id,
+      created_at: row.created_at ?? new Date().toISOString(),
+      actor_name: row.child_name ?? null,
+    });
   });
 
   useEffect(() => {
@@ -89,11 +135,20 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
               }`}
             >
               <span className="text-panel-body">
-                {entry.actor_name ?? 'Someone'}{' '}
-                <span className="text-panel-muted">
-                  {ACTION_WORDS[entry.action] ?? entry.action}
-                </span>{' '}
-                a {readableType(entry.entity_type)}
+                {entry.submission ? (
+                  <>
+                    <span className="text-emerald-400">New {readableType(entry.entity_type)}</span>
+                    {entry.actor_name ? <> from {entry.actor_name}</> : null}
+                  </>
+                ) : (
+                  <>
+                    {entry.actor_name ?? 'Someone'}{' '}
+                    <span className="text-panel-muted">
+                      {ACTION_WORDS[entry.action] ?? entry.action}
+                    </span>{' '}
+                    a {readableType(entry.entity_type)}
+                  </>
+                )}
               </span>
               <time
                 dateTime={entry.created_at}
