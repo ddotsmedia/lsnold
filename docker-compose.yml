@@ -19,6 +19,40 @@ services:
       timeout: 5s
       retries: 5
 
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: lsn-grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # No default value. An unset password stops the stack rather than quietly
+      # starting a dashboard over the nursery's data with a guessable one.
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-lsnadmin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
+      # Nobody should be able to create an account on it, or read it as a guest.
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      # The read-only database role from migration 040, not the owning user.
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD must be set in .env}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      # Bound to 127.0.0.1 deliberately. The brief published this on 3100, which
+      # is already taken on this host by another project's server, and which
+      # would have put a dashboard wired to children's names and parents' phone
+      # numbers on the public internet.
+      # Reach it over SSH:  ssh -L 3100:127.0.0.1:3100 root@<host>
+      - "127.0.0.1:3100:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: lsn-redis
@@ -89,6 +123,8 @@ services:
       start_period: 30s
 
 volumes:
+  grafana_data:
+    driver: local
   pgdata:
     driver: local
   backend_uploads:

@@ -1,0 +1,27 @@
+# The nursery database, read-only.
+#
+# Provisioned as a file rather than clicked in the UI so the connection is
+# reproducible and reviewable, and so nobody has to paste the owning user's
+# password into a web form to set it up.
+apiVersion: 1
+
+datasources:
+  - name: LittleSmarties
+    type: postgres
+    uid: lsn-postgres
+    access: proxy
+    url: postgres:5432
+    database: littlesmarties
+    # grafana_ro from migration 040: SELECT only, and denied the users and
+    # refresh_tokens tables outright.
+    user: grafana_ro
+    isDefault: true
+    editable: false
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+      # Grafana would otherwise offer to write; the role cannot, and saying so
+      # here means the UI does not present an option that always fails.
+      timescaledb: false
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD

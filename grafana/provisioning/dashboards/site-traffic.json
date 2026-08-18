@@ -1,0 +1,122 @@
+{
+  "uid": "lsn-traffic",
+  "title": "Site traffic",
+  "description": "Visits to the public site. The only dashboard here with data behind it today: registrations and tour bookings are both empty, so an enrolment or booking dashboard would draw a flat line at zero.",
+  "tags": ["littlesmarties"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5m",
+  "time": { "from": "now-30d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Page views per day",
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1 },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('day', created_at) AS time, COUNT(*)::int AS \"views\" FROM page_analytics WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Views in range",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*)::int AS \"Views\" FROM page_analytics WHERE $__timeFilter(created_at)"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Distinct visitors",
+      "description": "Counted from visitor_id, which became stable across days on 2026-08-17. Figures spanning earlier dates undercount returning visitors, because before that change the same browser produced a new id each day.",
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT visitor_id)::int AS \"Visitors\" FROM page_analytics WHERE $__timeFilter(created_at) AND visitor_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "barchart",
+      "title": "Most visited pages",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT page_path AS \"Page\", COUNT(*)::int AS \"Views\" FROM page_analytics WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 2 DESC LIMIT 12"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "piechart",
+      "title": "Device type",
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(device_type, 'unknown') AS \"Device\", COUNT(*)::int AS \"Views\" FROM page_analytics WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 2 DESC"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Admin actions by type",
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "lsn-postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT action AS \"Action\", COUNT(*)::int AS \"Count\" FROM admin_activity_log WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 2 DESC"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "Dashboards not built, and why",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 18 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Enrolment trends**, **booking status** and **class capacity** were asked for and are not here, because there is nothing to plot.\n\n- `registrations` is empty, so an enrolment line would be flat at zero.\n- `tour_bookings` is empty, so a status pie would have no slices.\n- `age_groups` has no capacity column, so \"how full is each room\" has no denominator anywhere in the schema.\n\nThe alerts were left out for the same reason: **\"bookings below 5 per day\"** against zero bookings fires every day, forever. An alert that always fires teaches people to ignore alerts.\n\nAdd a capacity per room and take the first real bookings, and these become worth building — the queries are a few lines each."
+      }
+    }
+  ]
+}
