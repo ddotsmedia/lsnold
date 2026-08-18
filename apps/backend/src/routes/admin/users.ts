@@ -406,12 +406,17 @@ async function getActivityLog(db: Pool, req: AuthRequest, res: Response): Promis
     );
     const total = Number(countResult.rows[0]?.count ?? 0);
 
+    // action and entity_type are worth sorting by: grouping every delete, or
+    // every change to one kind of record, is how this page actually gets read.
+    const ALLOWED_SORTS = ['created_at', 'action', 'entity_type'] as const;
+    const { clause: activityOrder } = parseSort(req, ALLOWED_SORTS, 'created_at', 'al');
+
     const dataResult = await db.query(
       `SELECT al.*, u.name as admin_name, u.email as admin_email
        FROM admin_activity_log al
        LEFT JOIN users u ON al.admin_user_id = u.id
        ${where}
-       ORDER BY al.created_at DESC
+       ORDER BY ${activityOrder}
        LIMIT $${nextIdx} OFFSET $${nextIdx + 1}`,
       [...params, limit, offset]
     );

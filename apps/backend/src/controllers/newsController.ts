@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import type { AuthRequest } from '../middleware/auth.js';
+import { parseSort } from '../utils/sorting.js';
 import { logActivity } from '../utils/activityLog.js';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary.js';
 
@@ -188,9 +189,14 @@ export async function listNews(db: Pool, req: AuthRequest, res: Response): Promi
     const countResult = await db.query(`SELECT COUNT(*) FROM news ${where}`, params);
     const total = Number(countResult.rows[0]?.count ?? 0);
 
+    // The Title header was already marked sortable on this screen, but nothing
+    // sent or read a sort parameter, so clicking it did nothing at all.
+    const ALLOWED_SORTS = ['published_date', 'created_at', 'title'] as const;
+    const { clause: orderBy } = parseSort(req, ALLOWED_SORTS, 'published_date');
+
     const dataResult = await db.query(
       `SELECT * FROM news ${where}
-        ORDER BY published_date DESC, created_at DESC
+        ORDER BY ${orderBy}
         LIMIT $${idx} OFFSET $${idx + 1}`,
       [...params, limit, offset]
     );

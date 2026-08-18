@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
+import type { SortTerm } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
 import {
   SearchBar, Button, Modal, FormField, Input, Textarea, Select, Toast, ConfirmDialog,
@@ -151,6 +152,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 export default function NewsAndEventsPage() {
   const [tab, setTab] = useState<Tab>('news');
   const [search, setSearch] = useState('');
+  const [newsSort, setNewsSort] = useState<SortTerm[]>([]);
 
   const [news, setNews] = useState<NewsItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -189,7 +191,10 @@ export default function NewsAndEventsPage() {
     try {
       if (which === 'news') {
         const res = await api<PaginatedResponse<NewsItem>>('/admin/news', {
-          params: { page, limit: 20, search },
+          params: {
+            page, limit: 20, search,
+            sort: newsSort.map((t) => `${t.key}:${t.dir}`).join(',') || undefined,
+          },
         });
         setNews(res.data);
         setNewsPage(res.pagination);
@@ -207,7 +212,7 @@ export default function NewsAndEventsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, newsSort]);
 
   // Refetches on tab change and on search, so the query applies to whichever
   // list is showing.
@@ -526,7 +531,12 @@ export default function NewsAndEventsPage() {
       render: () => <span className="cursor-grab select-none text-panel-faint" aria-hidden>⠿</span>,
     },
     {
-      key: 'title', header: 'Title', sortable: true,
+      // Not sortable, deliberately. This table is drag-reordered, and a drag
+      // writes sort_order from the positions on screen — so reordering a list
+      // that had been sorted by title would scramble the order the public page
+      // uses. The header was marked sortable before but nothing sent a sort
+      // parameter, so clicking it had never done anything.
+      key: 'title', header: 'Title',
       render: (r) => (
         <span className="flex items-center gap-2">
           {r.image_url && (
@@ -634,6 +644,7 @@ export default function NewsAndEventsPage() {
         {isNews ? (
           <DataTable
             columns={newsColumns}
+            onSortChange={setNewsSort}
             data={news}
             loading={loading}
             pagination={newsPage}

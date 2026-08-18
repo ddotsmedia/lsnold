@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import type { PaginatedResponse } from '../../../lib/api';
 import { DataTable } from '../../../components/admin/DataTable';
+import { ColumnSettings, readVisible } from '../../../components/admin/ColumnSettings';
+import type { SortTerm } from '../../../components/admin/DataTable';
 import type { Column } from '../../../components/admin/DataTable';
 import { StatusBadge, FilterSelect, Modal, SearchBar, Toast } from '../../../components/admin/shared';
 import { ExportMenu } from '../../../components/admin/ExportMenu';
@@ -91,21 +93,32 @@ export default function ActivityLogPage() {
   const [admins, setAdmins] = useState<Array<{ id: string; name: string; email: string }>>([]);
   const [range, setRange] = useState<Record<string, string>>({});
   const [pageSize, setPageSize] = useState(30);
+  const [sort, setSort] = useState<SortTerm[]>([]);
+  const [visible, setVisible] = useState<Set<string> | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const res = await api<PaginatedResponse<Activity>>('/admin/users/activity-log', {
-        params: { page, limit: pageSize, entityType, action, adminId, search, ...range },
+        params: {
+          page, limit: pageSize, entityType, action, adminId, search, ...range,
+          sort: sort.map((t) => t.key + ':' + t.dir).join(',') || undefined,
+        },
       });
       setData(res.data);
       setPagination(res.pagination);
     } catch { /* ignore */ }
     finally { setLoading(false); }
-  }, [entityType, action, adminId, search, pageSize, range]);
+  }, [entityType, action, adminId, search, pageSize, range, sort]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // After mount: localStorage does not exist during SSR.
+  useEffect(() => {
+    setVisible(readVisible('activity-log', columns.map((c) => ({ key: c.key, header: c.header }))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Only the accounts that can act, so the dropdown is not a list of every
   // person who ever registered.
@@ -120,7 +133,7 @@ export default function ActivityLogPage() {
   }, [toast]);
 
   const columns: Column<Activity>[] = [
-    { key: 'created_at', header: 'Time', render: (r) => (
+    { key: 'created_at', header: 'Time', sortable: true, render: (r) => (
       <span className="text-xs text-panel-body tabular-nums whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</span>
     )},
     { key: 'admin_name', header: 'User', render: (r) => (
@@ -129,8 +142,8 @@ export default function ActivityLogPage() {
         {r.admin_email && <span className="block text-[10px] text-panel-faint">{r.admin_email}</span>}
       </div>
     )},
-    { key: 'action', header: 'Action', render: (r) => <StatusBadge status={r.action} /> },
-    { key: 'entity_type', header: 'Entity', render: (r) => (
+    { key: 'action', header: 'Action', sortable: true, render: (r) => <StatusBadge status={r.action} /> },
+    { key: 'entity_type', header: 'Entity', sortable: true, render: (r) => (
       <span className="text-sm text-panel-body">{r.entity_type}{r.entity_id ? ` #${r.entity_id.slice(0, 8)}` : ''}</span>
     )},
     { key: 'details', header: 'Changes', render: (r) => {
@@ -191,7 +204,13 @@ export default function ActivityLogPage() {
         <div className="max-w-xs flex-1">
           <SearchBar value={search} onChange={setSearch} placeholder="Record id, type or person…" />
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <ColumnSettings
+            table="activity-log"
+            columns={columns.map((c) => ({ key: c.key, header: c.header }))}
+            visible={visible ?? new Set(columns.map((c) => c.key))}
+            onChange={setVisible}
+          />
           <ExportMenu
             path="/admin/users/activity-log/export"
             params={{ entityType, action, adminId, search, ...range }}
@@ -212,7 +231,8 @@ export default function ActivityLogPage() {
       />
 
       <DataTable<Activity>
-        columns={columns}
+        columns={visible ? columns.filter((c) => visible.has(c.key)) : columns}
+        onSortChange={setSort}
         data={data}
         loading={loading}
         pagination={pagination}
