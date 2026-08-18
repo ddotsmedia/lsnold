@@ -19,6 +19,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: lsn-redis
+    # No ports mapping on purpose: reachable only from this project's compose
+    # network. Other projects on this host publish their own Redis, and a
+    # host port here would both collide and expose a broker that has no reason
+    # to be reachable from outside.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: ./apps/backend
@@ -32,6 +47,8 @@ services:
       PORT: 3011
       DATABASE_URL: postgresql://lsn:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/littlesmarties
       UPLOAD_DIR: ./uploads/gallery
+      # Only used to span Socket.io across instances; unset runs single-instance.
+      REDIS_URL: redis://redis:6379
     volumes:
       - backend_uploads:/app/uploads
     ports:

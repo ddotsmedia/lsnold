@@ -1,4 +1,6 @@
 import { Server as SocketServer } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { connectRedis, isRedisConfigured } from './redis.js';
 import type { Server as HttpServer } from 'node:http';
 import type { Pool } from 'pg';
 import { verifyToken } from './utils/jwt.js';
@@ -38,6 +40,26 @@ export function initRealtime(server: HttpServer, db: Pool, corsOrigins: string[]
     // The panel is a long-lived tab; a slow tab should not be dropped mid-edit.
     pingTimeout: 30_000,
   });
+
+  // Cross-instance delivery, when a broker is configured.
+  //
+  // The adapter is the whole mechanism: emitToRoom below keeps calling
+  // io.to(room).emit(...) exactly as before, and the adapter forwards it to
+  // the other instances over Redis. Publishing to a channel by hand — as one
+  // might expect to have to — would bypass it, and the message would never
+  // reach a socket.
+  //
+  // Attached asynchronously so a slow or absent broker never delays the API
+  // coming up. Until it attaches, broadcasts are in-process, which is exactly
+  // correct for the single instance this runs as today.
+  if (isRedisConfigured()) {
+    void connectRedis().then((redis) => {
+      if (redis && io) {
+        io.adapter(createAdapter(redis.publisher, redis.subscriber));
+        console.log('socket.io: redis adapter attached');
+      }
+    });
+  }
 
   // Authentication runs once at connection rather than per message: a socket
   // that cannot prove who it is never reaches a room.
