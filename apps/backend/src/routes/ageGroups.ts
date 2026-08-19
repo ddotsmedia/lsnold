@@ -12,7 +12,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 async function listAgeGroups(db: Pool, _req: AuthRequest, res: Response): Promise<void> {
   try {
     const result = await db.query(
-      `SELECT id, name, slug, description, min_age_months, max_age_months, image_url, sort_order
+      `SELECT id, name, slug, description, min_age_months, max_age_months, image_url, icon_url, sort_order
          FROM age_groups
         WHERE deleted_at IS NULL
         ORDER BY sort_order ASC, min_age_months ASC`
