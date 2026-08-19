@@ -16,7 +16,8 @@ import {
 } from '@/components/Decorations';
 import { PartnerLogo } from '@/components/PartnerLogo';
 import { PageFeatureImages, PageBackground } from '@/components/PageFeatureImages';
-import { usePageMedia } from '@/lib/media';
+import { usePageMedia, useAgeGroupImages, slugify } from '@/lib/media';
+import { useAgeGroups, formatRange } from '@/lib/ageGroups';
 import { usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import type { SiteImage } from '@/lib/media';
@@ -161,6 +162,12 @@ interface Partner {
 }
 
 /**
+ * Slugs for the six groups above, derived the same way the admin panel derives
+ * them, so an image uploaded there is found here under the same key.
+ */
+const HOME_AGE_GROUP_SLUGS: readonly string[] = ageGroups.map((g) => slugify(g.name));
+
+/**
  * The carousel slots, in the order they play. Each is an image uploaded in
  * admin -> Media Library -> Pages -> Home, delivered from Cloudinary.
  */
@@ -242,7 +249,25 @@ export default function Home() {
 
   const heroSlides: HeroSlide[] = uploadedSlides.length > 0 ? uploadedSlides : HERO_SLIDES;
 
-  const activeGroup = ageGroups[activeTab];
+  // Photographs uploaded in admin -> Age Groups, and the editable rows.
+  // Merged over the copy below rather than replacing it: the experiences
+  // list has no database column, so swapping the array out would delete it.
+  const groupImages = useAgeGroupImages(HOME_AGE_GROUP_SLUGS);
+  const groupRecords = useAgeGroups();
+
+  const baseGroup = ageGroups[activeTab];
+  const activeSlug = baseGroup ? slugify(baseGroup.name) : null;
+  const activeRecord = activeSlug ? groupRecords[activeSlug] : undefined;
+  const activePhoto = activeSlug ? groupImages[activeSlug]?.hero : null;
+
+  const activeGroup = baseGroup && {
+    ...baseGroup,
+    name: activeRecord?.name ?? baseGroup.name,
+    description: activeRecord?.description ?? baseGroup.description,
+    ageRange: activeRecord
+      ? formatRange(activeRecord.min_age_months, activeRecord.max_age_months)
+      : baseGroup.ageRange,
+  };
 
   const visibleTestimonials = [0, 1, 2].map(
     (offset) => testimonials[(testimonialStart + offset) % testimonials.length]
@@ -372,6 +397,13 @@ export default function Home() {
             <div className="mt-10 flex flex-wrap justify-center gap-3">
               {ageGroups.map((group, idx) => {
                 const isActive = idx === activeTab;
+                // Same merge as the detail panel, so a rename in admin shows on
+                // the tab as well as in the heading it opens.
+                const record = groupRecords[slugify(group.name)];
+                const label = record?.name ?? group.name;
+                const range = record
+                  ? formatRange(record.min_age_months, record.max_age_months)
+                  : group.ageRange;
                 return (
                   <button
                     key={group.name}
@@ -382,9 +414,9 @@ export default function Home() {
                         : 'border-gray-200 bg-white text-gray-700 hover:border-red-200'
                     }`}
                   >
-                    <div>{group.name}</div>
+                    <div>{label}</div>
                     <div className={`text-[11px] font-normal ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
-                      {group.ageRange}
+                      {range}
                     </div>
                   </button>
                 );
@@ -413,9 +445,21 @@ export default function Home() {
               </div>
 
               <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-amber-50 shadow-lg">
-                <div className="flex h-full items-center justify-center text-6xl">
-                  {activeGroup.icon}
-                </div>
+                {/* The photograph uploaded for this group, when there is one.
+                    The emoji stays as the fallback rather than being removed:
+                    a group with no image yet would otherwise show an empty
+                    gradient box, which reads as a broken picture. */}
+                {activePhoto ? (
+                  <img
+                    src={activePhoto.url}
+                    alt={activePhoto.alt_text || activeGroup.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-6xl">
+                    {activeGroup.icon}
+                  </div>
+                )}
                 <span className="absolute left-4 top-4 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
                   {activeGroup.ageRange}
                 </span>
