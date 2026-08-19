@@ -1,8 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../../lib/api';
-import { StatCard, StatusBadge } from '../../../components/admin/shared';
+import { fadeInUp } from '../../../lib/animations';
+import { StatCard, StatusBadge, Button } from '../../../components/admin/shared';
+import { HierarchyCharts } from '../../../components/admin/charts/HierarchyCharts';
 import { EnrollmentTrendChart } from '../../../components/admin/charts/EnrollmentTrendChart';
 import { ConversionFunnel } from '../../../components/admin/charts/ConversionFunnel';
 import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
@@ -95,6 +98,41 @@ function ChartCard({
   );
 }
 
+/** The two views the dashboard offers. */
+type Tab = 'overview' | 'breakdown';
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      role="tab"
+      aria-selected={active}
+      className={`relative min-h-11 px-4 text-sm font-medium transition-colors ${
+        active ? 'text-emerald-400' : 'text-panel-muted hover:text-panel-body'
+      }`}
+    >
+      {children}
+      {/* layoutId slides the underline between tabs rather than cross-fading
+          two separate bars, which is the whole reason it reads as one control. */}
+      {active && (
+        <motion.span
+          layoutId="dashboard-tab-underline"
+          className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-emerald-400"
+        />
+      )}
+    </button>
+  );
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,10 +140,19 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<string | null>(null);
   // Set briefly when a figure changes, so the affected card can flash.
   const [flash, setFlash] = useState(false);
+  const [tab, setTab] = useState<Tab>('overview');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
+  /**
+   * `fresh` bypasses the server's cache on the stats query. Without it the
+   * button would re-request a cached answer and look like it had done nothing,
+   * which is worse than having no button.
+   */
+  const load = useCallback(async (fresh = false) => {
     try {
-      const res = await api<DashboardData>('/admin/dashboard/stats');
+      const res = await api<DashboardData>('/admin/dashboard/stats', {
+        params: fresh ? { fresh: 'true' } : undefined,
+      });
       setData(res);
       setError(null);
     } catch (err: unknown) {
@@ -113,6 +160,15 @@ export default function DashboardPage() {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard');
     } finally { setLoading(false); }
   }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -175,10 +231,63 @@ export default function DashboardPage() {
 
       <AnomalyBanner />
 
-      <div className="flex justify-end">
-        <AnalyticsReportButton />
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-panel-line/50">
+        <div role="tablist" aria-label="Dashboard views" className="flex gap-1">
+          <TabButton active={tab === 'overview'} onClick={() => setTab('overview')}>
+            Overview
+          </TabButton>
+          <TabButton active={tab === 'breakdown'} onClick={() => setTab('breakdown')}>
+            Breakdown
+          </TabButton>
+        </div>
+
+        <div className="flex items-center gap-2 pb-2">
+          <Button variant="secondary" size="sm" onClick={() => void refresh()} disabled={refreshing}>
+            <motion.span
+              aria-hidden="true"
+              className="mr-1.5 inline-block"
+              animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
+              transition={
+                refreshing
+                  ? { duration: 0.8, repeat: Infinity, ease: 'linear' }
+                  : { duration: 0.2 }
+              }
+            >
+              ⟳
+            </motion.span>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </Button>
+          <AnalyticsReportButton />
+        </div>
       </div>
 
+      {/* mode="wait" so the outgoing panel finishes before the next arrives —
+          overlapping them makes the height jump while both are mounted. */}
+      <AnimatePresence mode="wait">
+        {tab === 'breakdown' ? (
+          <motion.div
+            key="breakdown"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-4"
+          >
+            <p className="text-xs text-panel-muted">
+              Site traffic and admin activity, broken down. The same charts sit under
+              Analytics → Breakdown with a selectable window.
+            </p>
+            <HierarchyCharts days={30} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="overview"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-8"
+          >
       <LiveActivity />
 
       <DashboardWidgets widgets={[
@@ -307,7 +416,11 @@ export default function DashboardPage() {
       </div>
         )},
       ]} />
-      {toast && <Toast message={toast} type="success" />}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>{toast && <Toast message={toast} type="success" />}</AnimatePresence>
     </div>
   );
 }

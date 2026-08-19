@@ -80,3 +80,42 @@ export const card: Variants = {
 
 /** Pressed state for buttons — the one motion that confirms a tap landed. */
 export const tap = { scale: 0.97 };
+
+/** A section arriving below the fold, or a tab panel being switched to. */
+export const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: SETTLED },
+  exit: { opacity: 0, y: -8, transition: QUICK },
+};
+
+/** Something entering from the side — a panel, a drawer, a sidebar item. */
+export const slideInLeft: Variants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: { opacity: 1, x: 0, transition: SETTLED },
+};
+
+/**
+ * A figure that should read as landing rather than fading.
+ *
+ * A spring, but a stiff and well-damped one. The brief's stiffness 100 /
+ * damping 10 overshoots visibly and wobbles back — fine for a toy, wrong for a
+ * number somebody is trying to read. This settles without a second bounce.
+ */
+export const scaleIn: Variants = {
+  hidden: { opacity: 0, scale: 0.94 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 320, damping: 30, mass: 0.8 },
+  },
+};
+
+/**
+ * Hover lift for a card.
+ *
+ * Not a variant: this goes on whileHover, and it deliberately carries no
+ * shadow. The panel has a light theme, where a heavy black drop shadow reads
+ * as grime rather than elevation. The border brightens in CSS instead, which
+ * works in both themes.
+ */
+export const lift = { y: -3, transition: QUICK };

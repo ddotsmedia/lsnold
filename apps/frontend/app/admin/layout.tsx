@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <PanelTheme>
       <AuthProvider>
         <AdminGuard>
-        <div className="min-h-screen bg-panel-base text-panel-strong">
+        <div className="admin-scroll min-h-screen bg-panel-base text-panel-strong">
           <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
           <div className={`transition-all duration-300 ${collapsed ? 'ml-[68px]' : 'ml-[260px]'}`}>
             <Topbar />

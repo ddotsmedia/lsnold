@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { modalPanel, backdrop, toast as toastVariants, tap } from '../../lib/animations';
+import { modalPanel, backdrop, toast as toastVariants, tap, card, lift } from '../../lib/animations';
 
 // ---------- Status Badge ----------
 const STATUS_STYLES: Record<string, string> = {
@@ -40,19 +40,42 @@ export function StatCard({
   className?: string;
 }) {
   const accents = {
-    emerald: 'from-emerald-500/10 to-transparent border-emerald-500/20',
-    amber: 'from-amber-500/10 to-transparent border-amber-500/20',
-    red: 'from-red-500/10 to-transparent border-red-500/20',
-    blue: 'from-blue-500/10 to-transparent border-blue-500/20',
-    purple: 'from-purple-500/10 to-transparent border-purple-500/20',
+    emerald: 'from-emerald-500/10 to-transparent border-emerald-500/20 hover:border-emerald-500/40',
+    amber: 'from-amber-500/10 to-transparent border-amber-500/20 hover:border-amber-500/40',
+    red: 'from-red-500/10 to-transparent border-red-500/20 hover:border-red-500/40',
+    blue: 'from-blue-500/10 to-transparent border-blue-500/20 hover:border-blue-500/40',
+    purple: 'from-purple-500/10 to-transparent border-purple-500/20 hover:border-purple-500/40',
+  };
+
+  /** A wash of the accent colour, bled off the top-right corner. */
+  const glow = {
+    emerald: 'bg-emerald-500/20',
+    amber: 'bg-amber-500/20',
+    red: 'bg-red-500/20',
+    blue: 'bg-blue-500/20',
+    purple: 'bg-purple-500/20',
   };
 
   return (
-    <div className={`bg-gradient-to-br ${accents[accent]} rounded-xl border p-5 transition-shadow duration-500 ${className}`}>
-      <p className="text-xs text-panel-muted uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-panel-strong tabular-nums">{value}</p>
-      {sublabel && <p className="text-xs text-panel-muted mt-1">{sublabel}</p>}
-    </div>
+    // variants rather than initial/animate props, so a parent with cardGrid
+    // staggers these and a card used on its own still animates.
+    <motion.div
+      variants={card}
+      initial="hidden"
+      animate="visible"
+      whileHover={lift}
+      className={`group relative overflow-hidden bg-gradient-to-br ${accents[accent]} rounded-xl border p-5 transition-colors duration-300 ${className}`}
+    >
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl opacity-60 transition-opacity duration-300 group-hover:opacity-100 ${glow[accent]}`}
+      />
+      <div className="relative">
+        <p className="text-xs text-panel-muted uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-2xl font-bold text-panel-strong tabular-nums">{value}</p>
+        {sublabel && <p className="text-xs text-panel-muted mt-1">{sublabel}</p>}
+      </div>
+    </motion.div>
   );
 }
 

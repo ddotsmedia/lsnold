@@ -245,3 +245,46 @@ body {
 .rbc-dark .rbc-agenda-empty { color: #71717a; padding: 2rem; }
 /* The drag preview is otherwise invisible against the dark ground. */
 .rbc-dark .rbc-addons-dnd-drag-preview { opacity: 0.8; }
+
+/*
+ * Scrollbars inside the admin panel.
+ *
+ * Scoped to .admin-scroll rather than applied globally: the public site is a
+ * fixed light design and a green-on-dark scrollbar there would look like a
+ * mistake. The colours come from the panel tokens, so the bar follows the
+ * light/dark toggle instead of being pinned to one theme.
+ *
+ * scrollbar-color first for Firefox, which ignores ::-webkit-scrollbar
+ * entirely, then the WebKit pseudo-elements for everything else.
+ */
+.admin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-raised-2) transparent;
+}
+
+.admin-scroll ::-webkit-scrollbar,
+.admin-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.admin-scroll ::-webkit-scrollbar-track,
+.admin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-scroll ::-webkit-scrollbar-thumb,
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: var(--panel-raised-2);
+  border-radius: 9999px;
+  /* Inset so the thumb reads as narrower than its hit area — the pointer
+     target stays a comfortable 10px while the bar itself looks slim. */
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.admin-scroll ::-webkit-scrollbar-thumb:hover,
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(16 185 129 / 0.6);
+  background-clip: content-box;
+}
