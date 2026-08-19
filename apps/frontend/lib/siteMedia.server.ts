@@ -15,27 +15,47 @@ import type { SiteImage } from './media';
  * skips nginx and the public hostname on every render.
  */
 
-const INTERNAL_API =
-  process.env.INTERNAL_API_URL ?? 'http://backend:3011/api/v1';
+/**
+ * Two hosts, in order, because this code runs in two places that can reach
+ * different things.
+ *
+ * At runtime the frontend container sits on the compose network and resolves
+ * `backend` directly, which skips nginx and the public round trip.
+ *
+ * During `docker build` it does not: a build stage joins no compose network,
+ * so `backend` is ENOTFOUND. That matters because the pages are prerendered at
+ * build time — a failure there bakes an empty result into the static HTML and
+ * the flicker survives the fix. The build stage does have outbound internet,
+ * so the public host covers it.
+ */
+const SOURCES = [
+  process.env.INTERNAL_API_URL ?? 'http://backend:3011/api/v1',
+  process.env.NEXT_PUBLIC_SITE_URL
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/v1`
+    : 'https://bayrotna.ae/api/v1',
+];
 
 export async function getSiteMedia(): Promise<Record<string, SiteImage>> {
-  try {
-    const response = await fetch(`${INTERNAL_API}/site-media`, {
-      // An hour. The logo changes when somebody uploads a new one, which is
-      // rare; paying for a request on every page render to catch it sooner is
-      // not a good trade.
-      next: { revalidate: 3600 },
-    });
-    if (!response.ok) return {};
-    const data: unknown = await response.json();
-    if (!data || typeof data !== 'object') return {};
-    return data as Record<string, SiteImage>;
-  } catch {
-    // Fails quiet, like every other reader in lib/media.ts. If the backend is
-    // down — or unreachable at build time, when this runs during prerender —
-    // the client hook still fetches and fills the logo in. That restores the
-    // old flicker for that one render, which is the correct thing to degrade
-    // to: a late logo beats a build that fails over a picture.
-    return {};
+  for (const base of SOURCES) {
+    try {
+      const response = await fetch(`${base}/site-media`, {
+        // An hour. The logo changes when somebody uploads a new one, which is
+        // rare; paying for a request on every page render to catch it sooner
+        // is not a good trade.
+        next: { revalidate: 3600 },
+      });
+      if (!response.ok) continue;
+      const data: unknown = await response.json();
+      if (!data || typeof data !== 'object') continue;
+      return data as Record<string, SiteImage>;
+    } catch {
+      // Try the next host.
+    }
   }
+
+  // Fails quiet, like every other reader in lib/media.ts. With nothing from
+  // the server the client hook fetches as it always did, which restores the
+  // old flicker for that render — the correct thing to degrade to. A late
+  // logo beats a build that fails over a picture.
+  return {};
 }
