@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useServerSiteMedia } from '@/components/SiteMediaProvider';
 
 /**
  * Reads images uploaded through the admin Media Library.
@@ -21,11 +22,26 @@ export interface SiteImage {
   height: number | null;
 }
 
-/** Site-wide slots: logo, header_bg, footer_logo, favicon. */
+/**
+ * Site-wide slots: logo, header_bg, footer_logo, favicon.
+ *
+ * Prefers what the layout already fetched on the server. That value is in the
+ * tree before the first paint, so the header renders the uploaded logo
+ * immediately instead of drawing LogoMark and swapping it a moment later.
+ *
+ * The fetch below is the fallback for when there is nothing from the server —
+ * the backend was unreachable during prerender, or this is being used outside
+ * the provider. Skipping it when the server already answered saves every
+ * visitor a request.
+ */
 export function useSiteMedia(): Record<string, SiteImage> {
-  const [media, setMedia] = useState<Record<string, SiteImage>>({});
+  const fromServer = useServerSiteMedia();
+  const haveServerValue = Object.keys(fromServer).length > 0;
+
+  const [media, setMedia] = useState<Record<string, SiteImage>>(fromServer);
 
   useEffect(() => {
+    if (haveServerValue) return;
     let cancelled = false;
     fetch(`${API}/site-media`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('failed'))))
@@ -34,9 +50,9 @@ export function useSiteMedia(): Record<string, SiteImage> {
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
-  }, []);
+  }, [haveServerValue]);
 
-  return media;
+  return haveServerValue ? fromServer : media;
 }
 
 /** Per-page sections: hero, feature1..3, background. */
