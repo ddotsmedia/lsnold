@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { banner } from '../../lib/animations';
 import { useRealtimeEvent } from '../../lib/realtime';
 import { api } from '../../lib/api';
 
@@ -86,17 +88,11 @@ export function AnomalyBanner() {
     );
   });
 
-  if (!alert) return null;
 
-  const high = alert.severity === 'high';
-  const expected = Number(alert.expected);
-  const actual = Number(alert.actual);
-  const pct = expected > 0 ? Math.round((actual / expected - 1) * 100) : null;
-
-  const markSeen = async () => {
+  const markSeen = async (id: string) => {
     setDismissing(true);
     try {
-      await api(`/admin/anomalies/${alert.id}/acknowledge`, { method: 'POST' });
+      await api(`/admin/anomalies/${id}/acknowledge`, { method: 'POST' });
       setAlert(null);
     } catch {
       // Left on screen rather than hidden: a banner that vanishes without the
@@ -106,7 +102,41 @@ export function AnomalyBanner() {
   };
 
   return (
-    <div
+    // AnimatePresence so it can be seen leaving when marked seen, rather than
+    // blinking out of the layout.
+    <AnimatePresence>
+      {alert && (
+        <BannerBody
+          alert={alert}
+          dismissing={dismissing}
+          onMarkSeen={() => void markSeen(alert.id)}
+        />
+      )}
+    </AnimatePresence>
+  );
+}
+
+/** Split out so every field can assume the alert exists. */
+function BannerBody({
+  alert,
+  dismissing,
+  onMarkSeen,
+}: {
+  alert: Alert;
+  dismissing: boolean;
+  onMarkSeen: () => void;
+}) {
+  const high = alert.severity === 'high';
+  const expected = Number(alert.expected);
+  const actual = Number(alert.actual);
+  const pct = expected > 0 ? Math.round((actual / expected - 1) * 100) : null;
+
+  return (
+    <motion.div
+      variants={banner}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
       role="status"
       className={`rounded-xl border-l-4 p-4 ${
         high
@@ -136,7 +166,7 @@ export function AnomalyBanner() {
           </Link>
           <button
             type="button"
-            onClick={() => void markSeen()}
+            onClick={onMarkSeen}
             disabled={dismissing}
             className="min-h-11 rounded-lg bg-white/15 px-3 text-sm hover:bg-white/25 disabled:opacity-50"
           >
@@ -144,6 +174,6 @@ export function AnomalyBanner() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

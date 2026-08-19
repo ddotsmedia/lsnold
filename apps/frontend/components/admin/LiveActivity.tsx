@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeEvent } from '../../lib/realtime';
+import { feedItem } from '../../lib/animations';
 
 /**
  * Admin actions as they happen.
@@ -127,9 +129,13 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
         </p>
       ) : (
         <ul className="space-y-2">
+          <AnimatePresence initial={false}>
           {entries.map((entry) => (
-            <li
+            <motion.li
               key={entry.id}
+              variants={feedItem}
+              initial="hidden" animate="visible" exit="exit"
+              layout
               className={`flex items-baseline gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors duration-700 ${
                 entry.id === newestId ? 'bg-emerald-500/10' : ''
               }`}
@@ -159,8 +165,9 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
                   minute: '2-digit',
                 })}
               </time>
-            </li>
+            </motion.li>
           ))}
+          </AnimatePresence>
         </ul>
       )}
     </section>

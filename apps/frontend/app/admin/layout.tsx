@@ -7,6 +7,7 @@ import { Sidebar } from '../../components/admin/Sidebar';
 import { Topbar } from '../../components/admin/Topbar';
 import { usePathname } from 'next/navigation';
 import { ThemeProvider } from 'next-themes';
+import { MotionConfig } from 'framer-motion';
 
 /**
  * Theme scope.
@@ -23,6 +24,7 @@ function PanelTheme({ children }: { children: React.ReactNode }) {
     // disableTransitionOnChange: the panel has no colour transitions worth
     // preserving mid-switch, and leaving them on makes the change look like a
     // slow repaint rather than a toggle.
+    <MotionConfig reducedMotion="user">
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
@@ -32,6 +34,7 @@ function PanelTheme({ children }: { children: React.ReactNode }) {
     >
       {children}
     </ThemeProvider>
+    </MotionConfig>
   );
 }
 

@@ -1,6 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalPanel, backdrop, toast as toastVariants, tap } from '../../lib/animations';
 
 // ---------- Status Badge ----------
 const STATUS_STYLES: Record<string, string> = {
@@ -68,19 +70,33 @@ export function Modal({
   children: ReactNode;
   maxWidth?: string;
 }) {
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-panel-surface rounded-2xl border border-panel-line/50 ${maxWidth} w-full shadow-2xl`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-panel-line/50">
-          <h2 className="text-base font-semibold text-panel-strong">{title}</h2>
-          <button onClick={onClose} className="text-panel-muted hover:text-panel-body text-lg transition-colors">×</button>
+    // AnimatePresence rather than an early return, so the dialog can be seen
+    // leaving. Returning null on close removes it from the tree immediately and
+    // there is nothing left to animate.
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            variants={backdrop}
+            initial="hidden" animate="visible" exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            variants={modalPanel}
+            initial="hidden" animate="visible" exit="exit"
+            className={`relative bg-panel-surface rounded-2xl border border-panel-line/50 ${maxWidth} w-full shadow-2xl`}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-panel-line/50">
+              <h2 className="text-base font-semibold text-panel-strong">{title}</h2>
+              <button onClick={onClose} className="text-panel-muted hover:text-panel-body text-lg transition-colors">×</button>
+            </div>
+            <div className="p-6">{children}</div>
+          </motion.div>
         </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -179,13 +195,23 @@ export function FilterSelect({
 // ---------- Toast (simple inline) ----------
 export function Toast({ message, type = 'success' }: { message: string; type?: 'success' | 'error' }) {
   return (
-    <div className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-xl text-sm font-medium shadow-2xl border animate-in slide-in-from-bottom-4 ${
-      type === 'error'
-        ? 'bg-red-500/10 text-red-400 border-red-500/30'
-        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-    }`}>
+    // role="status" so a screen reader announces it without stealing focus —
+    // the movement is what tells a sighted user something arrived, and this is
+    // the equivalent for everyone else.
+    <motion.div
+      variants={toastVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      role="status"
+      className={`fixed bottom-6 right-6 z-[60] px-5 py-3 rounded-xl text-sm font-medium shadow-2xl border ${
+        type === 'error'
+          ? 'bg-red-500/10 text-red-400 border-red-500/30'
+          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+      }`}
+    >
       {message}
-    </div>
+    </motion.div>
   );
 }
 
@@ -270,12 +296,19 @@ export function Button({
     md: 'min-h-12 min-w-12 px-4 py-2 text-sm',
   };
 
+  const { disabled } = props;
+
   return (
-    <button
-      {...props}
+    // Only a press, no hover growth. A button that swells under the pointer
+    // nudges its neighbours and makes a toolbar feel unsteady; the colour
+    // change already says it is hoverable. The press is worth animating because
+    // it confirms the tap landed, which matters most on a phone.
+    <motion.button
+      {...(props as React.ComponentProps<typeof motion.button>)}
+      whileTap={disabled ? undefined : tap}
       className={`inline-flex items-center justify-center rounded-lg font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${props.className || ''}`}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
