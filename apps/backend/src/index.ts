@@ -18,6 +18,7 @@ import { createPagesRouter } from './routes/pages.js';
 import { createAdminRouter } from './routes/admin/index.js';
 import { createAnalyticsTracker } from './middleware/analytics.js';
 import { initRealtime } from './realtime.js';
+import { startScheduledJobs } from './jobs/scheduler.js';
 
 const app = express();
 const PORT = process.env.PORT || 3011;
@@ -77,6 +78,7 @@ app.use('/api/v1/admin', createAdminRouter(db));
 // the Upgrade requests. Express still handles every ordinary request unchanged.
 const server = createServer(app);
 initRealtime(server, db, CORS_ORIGINS);
+startScheduledJobs(db);
 
 server.listen(PORT, () => {
   console.log(`Backend running on port ${PORT} (realtime at /api/v1/socket.io)`);
