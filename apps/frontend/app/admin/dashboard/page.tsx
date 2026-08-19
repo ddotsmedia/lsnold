@@ -8,6 +8,7 @@ import { ConversionFunnel } from '../../../components/admin/charts/ConversionFun
 import { VisitHeatmap } from '../../../components/admin/charts/VisitHeatmap';
 import { DashboardWidgets } from '../../../components/admin/DashboardWidgets';
 import { LiveActivity } from '../../../components/admin/LiveActivity';
+import { AnomalyBanner } from '../../../components/admin/AnomalyBanner';
 import { useRealtimeEvent } from '../../../lib/realtime';
 import { Toast } from '../../../components/admin/shared';
 import { AnalyticsReportButton } from '../../../components/admin/AnalyticsReportButton';
@@ -171,6 +172,8 @@ export default function DashboardPage() {
           Some statistics are unavailable ({data.degraded.join(', ')}). Everything else below is current.
         </div>
       )}
+
+      <AnomalyBanner />
 
       <div className="flex justify-end">
         <AnalyticsReportButton />

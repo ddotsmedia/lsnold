@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: '/admin/seo', label: 'SEO Settings', icon: '◎' },
   { href: '/admin/analytics', label: 'Analytics', icon: '◫' },
   { href: '/admin/assistant', label: 'Assistant', icon: '◇' },
+  { href: '/admin/anomalies', label: 'Anomalies', icon: '◬' },
   { href: '/admin/users', label: 'Users', icon: '◑' },
   { href: '/admin/roles', label: 'Roles & Permissions', icon: '⚿' },
   { href: '/admin/notifications', label: 'Notifications', icon: '🔔' },
