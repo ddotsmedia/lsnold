@@ -262,6 +262,7 @@ export default function Home() {
   const activeSlug = baseGroup ? slugify(baseGroup.name) : null;
   const activeRecord = activeSlug ? groupRecords[activeSlug] : undefined;
   const activePhoto = activeSlug ? groupImages[activeSlug]?.hero : null;
+  const activeIcon = activeSlug ? groupImages[activeSlug]?.icon : null;
 
   const activeGroup = baseGroup && {
     ...baseGroup,
@@ -429,8 +430,21 @@ export default function Home() {
             {/* Detail panel */}
             <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2 md:items-start">
               <div>
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 text-3xl">
-                  {activeGroup.icon}
+                {/* The icon uploaded in admin -> Age Groups -> Icon, when the
+                    group has one. The red tile stays behind it so a
+                    transparent PNG still reads against the page, and the emoji
+                    remains the fallback for a group with nothing uploaded. */}
+                <div className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-red-600 text-3xl">
+                  {activeIcon ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={activeIcon.url}
+                      alt={activeIcon.alt_text || activeGroup.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    activeGroup.icon
+                  )}
                 </div>
                 <h3 className="mt-5 font-display text-3xl text-gray-900">{activeGroup.name}</h3>
                 <p className="mt-4 text-gray-600">{activeGroup.description}</p>
