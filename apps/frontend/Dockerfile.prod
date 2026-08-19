@@ -10,6 +10,11 @@ FROM node:20-alpine AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Hotjar site id. Empty by default, which leaves session recording switched
+# off — SessionRecording.tsx renders nothing without it. Read that file before
+# setting this: the panel shows children's names and dates of birth.
+ARG NEXT_PUBLIC_HOTJAR_ID=
+ENV NEXT_PUBLIC_HOTJAR_ID=$NEXT_PUBLIC_HOTJAR_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

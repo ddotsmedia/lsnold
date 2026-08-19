@@ -113,6 +113,13 @@ services:
         # same-origin and no CORS entry is needed. lib/api.ts expects this value
         # to already include /api/v1 and appends only the resource path.
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://bayrotna.ae/api/v1}
+        # Session recording, off unless a Hotjar site id is set in .env and the
+        # image is rebuilt — NEXT_PUBLIC_* is baked at build time, so a restart
+        # will not pick it up. Before switching it on, read
+        # apps/frontend/components/admin/SessionRecording.tsx: recordings of
+        # this panel would otherwise capture children's names and dates of
+        # birth.
+        NEXT_PUBLIC_HOTJAR_ID: ${NEXT_PUBLIC_HOTJAR_ID:-}
     container_name: lsn-frontend
     depends_on:
       - backend

@@ -128,7 +128,9 @@ export function LiveActivity({ max = 8 }: { max?: number }) {
             : 'Not connected — the feed will fill once the connection is up.'}
         </p>
       ) : (
-        <ul className="space-y-2">
+        /* Submission rows carry the visitor's or child's name, so the feed is
+           kept out of session recordings. See admin/SessionRecording.tsx. */
+        <ul className="space-y-2" data-hj-suppress>
           <AnimatePresence initial={false}>
           {entries.map((entry) => (
             <motion.li

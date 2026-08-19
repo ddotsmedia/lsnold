@@ -170,7 +170,11 @@ export function GlobalSearch() {
                 : 'Type to search, or pick an action below.'}
             </p>
           ) : (
-            <ul>
+            /* Registration hits come back with the child's name as the title,
+               and this palette opens on every admin route — so the results are
+               kept out of session recordings wherever they are opened from.
+               See components/admin/SessionRecording.tsx. */
+            <ul data-hj-suppress>
               {rows.map((row, index) => {
                 const highlightedRow = index === highlighted;
                 const cls = `flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
