@@ -112,7 +112,10 @@ const ageGroups: AgeGroup[] = [
     ],
   },
   {
-    name: 'Cuddly Camel',
+    // Plural, matching the database row. Singular here slugs to
+    // "cuddly-camel", the row is "cuddly-camels", and the group silently
+    // stops merging while the other five work.
+    name: 'Cuddly Camels',
     ageRange: '4 - 5 years',
     description:
       'Supportive learning for confident, curious learners preparing to transition to primary school.',
