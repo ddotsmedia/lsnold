@@ -38,12 +38,6 @@ const brandingSchema = z.object({
   // A token, not a font stack — the same eight the CHECK constraint allows and
   // the picker offers. Mapped to real CSS in the frontend's lib/typography.ts,
   // so nothing typed into a form ever becomes styling.
-  font_family: z.enum([
-    'default', 'system', 'georgia', 'times', 'arial', 'verdana', 'trebuchet', 'comic',
-  ]),
-  // Sets the root font size, and the site's sizes are all in rem, so this
-  // scales every page. Bounded to what the layout still holds together at.
-  base_font_size: z.number().int().min(12).max(24),
 });
 
 /** Falls back to the seeded row's values if the table is somehow empty. */
