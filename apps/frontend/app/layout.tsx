@@ -5,7 +5,8 @@ import './globals.css';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { WhatsAppContact } from '@/components/WhatsAppContact';
 import { SiteMediaProvider } from '@/components/SiteMediaProvider';
-import { getSiteMedia } from '@/lib/siteMedia.server';
+import { getSiteMedia, getSiteBranding } from '@/lib/siteMedia.server';
+import { fontStack, clampFontSize } from '@/lib/typography';
 
 const caveat = Caveat({
   subsets: ['latin'],
@@ -33,10 +34,30 @@ export const metadata: Metadata = {
  * built.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const siteMedia = await getSiteMedia();
+  const [siteMedia, branding] = await Promise.all([getSiteMedia(), getSiteBranding()]);
 
   return (
-    <html lang="en" className={`${caveat.variable} ${nunito.variable}`}>
+    /*
+     * Typography is set here as custom properties rather than as a plain
+     * font-family, because globals.css styles `body`, and a rule on body beats
+     * an inherited value from html. body reads these two variables instead.
+     *
+     * fontSize goes on <html> because every size on the site is in rem, and rem
+     * resolves against the root element — setting it on body would leave every
+     * Tailwind text- class exactly where it was and make the slider do nothing.
+     *
+     * Server-rendered, so the page arrives already in the chosen font. A client
+     * effect would repaint the whole site a moment after it appeared, which is
+     * a far worse version of the logo flicker.
+     */
+    <html
+      lang="en"
+      className={`${caveat.variable} ${nunito.variable}`}
+      style={{
+        ['--site-font' as string]: fontStack(branding.font_family),
+        fontSize: `${clampFontSize(branding.base_font_size)}px`,
+      }}
+    >
       <body className="bg-white text-gray-900">
         <SiteMediaProvider value={siteMedia}>{children}</SiteMediaProvider>
         {/*

@@ -59,3 +59,51 @@ export async function getSiteMedia(): Promise<Record<string, SiteImage>> {
   // logo beats a build that fails over a picture.
   return {};
 }
+
+/**
+ * The site's name, colour, font and text size, read on the server.
+ *
+ * Separate from getSiteMedia because the root layout needs this before it can
+ * render <html> — the font and size go on that element, and applying them from
+ * a client effect would repaint the whole page a moment after it appeared.
+ *
+ * The layout is a server component, so it cannot call useBranding. That is why
+ * this exists rather than the hook being reused there.
+ */
+export interface ServerBranding {
+  site_name: string;
+  tagline: string | null;
+  primary_color: string;
+  font_family: string;
+  base_font_size: number;
+}
+
+const BRANDING_FALLBACK: ServerBranding = {
+  site_name: 'Little Smarties',
+  tagline: null,
+  primary_color: '#1e40af',
+  font_family: 'default',
+  base_font_size: 16,
+};
+
+export async function getSiteBranding(): Promise<ServerBranding> {
+  for (const base of SOURCES) {
+    try {
+      const response = await fetch(`${base}/branding`, { next: { revalidate: 3600 } });
+      if (!response.ok) continue;
+      const data: unknown = await response.json();
+      if (!data || typeof data !== 'object') continue;
+      const row = data as Partial<ServerBranding>;
+      return {
+        site_name: row.site_name || BRANDING_FALLBACK.site_name,
+        tagline: row.tagline ?? null,
+        primary_color: row.primary_color || BRANDING_FALLBACK.primary_color,
+        font_family: row.font_family || BRANDING_FALLBACK.font_family,
+        base_font_size: Number(row.base_font_size) || BRANDING_FALLBACK.base_font_size,
+      };
+    } catch {
+      // Try the next host.
+    }
+  }
+  return BRANDING_FALLBACK;
+}

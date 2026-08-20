@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider } from '../../lib/auth-context';
 import { AdminGuard } from '../../components/admin/AdminGuard';
 import { Sidebar } from '../../components/admin/Sidebar';
@@ -52,9 +52,37 @@ function PanelTheme({ children }: { children: React.ReactNode }) {
  */
 const NO_RECORDING = ['/admin/registrations', '/admin/bookings', '/admin/chatbot'];
 
+/**
+ * Holds the panel at its own typography while it is open.
+ *
+ * The root layout puts the site's chosen font and base size on <html>, and
+ * every rem on the page resolves against that element — so without this, an
+ * admin who set the site to 24px would find the panel scaled up too. Worse,
+ * they would have to fix it from inside the panel they had just enlarged.
+ *
+ * The site's typography is a choice about the site. The panel is the tool for
+ * making it, and a tool that changes shape as you use it is a trap.
+ */
+function usePanelTypography(): void {
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousSize = root.style.fontSize;
+    const previousFont = root.style.getPropertyValue('--site-font');
+
+    root.style.fontSize = '16px';
+    root.style.removeProperty('--site-font');
+
+    return () => {
+      root.style.fontSize = previousSize;
+      if (previousFont) root.style.setProperty('--site-font', previousFont);
+    };
+  }, []);
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  usePanelTypography();
   const suppressed = NO_RECORDING.some((route) => (pathname ?? '').startsWith(route));
 
   // Login page has no shell

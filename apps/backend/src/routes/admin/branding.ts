@@ -35,6 +35,15 @@ const brandingSchema = z.object({
   // field on this table that reaches the page as code rather than as text —
   // anything that is not six hex digits is refused before it gets near a page.
   primary_color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a colour like #1e40af'),
+  // A token, not a font stack — the same eight the CHECK constraint allows and
+  // the picker offers. Mapped to real CSS in the frontend's lib/typography.ts,
+  // so nothing typed into a form ever becomes styling.
+  font_family: z.enum([
+    'default', 'system', 'georgia', 'times', 'arial', 'verdana', 'trebuchet', 'comic',
+  ]),
+  // Sets the root font size, and the site's sizes are all in rem, so this
+  // scales every page. Bounded to what the layout still holds together at.
+  base_font_size: z.number().int().min(12).max(24),
 });
 
 /** Falls back to the seeded row's values if the table is somehow empty. */
@@ -43,12 +52,15 @@ const FALLBACK = {
   site_name: 'Little Smarties',
   tagline: null,
   primary_color: '#1e40af',
+  font_family: 'default',
+  base_font_size: 16,
 };
 
 export async function getBranding(db: Pool, _req: AuthRequest, res: Response): Promise<void> {
   try {
     const result = await db.query(
-      'SELECT id, site_name, tagline, primary_color, updated_at FROM site_branding WHERE id = 1'
+      `SELECT id, site_name, tagline, primary_color, font_family, base_font_size, updated_at
+         FROM site_branding WHERE id = 1`
     );
     // Never 404 or 500 into the public header: a missing row must leave the
     // site reading exactly as it did before, not blank out its own name.
@@ -66,23 +78,29 @@ async function updateBranding(db: Pool, req: AuthRequest, res: Response): Promis
     return;
   }
 
-  const { site_name, tagline, primary_color } = parsed.data;
+  const { site_name, tagline, primary_color, font_family, base_font_size } = parsed.data;
 
   try {
     // Keyed on id = 1 rather than a subquery, since the table is constrained to
     // that single row. Upserts rather than updates so a database that somehow
     // lost its seed row repairs itself on the next save.
     const result = await db.query(
-      `INSERT INTO site_branding (id, site_name, tagline, primary_color, updated_at, updated_by)
-            VALUES (1, $1, $2, $3, CURRENT_TIMESTAMP, $4)
+      `INSERT INTO site_branding
+              (id, site_name, tagline, primary_color, font_family, base_font_size,
+               updated_at, updated_by)
+            VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
        ON CONFLICT (id) DO UPDATE
                SET site_name = $1,
                    tagline = $2,
                    primary_color = $3,
+                   font_family = $4,
+                   base_font_size = $5,
                    updated_at = CURRENT_TIMESTAMP,
-                   updated_by = $4
-         RETURNING id, site_name, tagline, primary_color, updated_at`,
-      [site_name, tagline ?? null, primary_color, req.userId ?? null]
+                   updated_by = $6
+         RETURNING id, site_name, tagline, primary_color, font_family, base_font_size,
+                   updated_at`,
+      [site_name, tagline ?? null, primary_color, font_family, base_font_size,
+       req.userId ?? null]
     );
     res.json(result.rows[0]);
   } catch (error) {

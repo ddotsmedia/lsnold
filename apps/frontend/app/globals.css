@@ -113,7 +113,10 @@ html {
 }
 
 body {
-  font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* --site-font is set on <html> by the root layout from admin -> Typography.
+     The fallback is the same stack this rule used before, so a page rendered
+     without that variable — an error boundary, a 404 — looks unchanged. */
+  font-family: var(--site-font, var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif);
   min-height: 100dvh;
 }
 
