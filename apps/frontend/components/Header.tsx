@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from './Button';
 import { useSiteMedia } from '../lib/media';
+import { useBranding } from '../lib/branding';
 
 export interface NavLink {
   label: string;
@@ -103,6 +104,9 @@ export default function Header({ currentPage }: HeaderProps = {}) {
   // An uploaded logo replaces the drawn mark. Until one exists — or if the
   // request fails — LogoMark renders exactly as before.
   const siteMedia = useSiteMedia();
+  // Name and accent colour from admin -> Branding. Seeded with the current
+  // values, so this renders identically until somebody changes them.
+  const branding = useBranding();
   const logo = siteMedia.logo ?? null;
 
   const activePath = currentPage ?? pathname ?? '/';
@@ -148,13 +152,18 @@ export default function Header({ currentPage }: HeaderProps = {}) {
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={logo.url}
-              alt={logo.alt_text || 'Little Smarties'}
+              alt={logo.alt_text || branding.site_name}
               className="h-8 w-auto max-w-35 object-contain"
             />
           ) : (
             <LogoMark />
           )}
-          <span>Little Smarties</span>
+          {/* The accent colour is applied inline because it is a value from the
+              database, and Tailwind only ships classes it can see at build
+              time — text-[#abc123] written at runtime produces no CSS. The
+              class above still carries the hover and focus colours, so the
+              link behaves the same either way. */}
+          <span style={{ color: branding.primary_color }}>{branding.site_name}</span>
         </Link>
 
         {/* Desktop navigation */}

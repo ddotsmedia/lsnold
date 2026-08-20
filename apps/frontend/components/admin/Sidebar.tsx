@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/admin/gallery', label: 'Gallery', icon: '▣' },
   { href: '/admin/facilities', label: 'Facilities', icon: '▧' },
   { href: '/admin/age-groups', label: 'Age Groups', icon: '▤' },
+  { href: '/admin/branding', label: 'Branding', icon: '◐' },
   { href: '/admin/settings/social-media', label: 'Social Media', icon: '◈' },
   { href: '/admin/seo', label: 'SEO Settings', icon: '◎' },
   { href: '/admin/analytics', label: 'Analytics', icon: '◫' },

@@ -7,6 +7,7 @@ import { listPublicNews } from '../controllers/newsController.js';
 import { getSiteMedia, getAgeGroupMedia, getPageMedia } from '../controllers/mediaController.js';
 import { listPublicPartners } from '../controllers/partnersController.js';
 import { listPublicTestimonials } from '../controllers/testimonialsController.js';
+import { getBranding } from './admin/branding.js';
 
 /**
  * Read-only endpoints the public site needs: the footer's social links and the
@@ -28,6 +29,10 @@ export function createPublicContentRouter(db: Pool): express.Router {
   router.get('/page-media/:slug', (req, res) => getPageMedia(db, req as AuthRequest, res));
   router.get('/partners', (req, res) => listPublicPartners(db, req as AuthRequest, res));
   router.get('/testimonials', (req, res) => listPublicTestimonials(db, req as AuthRequest, res));
+
+  // The header on every public page renders the site name, so this read is
+  // unauthenticated. Writes stay behind /api/v1/admin/branding.
+  router.get('/branding', (req, res) => getBranding(db, req as AuthRequest, res));
 
   return router;
 }
