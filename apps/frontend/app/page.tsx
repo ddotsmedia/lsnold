@@ -192,6 +192,8 @@ const HERO_SLIDES: HeroSlide[] = [
 ];
 
 export default function Home() {
+  console.log('HOME_AGE_GROUP_SLUGS:', HOME_AGE_GROUP_SLUGS);
+  console.log('ageGroups length:', ageGroups.length);
   const [activeTab, setActiveTab] = useState(0);
   const [testimonialStart, setTestimonialStart] = useState(0);
   // Images uploaded in admin -> Media Library -> Pages -> Home. usePageMedia
