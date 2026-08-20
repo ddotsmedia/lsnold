@@ -58,7 +58,7 @@ const AGE_GROUP_SLUGS: readonly string[] = [
 const AGE_GROUPS: readonly AgeGroup[] = [
   {
     id: 1,
-    emoji: '🐰',
+    emoji: '',
     name: 'Bouncing Bunnies',
     range: '0-1 year',
     color: 'pink',
@@ -100,7 +100,7 @@ const AGE_GROUPS: readonly AgeGroup[] = [
   },
   {
     id: 2,
-    emoji: '🐼',
+    emoji: '',
     name: 'Precious Pandas',
     range: '1-2 years',
     color: 'purple',
@@ -143,7 +143,7 @@ const AGE_GROUPS: readonly AgeGroup[] = [
   },
   {
     id: 3,
-    emoji: '🦒',
+    emoji: '',
     name: 'Gentle Giraffes',
     range: '2-3 years',
     color: 'blue',
@@ -186,7 +186,7 @@ const AGE_GROUPS: readonly AgeGroup[] = [
   },
   {
     id: 4,
-    emoji: '🐬',
+    emoji: '',
     name: 'Dazzling Dolphins',
     range: '3-4 years',
     color: 'red',
@@ -229,7 +229,7 @@ const AGE_GROUPS: readonly AgeGroup[] = [
   },
   {
     id: 5,
-    emoji: '🦊',
+    emoji: '',
     name: 'Fuzzy Foxes',
     range: '4-5 years',
     color: 'green',
@@ -272,7 +272,7 @@ const AGE_GROUPS: readonly AgeGroup[] = [
   },
   {
     id: 6,
-    emoji: '🐫',
+    emoji: '',
     name: 'Cuddly Camels',
     range: '4-5 years Advanced',
     color: 'yellow',

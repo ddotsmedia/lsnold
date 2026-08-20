@@ -50,7 +50,7 @@ const ageGroups: AgeGroup[] = [
     ageRange: '0 - 1 year',
     description:
       'A warm, nurturing start for our tiniest learners with lots of cuddles, sensory play, and support.',
-    icon: '🐰',
+    icon: '',
     experiences: [
       'Gentle care & feeding routines',
       'Tummy time and soft play',
@@ -63,7 +63,7 @@ const ageGroups: AgeGroup[] = [
     name: 'Precious Pandas',
     ageRange: '1 - 2 years',
     description: 'Encouraging curiosity and independence in early walkers through playful learning.',
-    icon: '🐼',
+    icon: '',
     experiences: [
       'Hands-on discovery play',
       'Language development support',
@@ -76,7 +76,7 @@ const ageGroups: AgeGroup[] = [
     name: 'Gentle Giraffes',
     ageRange: '2 - 3 years',
     description: 'Developing communication and social-emotional skills through structured play.',
-    icon: '🦒',
+    icon: '',
     experiences: [
       'Circle time and storytelling',
       'Creative expression activities',
@@ -89,7 +89,7 @@ const ageGroups: AgeGroup[] = [
     name: 'Dazzling Dolphins',
     ageRange: '3 - 4 years',
     description: 'Fostering confidence, imagination, and cognitive growth in a vibrant environment.',
-    icon: '🐬',
+    icon: '',
     experiences: [
       'Phonics and early math',
       'Role play and drama',
@@ -102,7 +102,7 @@ const ageGroups: AgeGroup[] = [
     name: 'Fuzzy Foxes',
     ageRange: '4 - 5 years',
     description: 'Ready for school with structured curriculum and focus on independence.',
-    icon: '🦊',
+    icon: '',
     experiences: [
       'Reading and number concepts',
       'Problem-solving and logic',
@@ -119,7 +119,7 @@ const ageGroups: AgeGroup[] = [
     ageRange: '4 - 5 years',
     description:
       'Supportive learning for confident, curious learners preparing to transition to primary school.',
-    icon: '🐫',
+    icon: '',
     experiences: [
       'Advanced literacy and numeracy',
       'Personal and social skills',
