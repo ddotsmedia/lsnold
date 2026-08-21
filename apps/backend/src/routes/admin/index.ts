@@ -24,7 +24,7 @@ import { createAdminAnomaliesRouter } from './anomalies.js';
 import { createAdminUsersRouter } from './users.js';
 import { createAdminChatbotRouter } from './chatbot.js';
 import { createAdminSocialLinksRouter } from './socialLinks.js';
-import { createTypographyRouter } from './typography.js';
+import { createBrandingRouter } from './branding.js';
 import { createAdminYoutubeVideosRouter } from './youtubeVideos.js';
 
 /**
@@ -66,8 +66,11 @@ export function createAdminRouter(db: Pool): express.Router {
   router.use('/notifications', createAdminNotificationFeedRouter(db));
   router.use('/chatbot', createAdminChatbotRouter(db));
   router.use('/social-links', createAdminSocialLinksRouter(db));
-  router.use('/youtube-videos', createAdminYoutubeVideosRouter(db));
-  router.use('/typography', createTypographyRouter(db));
+  // Typography is edited through /admin/branding — the font_family and
+  // base_font_size columns live on the same site_branding row, and both admin
+  // pages (Branding and Typography) call that one endpoint. There is no
+  // separate typography router.
+  router.use('/branding', createBrandingRouter(db));
 
   return router;
 }
