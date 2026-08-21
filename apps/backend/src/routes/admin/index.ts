@@ -24,7 +24,6 @@ import { createAdminAnomaliesRouter } from './anomalies.js';
 import { createAdminUsersRouter } from './users.js';
 import { createAdminChatbotRouter } from './chatbot.js';
 import { createAdminSocialLinksRouter } from './socialLinks.js';
-import { createBrandingRouter } from './branding.js';
 import { createTypographyRouter } from './typography.js';
 import { createAdminYoutubeVideosRouter } from './youtubeVideos.js';
 
@@ -68,7 +67,6 @@ export function createAdminRouter(db: Pool): express.Router {
   router.use('/chatbot', createAdminChatbotRouter(db));
   router.use('/social-links', createAdminSocialLinksRouter(db));
   router.use('/youtube-videos', createAdminYoutubeVideosRouter(db));
-  router.use('/branding', createBrandingRouter(db));
   router.use('/typography', createTypographyRouter(db));
 
   return router;
