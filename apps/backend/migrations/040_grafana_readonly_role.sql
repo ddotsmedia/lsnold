@@ -24,7 +24,18 @@ BEGIN
 END
 $$;
 
+-- Only when a password was actually supplied. Applying the whole directory in
+-- order — a rebuild, or infra/scripts/deploy.sh — passes no psql variables, and
+-- an unset :grafana_password is a syntax error that halted the run under
+-- ON_ERROR_STOP and stopped every later migration.
+--
+-- Skipping it leaves the role exactly as the block above created it: NOLOGIN,
+-- so it still never exists in a connectable state without a password.
+\if :{?grafana_password}
 ALTER ROLE grafana_ro LOGIN PASSWORD :grafana_password;
+\else
+\echo '040: grafana_password not supplied - grafana_ro left NOLOGIN. Re-run with -v grafana_password="''...''" to enable it.'
+\endif
 
 -- Explicitly not CREATE: the role cannot add objects of its own.
 GRANT CONNECT ON DATABASE littlesmarties TO grafana_ro;
