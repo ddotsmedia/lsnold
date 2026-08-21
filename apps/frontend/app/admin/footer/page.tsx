@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { api } from '../../../lib/api';
+import { api, type PaginatedResponse } from '../../../lib/api';
 import { DEFAULT_FOOTER, clearFooterCache, lines, type SiteFooter } from '../../../lib/footer';
-import { Button, FormField, Input, Textarea, Toast } from '../../../components/admin/shared';
+import { Button, FormField, Input, Modal, Textarea, Toast } from '../../../components/admin/shared';
+import { ImageUploader, MediaLibrary, type MediaItem } from '../../../components/admin/MediaKit';
 
 /**
  * The footer's company name, logo and contact details.
@@ -25,6 +26,12 @@ export default function FooterPage() {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  // Media picker. The library is only fetched when the modal first opens —
+  // most visits to this page are to correct a phone number, not the logo.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [library, setLibrary] = useState<MediaItem[]>([]);
+  const [libLoading, setLibLoading] = useState(false);
+
   const load = useCallback(async () => {
     try {
       const res = await api<Partial<SiteFooter>>('/admin/footer');
@@ -44,6 +51,31 @@ export default function FooterPage() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  const loadLibrary = useCallback(async () => {
+    setLibLoading(true);
+    try {
+      const res = await api<PaginatedResponse<MediaItem>>('/admin/media', {
+        params: { limit: 60 },
+      });
+      setLibrary(res.data);
+    } catch {
+      setToast({ message: 'Could not load the media library', type: 'error' });
+    } finally {
+      setLibLoading(false);
+    }
+  }, []);
+
+  const openPicker = (): void => {
+    setPickerOpen(true);
+    if (library.length === 0) void loadLibrary();
+  };
+
+  /** Picking an image only fills the field — it is saved with the rest of the form. */
+  const choose = (item: MediaItem): void => {
+    setFooter((current) => ({ ...current, logo_url: item.url }));
+    setPickerOpen(false);
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -124,15 +156,43 @@ export default function FooterPage() {
         </FormField>
 
         <FormField
-          label="Logo URL (optional)"
+          label="Logo (optional)"
           error={logoValid ? undefined : 'Use a full URL starting http:// or https://'}
         >
-          <Input
-            value={footer.logo_url ?? ''}
-            onChange={(e) => set({ logo_url: e.target.value })}
-            placeholder="Leave empty to keep the 🐣 badge"
-            maxLength={2048}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            {/* The chosen image, at the size the footer badge actually renders. */}
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-panel-line bg-white text-lg">
+              {footer.logo_url?.trim() && logoValid ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={footer.logo_url}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span aria-hidden="true">🐣</span>
+              )}
+            </div>
+
+            <Input
+              value={footer.logo_url ?? ''}
+              onChange={(e) => set({ logo_url: e.target.value })}
+              placeholder="Leave empty to keep the 🐣 badge"
+              maxLength={2048}
+              aria-label="Logo image URL"
+              className="min-w-50 flex-1"
+            />
+
+            <Button variant="secondary" onClick={openPicker}>
+              Choose image
+            </Button>
+
+            {footer.logo_url?.trim() && (
+              <Button variant="ghost" onClick={() => set({ logo_url: '' })}>
+                Clear
+              </Button>
+            )}
+          </div>
         </FormField>
 
         <FormField label="Phone">
@@ -190,6 +250,39 @@ export default function FooterPage() {
           </Button>
         </div>
       </section>
+
+      <Modal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title="Choose a logo"
+        maxWidth="max-w-3xl"
+      >
+        <div className="space-y-5">
+          <ImageUploader
+            category="site"
+            label="Upload a new image"
+            onUpload={(items) => {
+              // Show it in the grid straight away, and select it — uploading
+              // one here means you want to use it.
+              setLibrary((current) => [...items, ...current]);
+              const first = items[0];
+              if (first) choose(first);
+            }}
+          />
+
+          <div>
+            <p className="mb-3 text-xs uppercase tracking-wider text-panel-muted">
+              Or pick one already uploaded
+            </p>
+            <MediaLibrary
+              items={library}
+              loading={libLoading}
+              onSelect={choose}
+              emptyMessage="Nothing in the media library yet. Upload an image above."
+            />
+          </div>
+        </div>
+      </Modal>
 
       <AnimatePresence>
         {toast && <Toast message={toast.message} type={toast.type} />}
