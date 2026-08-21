@@ -11,6 +11,7 @@ import { usePageMedia } from '@/lib/media';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import Link from 'next/link';
+import { usePhone, telHref } from '@/lib/footer';
 
 interface ApiEvent {
   id: string;
@@ -228,6 +229,7 @@ function EventGrid({
 }
 
 export default function EventsPage() {
+  const phone = usePhone();
   // Images uploaded in admin -> Media Library -> Pages -> News & Events. The
   // pages row is 'news-events', which is the slug page_media stores under.
   const pageImages = usePageMedia('news-events');
@@ -308,8 +310,8 @@ export default function EventsPage() {
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-5">
               <p className="text-sm text-amber-800">
                 We couldn&rsquo;t load our events just now. Please try again, or call us on{' '}
-                <a href="tel:+971562677747" className="font-semibold underline">
-                  +971 56 267 7747
+                <a href={telHref(phone)} className="font-semibold underline">
+                  {phone}
                 </a>
                 .
               </p>

@@ -86,6 +86,24 @@ export function useFooter(): SiteFooter {
   return footer;
 }
 
+/**
+ * The nursery's phone number, for the many places that print it or link to it.
+ *
+ * Returns the built-in default rather than null while the request is in flight
+ * or if it fails: these are call-us-instead messages shown when something has
+ * already gone wrong, and a blank number there is worse than a slightly stale
+ * one.
+ */
+export function usePhone(): string {
+  const { phone } = useFooter();
+  return phone?.trim() || (DEFAULT_FOOTER.phone as string);
+}
+
+/** `+971 56 267 7747` -> `tel:+971562677747`. */
+export function telHref(phone: string): string {
+  return `tel:${phone.replace(/[^\d+]/g, '')}`;
+}
+
 /** Clears the cache. Exported for the admin editor to call after saving. */
 export function clearFooterCache(): void {
   cache = null;

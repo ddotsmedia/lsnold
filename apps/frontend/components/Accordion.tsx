@@ -4,7 +4,10 @@ import React, { useId, useState } from 'react';
 import { AccordionItem } from './AccordionItem';
 
 export interface AccordionEntry {
-  id: number;
+  /** Was a number when the entries were a hardcoded list; FAQs from the
+      database key on a UUID, and both are only ever used as a key and an
+      element id. */
+  id: string | number;
   question: string;
   answer: string;
 }
@@ -25,9 +28,9 @@ const cx = (...classes: Array<string | false | undefined>): string =>
  */
 export function Accordion({ items, allowMultiple = false, className }: AccordionProps) {
   const baseId = useId();
-  const [expanded, setExpanded] = useState<ReadonlySet<number>>(() => new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<AccordionEntry['id']>>(() => new Set());
 
-  const toggle = (id: number): void => {
+  const toggle = (id: AccordionEntry['id']): void => {
     setExpanded((current) => {
       const next = new Set(current);
       if (next.has(id)) {

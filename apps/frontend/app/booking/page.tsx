@@ -7,6 +7,7 @@ import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSect
 import { BenefitCard } from '@/components/BenefitCard';
 import { TourBookingForm } from '@/components/TourBookingForm';
 import { Butterfly, Flower } from '@/components/Decorations';
+import { usePhone, telHref } from '@/lib/footer';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -86,6 +87,7 @@ const BENEFITS = [
 /* -------------------------------------------------------------------------- */
 
 export default function BookingPage() {
+  const phone = usePhone();
   // Text written in admin -> Pages -> Text, keyed by section.
   const sections = sectionMap(usePageSections('booking'));
 
@@ -183,10 +185,10 @@ export default function BookingPage() {
             <p className="mt-6 text-center text-sm text-gray-600">
               Prefer to arrange it over the phone?{' '}
               <a
-                href="tel:+971562677747"
+                href={telHref(phone)}
                 className="font-semibold text-red-600 underline transition-colors hover:text-red-700"
               >
-                Call us on +971 56 267 7747
+                Call us on {phone}
               </a>
               .
             </p>

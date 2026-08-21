@@ -11,60 +11,32 @@ import { InfoCard } from '@/components/InfoCard';
 import { Butterfly, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
+import { useFooter, lines } from '@/lib/footer';
+import { useFaqs, type Faq } from '@/lib/faqs';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
 /* -------------------------------------------------------------------------- */
 
-interface ContactInfo {
-  type: string;
-  icon: string;
-  title: string;
-  content: readonly string[];
-  linkText?: string;
-  linkHref?: string;
+/**
+ * The phone, email, address and hours all come from admin -> Footer now.
+ * They used to be a second copy here, which is how the page ended up
+ * publishing a different email and a different address from the footer.
+ */
+
+/**
+ * Splits one stored line of opening hours into the two columns the list
+ * renders. "Mon – Fri: 7:00 – 18:00" becomes days and hours; a line with no
+ * colon is shown whole, so an admin is not forced into the format.
+ */
+function splitHours(line: string): { days: string; hours: string } {
+  const at = line.indexOf(':');
+  if (at === -1) return { days: line, hours: '' };
+  return { days: line.slice(0, at).trim(), hours: line.slice(at + 1).trim() };
 }
 
-const CONTACT_INFO: readonly ContactInfo[] = [
-  {
-    type: 'email',
-    icon: '✉️',
-    title: 'Email',
-    content: ['lsn@gmail.com', 'info@lsn.ae'],
-    linkText: 'Send Email',
-    linkHref: 'mailto:info@lsn.ae',
-  },
-  {
-    type: 'phone',
-    icon: '📱',
-    title: 'Phone',
-    content: ['+971 56 267 7747'],
-    linkText: 'Call Us',
-    linkHref: 'tel:+971562677747',
-  },
-  {
-    type: 'address',
-    icon: '📍',
-    title: 'Address',
-    content: ['Ministry of Justice Building', 'Khalifa City (A)', 'Abu Dhabi, UAE'],
-    linkText: 'Get Directions',
-    linkHref: 'https://maps.google.com/?q=Khalifa+City+A+Abu+Dhabi',
-  },
-];
-
-interface OfficeHour {
-  days: string;
-  hours: string;
-}
-
-const OFFICE_HOURS: readonly OfficeHour[] = [
-  { days: 'Monday – Friday', hours: '7:00 AM – 6:00 PM' },
-  { days: 'Saturday', hours: 'Closed' },
-  { days: 'Sunday', hours: 'Closed' },
-  { days: 'Holidays', hours: 'Closed' },
-];
-
-const FAQS: readonly AccordionEntry[] = [
+/** What the page showed before the FAQs moved into the database. */
+const FALLBACK_QA = [
   {
     id: 1,
     question: 'How do I enroll my child at Little Smarties?',
@@ -115,7 +87,14 @@ const FAQS: readonly AccordionEntry[] = [
   },
 ];
 
-const MAP_QUERY = 'Khalifa+City+A+Abu+Dhabi';
+// Shaped like a row so the hook can hand back either without the page caring.
+const FALLBACK_FAQS: readonly Faq[] = FALLBACK_QA.map((entry) => ({
+  id: `fallback-${entry.id}`,
+  question: entry.question,
+  answer: entry.answer,
+  category: null,
+  display_order: entry.id,
+}));
 
 /* -------------------------------------------------------------------------- */
 /* Page                                                                        */
@@ -127,6 +106,52 @@ export default function ContactPage() {
   const pageImages = usePageMedia('contact');
   // Text written in admin -> Pages -> Text, keyed by section.
   const sections = sectionMap(usePageSections('contact'));
+
+  // Contact details come from admin -> Footer, the same row the site footer
+  // reads, so the two can no longer disagree.
+  const footer = useFooter();
+  const emails = lines(footer.email);
+  const address = lines(footer.address);
+  const hours = lines(footer.hours);
+  const mapQuery = encodeURIComponent(address.join(', '));
+
+  const faqs = useFaqs(FALLBACK_FAQS);
+
+  const contactCards = [
+    emails.length > 0 && {
+      type: 'email',
+      icon: '✉️',
+      title: 'Email',
+      content: emails,
+      linkText: 'Send Email',
+      // The last address listed is the office one; the first is personal.
+      linkHref: `mailto:${emails[emails.length - 1]}`,
+    },
+    footer.phone?.trim() && {
+      type: 'phone',
+      icon: '📱',
+      title: 'Phone',
+      content: [footer.phone],
+      linkText: 'Call Us',
+      linkHref: `tel:${footer.phone.replace(/\s/g, '')}`,
+    },
+    address.length > 0 && {
+      type: 'address',
+      icon: '📍',
+      title: 'Address',
+      content: address,
+      linkText: 'Get Directions',
+      linkHref: `https://maps.google.com/?q=${mapQuery}`,
+    },
+  ].filter(Boolean) as Array<{
+    type: string;
+    icon: string;
+    title: string;
+    content: readonly string[];
+    linkText: string;
+    linkHref: string;
+  }>;
+
   return (
     <>
       <Header />
@@ -173,7 +198,7 @@ export default function ContactPage() {
               Contact details
             </h2>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
-              {CONTACT_INFO.map((info) => (
+              {contactCards.map((info) => (
                 <InfoCard
                   key={info.type}
                   icon={info.icon}
@@ -204,23 +229,29 @@ export default function ContactPage() {
               <div>
                 <h2 className="mb-6 text-2xl font-bold text-gray-800 md:text-3xl">Our Location</h2>
 
-                <div className="overflow-hidden rounded-lg shadow-md">
-                  <iframe
-                    title="Map showing Little Smarties Nursery in Khalifa City, Abu Dhabi"
-                    src={`https://maps.google.com/maps?q=${MAP_QUERY}&output=embed`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="aspect-3/2 w-full border-0"
-                  />
-                </div>
+                {/* Without an address the embed resolves to an arbitrary place,
+                    so it is dropped rather than shown pointing somewhere wrong. */}
+                {address.length > 0 && (
+                  <div className="overflow-hidden rounded-lg shadow-md">
+                    <iframe
+                      title={`Map showing ${footer.company_name}`}
+                      src={`https://maps.google.com/maps?q=${mapQuery}&output=embed`}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="aspect-3/2 w-full border-0"
+                    />
+                  </div>
+                )}
 
                 <address className="mt-6 rounded-lg bg-white p-6 not-italic shadow-md">
-                  <p className="text-sm font-semibold text-gray-600">Little Smarties Nursery</p>
-                  <p className="mt-2 text-base text-gray-800">Ministry of Justice Building</p>
-                  <p className="text-base text-gray-800">Khalifa City (A)</p>
-                  <p className="text-base text-gray-800">Abu Dhabi, UAE</p>
+                  <p className="text-sm font-semibold text-gray-600">{footer.company_name}</p>
+                  {address.map((line) => (
+                    <p key={line} className="text-base text-gray-800 first:mt-2">
+                      {line}
+                    </p>
+                  ))}
                   <a
-                    href={`https://maps.google.com/?q=${MAP_QUERY}`}
+                    href={`https://maps.google.com/?q=${mapQuery}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-red-600 transition-colors duration-200 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
@@ -248,23 +279,26 @@ export default function ContactPage() {
             </h2>
 
             <dl className="divide-y divide-blue-100 overflow-hidden rounded-lg bg-white shadow-md">
-              {OFFICE_HOURS.map((entry) => (
-                <div
-                  key={entry.days}
-                  className="flex items-baseline justify-between gap-4 px-6 py-4"
-                >
-                  <dt className="text-base font-semibold text-gray-800">{entry.days}</dt>
-                  <dd
-                    className={
-                      entry.hours === 'Closed'
-                        ? 'text-base text-gray-500'
-                        : 'text-base font-medium text-blue-800'
-                    }
+              {hours.map((line) => {
+                const entry = splitHours(line);
+                return (
+                  <div
+                    key={line}
+                    className="flex items-baseline justify-between gap-4 px-6 py-4"
                   >
-                    {entry.hours}
-                  </dd>
-                </div>
-              ))}
+                    <dt className="text-base font-semibold text-gray-800">{entry.days}</dt>
+                    <dd
+                      className={
+                        /closed/i.test(entry.hours)
+                          ? 'text-base text-gray-500'
+                          : 'text-base font-medium text-blue-800'
+                      }
+                    >
+                      {entry.hours}
+                    </dd>
+                  </div>
+                );
+              })}
             </dl>
 
             <p className="mt-6 text-center text-sm text-gray-600">
@@ -288,7 +322,7 @@ export default function ContactPage() {
               Can&rsquo;t find what you need? Send us a message above and we will answer directly.
             </p>
 
-            <Accordion items={FAQS} />
+            <Accordion items={faqs} />
           </div>
         </section>
         {/* Text written in admin -> Pages -> Text. Renders nothing until a

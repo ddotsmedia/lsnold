@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { usePhone } from '../lib/footer';
 
 export interface WhatsAppContactProps {
   /** Digits only, international format, no plus. */
@@ -39,11 +40,17 @@ function WhatsAppIcon() {
  * new tab by the visitor's own choice.
  */
 export function WhatsAppContact({
-  phoneNumber = '971562677747',
-  displayNumber = '+971 56 267 7747',
+  phoneNumber,
+  displayNumber,
   className,
 }: WhatsAppContactProps) {
   const pathname = usePathname();
+  // Defaults come from admin -> Footer rather than a default parameter: a
+  // parameter default cannot call a hook, and hardcoding one here would put the
+  // number back in a second place. Props still win where a caller passes them.
+  const footerPhone = usePhone();
+  const display = displayNumber ?? footerPhone;
+  const dial = phoneNumber ?? footerPhone.replace(/[^\d]/g, '');
 
   // Mounted from the root layout, which also wraps /admin. Staff working in the
   // panel should not have a visitor-facing button floating over their toolbar.
@@ -51,10 +58,10 @@ export function WhatsAppContact({
 
   return (
     <a
-      href={`https://wa.me/${phoneNumber}`}
+      href={`https://wa.me/${dial}`}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Chat with us on WhatsApp at ${displayNumber} (opens in a new tab)`}
+      aria-label={`Chat with us on WhatsApp at ${display} (opens in a new tab)`}
       className={cx(
         'fixed right-4 top-20 z-40 inline-flex min-h-11 items-center gap-2 rounded-full',
         'bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg',
@@ -66,7 +73,7 @@ export function WhatsAppContact({
     >
       <WhatsAppIcon />
       {/* The number is extra reassurance on wide screens; the icon carries it on mobile */}
-      <span className="hidden sm:inline">{displayNumber}</span>
+      <span className="hidden sm:inline">{display}</span>
       <span className="sm:hidden">WhatsApp</span>
     </a>
   );

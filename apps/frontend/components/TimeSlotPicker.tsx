@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { formatIsoDate } from './DatePicker';
+import { usePhone, telHref } from '../lib/footer';
 
 /** Mirrors TIME_SLOTS in the bookings controller; the API rejects anything else. */
 export const TIME_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] as const;
@@ -45,6 +46,7 @@ export function TimeSlotPicker({
   onSelectTime,
   className,
 }: TimeSlotPickerProps) {
+  const phone = usePhone();
   const [available, setAvailable] = useState<string[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -91,8 +93,8 @@ export function TimeSlotPicker({
         <p role="alert" className="text-sm text-amber-800">
           We couldn&rsquo;t check which times are free just now, so we can&rsquo;t take a booking
           for this date. Please try again, or call us on{' '}
-          <a href="tel:+971562677747" className="font-semibold underline">
-            +971 56 267 7747
+          <a href={telHref(phone)} className="font-semibold underline">
+            {phone}
           </a>
           .
         </p>

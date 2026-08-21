@@ -20,6 +20,8 @@ const NAV_ITEMS = [
   { href: '/admin/branding', label: 'Branding', icon: '◐' },
   { href: '/admin/typography', label: 'Typography', icon: '◍' },
   { href: '/admin/footer', label: 'Footer', icon: '▁' },
+  { href: '/admin/faqs', label: 'FAQs', icon: '⁇' },
+  { href: '/admin/staff', label: 'Staff', icon: '☺' },
   { href: '/admin/settings/social-media', label: 'Social Media', icon: '◈' },
   { href: '/admin/seo', label: 'SEO Settings', icon: '◎' },
   { href: '/admin/analytics', label: 'Analytics', icon: '◫' },

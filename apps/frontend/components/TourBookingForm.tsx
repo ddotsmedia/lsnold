@@ -7,6 +7,7 @@ import { FormStep } from './FormStep';
 import { ProgressIndicator } from './ProgressIndicator';
 import { DatePicker, formatIsoDate } from './DatePicker';
 import { TimeSlotPicker, formatSlotLabel, type TimeSlot } from './TimeSlotPicker';
+import { usePhone } from '../lib/footer';
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -176,6 +177,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
 /* -------------------------------------------------------------------------- */
 
 export function TourBookingForm({ onSuccess, className }: TourBookingFormProps) {
+  const phone = usePhone();
   const termsId = useId();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -325,7 +327,7 @@ export function TourBookingForm({ onSuccess, className }: TourBookingFormProps) 
       onSuccess?.();
     } catch {
       setSubmitError(
-        'We could not confirm your booking just now. Please try again, or call us on +971 56 267 7747.',
+        `We could not confirm your booking just now. Please try again, or call us on ${phone}.`,
       );
     } finally {
       setIsSubmitting(false);
@@ -376,7 +378,7 @@ export function TourBookingForm({ onSuccess, className }: TourBookingFormProps) 
         <ul className="mx-auto mt-6 max-w-md list-disc space-y-2 pl-6 text-left text-base text-gray-700">
           <li>We&rsquo;ll send a confirmation email to {confirmed.email}.</li>
           <li>Please arrive 10 minutes early.</li>
-          <li>If you need to reschedule, contact us at +971 56 267 7747.</li>
+          <li>If you need to reschedule, contact us at {phone}.</li>
         </ul>
 
         <div className="mt-8">

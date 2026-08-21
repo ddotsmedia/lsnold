@@ -4,8 +4,15 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RegistrationForm } from '@/components/RegistrationForm';
 import { Butterfly, Cloud } from '@/components/Decorations';
+import { usePhone, telHref } from '@/lib/footer';
+import { PageSections, usePageSections } from '@/components/PageSections';
+import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 
 export default function RegisterPage() {
+  const phone = usePhone();
+  // Text written in admin -> Pages -> Register -> Text, keyed by section.
+  // Migration 048 adds the pages row these sections attach to.
+  const sections = sectionMap(usePageSections('register'));
   return (
     <>
       <Header />
@@ -22,16 +29,28 @@ export default function RegisterPage() {
           <Cloud className="absolute right-[9%] bottom-[20%] w-24 text-white opacity-20 lg:w-36" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-12 text-center">
-            <h1
+            <EditableHeading
+              sections={sections}
+              sectionKey="hero"
               id="hero-heading"
               className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
             >
               Enroll Your Child
-            </h1>
+            </EditableHeading>
             <p className="mt-4 text-lg text-blue-50 drop-shadow md:text-xl">
-              Start their learning journey with us
+              <EditableProse sections={sections} sectionKey="hero">
+                Start their learning journey with us
+              </EditableProse>
             </p>
           </div>
+        </section>
+
+        {/* admin -> Pages -> Register -> Text. Renders nothing until a section
+            is published, so the page is unchanged by default. */}
+        <section className="mx-auto max-w-3xl px-4 pt-12 empty:hidden md:px-6">
+          <EditableHeading sections={sections} sectionKey="intro" className="mb-3 text-2xl font-bold text-gray-800 md:text-3xl">{null}</EditableHeading>
+          <EditableProse sections={sections} sectionKey="intro">{null}</EditableProse>
+          <EditableProse sections={sections} sectionKey="body">{null}</EditableProse>
         </section>
 
         {/* ---------------------------------------------------------------- */}
@@ -50,15 +69,18 @@ export default function RegisterPage() {
             <p className="mt-6 text-center text-sm text-gray-600">
               Prefer to talk it through first?{' '}
               <a
-                href="tel:+971562677747"
+                href={telHref(phone)}
                 className="font-semibold text-red-600 underline transition-colors hover:text-red-700"
               >
-                Call us on +971 56 267 7747
+                Call us on {phone}
               </a>
               .
             </p>
           </div>
         </section>
+
+        {/* Any further sections added in admin, after the form. */}
+        <PageSections pageSlug="register" />
       </main>
 
       <Footer />

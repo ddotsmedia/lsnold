@@ -9,6 +9,8 @@ import { listPublicPartners } from '../controllers/partnersController.js';
 import { listPublicTestimonials } from '../controllers/testimonialsController.js';
 import { getBranding } from './admin/branding.js';
 import { getFooter } from './admin/footer.js';
+import { listPublicFaqs } from './admin/faqs.js';
+import { listPublicStaff } from './admin/staff.js';
 
 /**
  * Read-only endpoints the public site needs: the footer's social links and the
@@ -36,6 +38,10 @@ export function createPublicContentRouter(db: Pool): express.Router {
   router.get('/branding', (req, res) => getBranding(db, req as AuthRequest, res));
   // Same reasoning: the footer renders for signed-out visitors on every page.
   router.get('/footer', (req, res) => getFooter(db, req as AuthRequest, res));
+  // The contact page's FAQs and the About page's team. Published rows only —
+  // the admin endpoints also return drafts, which a visitor must not see.
+  router.get('/faqs', (req, res) => listPublicFaqs(db, req as AuthRequest, res));
+  router.get('/staff', (req, res) => listPublicStaff(db, req as AuthRequest, res));
 
   return router;
 }

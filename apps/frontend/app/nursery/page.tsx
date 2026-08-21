@@ -9,6 +9,7 @@ import { Carousel } from '@/components/Carousel';
 import { MissionCard, type MissionCardColor, type MissionCardTitle } from '@/components/MissionCard';
 import { StatCard } from '@/components/StatCard';
 import { TeamMemberCard } from '@/components/TeamMemberCard';
+import { useStaff, type StaffMember } from '@/lib/staff';
 import { Butterfly, Circle, Cloud, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
@@ -90,7 +91,8 @@ interface TeamMember {
   bio: string;
 }
 
-const TEAM: readonly TeamMember[] = [
+/** What the page showed before the team moved into the database. */
+const FALLBACK_TEAM_RAW: readonly TeamMember[] = [
   {
     name: 'Sarah Ahmed',
     position: 'Director',
@@ -122,6 +124,16 @@ const TEAM: readonly TeamMember[] = [
     bio: 'Registered dietitian with 6+ years in pediatric nutrition. Ensures all meals meet health and safety standards.',
   },
 ];
+
+// Shaped like a row so the hook can hand back either without the page caring.
+const FALLBACK_TEAM: readonly StaffMember[] = FALLBACK_TEAM_RAW.map((m, i) => ({
+  id: `fallback-${i + 1}`,
+  name: m.name,
+  role: m.position,
+  bio: m.bio,
+  photo_url: null,
+  display_order: i + 1,
+}));
 
 interface Achievement {
   number: string;
@@ -262,6 +274,9 @@ export default function NurseryPage() {
   const pageImages = usePageMedia('nursery');
   // Text written in admin -> Pages -> Text, keyed by section.
   const sections = sectionMap(usePageSections('about'));
+  // Managed in admin -> Staff. Falls back to the built-in team when nothing is
+  // published or the request fails.
+  const team = useStaff(FALLBACK_TEAM);
 
   // Managed in admin -> Testimonials. Falls back to the built-in reviews.
   const testimonials = useTestimonials('about', FALLBACK_TESTIMONIALS);
@@ -465,12 +480,13 @@ export default function NurseryPage() {
             </p>
 
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-3">
-              {TEAM.map((member) => (
+              {team.map((member) => (
                 <TeamMemberCard
-                  key={member.name}
+                  key={member.id}
                   name={member.name}
-                  position={member.position}
-                  bio={member.bio}
+                  position={member.role ?? ''}
+                  bio={member.bio ?? ''}
+                  image={member.photo_url ?? undefined}
                 />
               ))}
             </div>

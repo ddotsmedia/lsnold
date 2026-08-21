@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/Button';
+import { usePhone, telHref } from '@/lib/footer';
 
 interface EventDetail {
   id: string;
@@ -65,6 +66,7 @@ const EMPTY_FORM = {
 };
 
 export default function EventDetailPage() {
+  const phone = usePhone();
   const params = useParams();
   const id = String(params?.id ?? '');
 
@@ -226,7 +228,7 @@ export default function EventDetailPage() {
                     <p className="font-semibold text-green-800">Your place is booked.</p>
                     <p className="mt-1 text-sm text-green-700">
                       We will confirm the details by email. If anything changes, call us on{' '}
-                      <a href="tel:+971562677747" className="font-semibold underline">+971 56 267 7747</a>.
+                      <a href={telHref(phone)} className="font-semibold underline">{phone}</a>.
                     </p>
                   </div>
                 ) : full ? (
@@ -234,7 +236,7 @@ export default function EventDetailPage() {
                     <p className="font-semibold text-amber-900">This event is fully booked.</p>
                     <p className="mt-1 text-sm text-amber-800">
                       Call us on{' '}
-                      <a href="tel:+971562677747" className="font-semibold underline">+971 56 267 7747</a>{' '}
+                      <a href={telHref(phone)} className="font-semibold underline">{phone}</a>{' '}
                       to be added to the waiting list.
                     </p>
                   </div>

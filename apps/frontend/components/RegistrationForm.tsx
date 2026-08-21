@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { FormField, LABEL_CLASSES, type SelectOption } from './FormField';
 import { FormStep } from './FormStep';
 import { ProgressIndicator } from './ProgressIndicator';
+import { usePhone, telHref } from '../lib/footer';
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -314,6 +315,7 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 /* -------------------------------------------------------------------------- */
 
 export function RegistrationForm({ onSuccess, className }: RegistrationFormProps) {
+  const phone = usePhone();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<RegistrationData>(EMPTY_DATA);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -522,7 +524,7 @@ export function RegistrationForm({ onSuccess, className }: RegistrationFormProps
       onSuccess?.();
     } catch {
       setSubmitError(
-        'We could not submit your registration just now. Please try again, or call us on +971 56 267 7747.',
+        `We could not submit your registration just now. Please try again, or call us on ${phone}.`,
       );
     } finally {
       setIsSubmitting(false);
@@ -559,7 +561,7 @@ export function RegistrationForm({ onSuccess, className }: RegistrationFormProps
           <p className="text-base leading-relaxed text-gray-700">
             A confirmation email is on its way to the address you gave us. Our admissions team
             reviews each registration and will contact you within two working days to confirm a
-            place and arrange a visit. If you need anything sooner, call us on +971 56 267 7747 and
+            place and arrange a visit. If you need anything sooner, call us on {phone} and
             quote your confirmation number.
           </p>
         </div>
@@ -647,7 +649,7 @@ export function RegistrationForm({ onSuccess, className }: RegistrationFormProps
             <p className="-mt-4 mb-6 text-sm text-amber-700">
               We couldn&rsquo;t load the programme list just now. You can still submit the form and
               we will confirm the right group with you, or call us on{' '}
-              <a href="tel:+971562677747" className="font-semibold underline">+971 56 267 7747</a>.
+              <a href={telHref(phone)} className="font-semibold underline">{phone}</a>.
             </p>
           )}
 

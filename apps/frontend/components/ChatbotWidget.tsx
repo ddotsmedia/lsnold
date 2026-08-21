@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
+import { usePhone } from '@/lib/footer';
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -125,6 +126,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 /* -------------------------------------------------------------------------- */
 
 export function ChatbotWidget() {
+  const phone = usePhone();
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin') ?? false;
   const [settings, setSettings] = useState<ChatbotSettings | null>(null);
@@ -234,7 +236,7 @@ export function ChatbotWidget() {
       });
       setContactSaved(true);
     } catch {
-      setError('We could not save your details. Please call us on +971 56 267 7747.');
+      setError(`We could not save your details. Please call us on ${phone}.`);
     }
   };
 
@@ -279,7 +281,7 @@ export function ChatbotWidget() {
     } catch {
       setMessages((current) => current.filter((m) => m.id !== optimistic.id));
       setDraft(text);
-      setError('Your message did not send. Please try again, or call us on +971 56 267 7747.');
+      setError(`Your message did not send. Please try again, or call us on ${phone}.`);
     } finally {
       setIsSending(false);
     }
@@ -303,7 +305,7 @@ export function ChatbotWidget() {
       setCallbackState('sent');
     } catch {
       setCallbackState('idle');
-      setError('We could not send that request. Please call us on +971 56 267 7747.');
+      setError(`We could not send that request. Please call us on ${phone}.`);
     }
   };
 
