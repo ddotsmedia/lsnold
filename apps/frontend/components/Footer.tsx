@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
+import { useFooter, lines } from '../lib/footer';
 
 interface FooterLink {
   label: string;
@@ -15,17 +16,11 @@ interface SocialLink {
   color: string;
 }
 
-/** Real contact details as published on the live production site. */
-const CONTACT = {
-  emails: ['lsnmoj@gmail.com', 'info@lsn.ae'],
-  phone: '+971 56 267 7747',
-  hours: ['Mon – Fri: 7:00 – 18:00', 'Weekends: Closed'],
-  address: [
-    'Ministry Of Justice Ground Floor, Khalifa City (A)',
-    'Sector 133, Street 12, P.O. Box 260',
-    'Abu Dhabi United Arab Emirates',
-  ],
-} as const;
+/**
+ * Contact details now come from admin -> Footer via useFooter(). The hook's
+ * DEFAULT_FOOTER holds these same values, so an unreachable backend leaves the
+ * footer reading exactly as it did before.
+ */
 
 const VISIT_US = ['Little Smarties Nursery LLC,', 'Khalifa City (A)', 'Abu Dhabi, UAE'];
 
@@ -125,7 +120,12 @@ function FooterLinkList({ title, links }: { title: string; links: readonly Foote
 let socialCache: DbSocialLink[] | null = null;
 
 export default function Footer() {
-  const mapQuery = encodeURIComponent(CONTACT.address.join(', '));
+  const footer = useFooter();
+  const emails = lines(footer.email);
+  const hours = lines(footer.hours);
+  const address = lines(footer.address);
+  // The map follows the edited address, so correcting it in admin moves the pin.
+  const mapQuery = encodeURIComponent(address.join(', '));
   const [socials, setSocials] = useState<DbSocialLink[]>(socialCache ?? []);
 
   useEffect(() => {
@@ -149,60 +149,81 @@ export default function Footer() {
     <footer className="bg-blue-700 text-blue-100/90">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-12 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">
-            🐣
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white text-lg">
+            {footer.logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={footer.logo_url}
+                alt={footer.company_name}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              '🐣'
+            )}
           </div>
-          <h2 className="font-display text-2xl text-white">Little Smarties</h2>
+          <h2 className="font-display text-2xl text-white">{footer.company_name}</h2>
         </div>
 
         {/* Contact card + map */}
         <div className="mt-6 grid grid-cols-1 gap-6 overflow-hidden rounded-2xl bg-blue-600/60 p-6 lg:grid-cols-2">
           <address className="space-y-3 text-sm not-italic">
-            <p>
-              {CONTACT.emails.map((email, idx) => (
-                <span key={email}>
-                  <a href={`mailto:${email}`} className="transition-colors hover:text-white">
-                    {email}
-                  </a>
-                  {idx < CONTACT.emails.length - 1 && <br />}
-                </span>
-              ))}
-            </p>
-            <p>
-              <a
-                href={`tel:${CONTACT.phone.replace(/\s/g, '')}`}
-                className="transition-colors hover:text-white"
-              >
-                {CONTACT.phone}
-              </a>
-            </p>
-            <p>
-              {CONTACT.hours.map((line) => (
-                <span key={line}>
-                  {line}
-                  <br />
-                </span>
-              ))}
-            </p>
-            <p>
-              {CONTACT.address.map((line) => (
-                <span key={line}>
-                  {line}
-                  <br />
-                </span>
-              ))}
-            </p>
+            {emails.length > 0 && (
+              <p>
+                {emails.map((email, idx) => (
+                  <span key={email}>
+                    <a href={`mailto:${email}`} className="transition-colors hover:text-white">
+                      {email}
+                    </a>
+                    {idx < emails.length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            )}
+            {footer.phone && (
+              <p>
+                <a
+                  href={`tel:${footer.phone.replace(/\s/g, '')}`}
+                  className="transition-colors hover:text-white"
+                >
+                  {footer.phone}
+                </a>
+              </p>
+            )}
+            {hours.length > 0 && (
+              <p>
+                {hours.map((line) => (
+                  <span key={line}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </p>
+            )}
+            {address.length > 0 && (
+              <p>
+                {address.map((line) => (
+                  <span key={line}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </p>
+            )}
           </address>
 
-          <div className="overflow-hidden rounded-xl">
-            <iframe
-              title="Little Smarties Nursery location"
-              src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
-              className="h-56 w-full border-0 lg:h-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
+          {/* Without an address the embed would resolve to an arbitrary place,
+              so it is dropped rather than shown pointing somewhere wrong. */}
+          {address.length > 0 && (
+            <div className="overflow-hidden rounded-xl">
+              <iframe
+                title={`${footer.company_name} location`}
+                src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+                className="h-56 w-full border-0 lg:h-full"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
