@@ -21,14 +21,27 @@ import { PageFeatureImages } from '@/components/PageFeatureImages';
 /* -------------------------------------------------------------------------- */
 
 interface MissionEntry {
+  /** Section key; see MISSION_VISION_VALUES below. */
+  key: string;
   icon: string;
   title: MissionCardTitle;
   content: string;
   color: MissionCardColor;
 }
 
+/**
+ * `key` is the section this block is edited under in admin -> Pages -> About
+ * -> Text. One key per block, not a `-title`/`-text` pair: the public endpoint
+ * only returns a section that has content, so a section carrying a heading and
+ * no body would never be delivered and the heading would silently never apply.
+ * The section's Title overrides the block's heading, its Content the body.
+ *
+ * The copy here stays as the fallback, so a block with nothing written for it
+ * reads exactly as it always has.
+ */
 const MISSION_VISION_VALUES: readonly MissionEntry[] = [
   {
+    key: 'nursery-mission',
     icon: '🎯',
     title: 'Mission',
     content:
@@ -36,6 +49,7 @@ const MISSION_VISION_VALUES: readonly MissionEntry[] = [
     color: 'red',
   },
   {
+    key: 'nursery-vision',
     icon: '🌟',
     title: 'Vision',
     content:
@@ -43,6 +57,7 @@ const MISSION_VISION_VALUES: readonly MissionEntry[] = [
     color: 'blue',
   },
   {
+    key: 'nursery-values',
     icon: '💎',
     title: 'Values',
     content:
@@ -52,6 +67,8 @@ const MISSION_VISION_VALUES: readonly MissionEntry[] = [
 ];
 
 interface PhilosophyEntry {
+  /** Section key; see MISSION_VISION_VALUES above. */
+  key: string;
   title: string;
   paragraphs: readonly string[];
   /** Tailwind gradient classes for the accompanying placeholder image. */
@@ -60,6 +77,7 @@ interface PhilosophyEntry {
 
 const PHILOSOPHY: readonly PhilosophyEntry[] = [
   {
+    key: 'nursery-learning-through-play',
     title: 'Learning Through Play',
     paragraphs: [
       'Young children make sense of the world by handling it, testing it and talking about it. Our rooms are set up so that play is the work of the day: open-ended materials, space to build, and adults who join in rather than direct.',
@@ -68,6 +86,7 @@ const PHILOSOPHY: readonly PhilosophyEntry[] = [
     gradient: 'from-blue-100 to-blue-200',
   },
   {
+    key: 'nursery-every-child',
     title: 'Every Child on Their Own Path',
     paragraphs: [
       'Children reach the same milestones at different times, and that is entirely normal. We observe and record where each child is rather than measuring them against a fixed timetable, and we plan the next small step from there.',
@@ -76,6 +95,9 @@ const PHILOSOPHY: readonly PhilosophyEntry[] = [
     gradient: 'from-red-100 to-orange-100',
   },
   {
+    // Not in the brief's key list, which stopped at two — but leaving the third
+    // block alone would make two of three editable for no reason.
+    key: 'nursery-family-partnership',
     title: 'A Partnership With Families',
     paragraphs: [
       'What happens at home and what happens at nursery need to point in the same direction. We keep communication frequent and practical, so families know what their child did today and what they are working towards.',
@@ -300,12 +322,21 @@ export default function NurseryPage() {
           <Circle className="absolute -right-8 -bottom-10 w-40 text-white opacity-20 lg:w-64" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-16 text-center">
-            <h1 id="hero-heading" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-              Little Smarties Nursery
-            </h1>
-            <p className="mt-4 text-lg text-blue-50 md:text-xl">
-              Committed to nurturing young minds since 2007
-            </p>
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-hero"
+              id="hero-heading"
+              className="text-3xl font-bold text-white md:text-4xl lg:text-5xl"
+            >
+              <h1 id="hero-heading" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+                Little Smarties Nursery
+              </h1>
+            </EditableHeading>
+            <EditableProse sections={sections} sectionKey="nursery-hero">
+              <p className="mt-4 text-lg text-blue-50 md:text-xl">
+                Committed to nurturing young minds since 2007
+              </p>
+            </EditableProse>
           </div>
         </section>
 
@@ -392,23 +423,37 @@ export default function NurseryPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="mvv-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-what-we-stand-for"
               id="mvv-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              What We Stand For
-            </h2>
-            <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
-              The commitments that shape how we teach, plan and care for every child in our rooms.
-            </p>
+              <h2
+                id="mvv-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                What We Stand For
+              </h2>
+            </EditableHeading>
+            <EditableProse sections={sections} sectionKey="nursery-what-we-stand-for">
+              <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
+                The commitments that shape how we teach, plan and care for every child in our rooms.
+              </p>
+            </EditableProse>
 
             <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
               {MISSION_VISION_VALUES.map((entry) => (
                 <MissionCard
-                  key={entry.title}
+                  key={entry.key}
                   icon={entry.icon}
-                  title={entry.title}
-                  content={entry.content}
+                  // Resolved to a string: it renders inside the card's own <h3>.
+                  title={sections[entry.key]?.title?.trim() || entry.title}
+                  content={
+                    <EditableProse sections={sections} sectionKey={entry.key}>
+                      {entry.content}
+                    </EditableProse>
+                  }
                   color={entry.color}
                 />
               ))}
@@ -421,20 +466,29 @@ export default function NurseryPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="philosophy-heading" className="bg-white py-20 md:py-32">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-philosophy"
               id="philosophy-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              Our Educational Philosophy
-            </h2>
-            <p className="mx-auto mb-12 max-w-2xl text-center text-base text-gray-600 md:mb-16 md:text-lg">
-              Based on proven developmental psychology
-            </p>
+              <h2
+                id="philosophy-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                Our Educational Philosophy
+              </h2>
+            </EditableHeading>
+            <EditableProse sections={sections} sectionKey="nursery-philosophy">
+              <p className="mx-auto mb-12 max-w-2xl text-center text-base text-gray-600 md:mb-16 md:text-lg">
+                Based on proven developmental psychology
+              </p>
+            </EditableProse>
 
             <div className="space-y-16 md:space-y-20">
               {PHILOSOPHY.map((entry, index) => (
                 <article
-                  key={entry.title}
+                  key={entry.key}
                   className={`grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12 ${
                     // Alternate which side the image sits on for large screens.
                     index % 2 === 1 ? 'lg:[&>figure]:order-2' : ''
@@ -449,14 +503,18 @@ export default function NurseryPage() {
                   </figure>
 
                   <div>
+                    {/* Resolved to a string: an override arrives as a <div>,
+                        which cannot nest inside this <h3>. */}
                     <h3 className="mb-4 text-xl font-semibold text-gray-800 md:text-2xl">
-                      {entry.title}
+                      {sections[entry.key]?.title?.trim() || entry.title}
                     </h3>
-                    <div className="space-y-4 text-base leading-relaxed text-gray-700">
-                      {entry.paragraphs.map((paragraph) => (
-                        <p key={paragraph.slice(0, 32)}>{paragraph}</p>
-                      ))}
-                    </div>
+                    <EditableProse sections={sections} sectionKey={entry.key}>
+                      <div className="space-y-4 text-base leading-relaxed text-gray-700">
+                        {entry.paragraphs.map((paragraph) => (
+                          <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+                        ))}
+                      </div>
+                    </EditableProse>
                   </div>
                 </article>
               ))}

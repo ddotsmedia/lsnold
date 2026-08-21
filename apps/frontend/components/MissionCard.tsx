@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
+/** The three the page ships with. Kept for callers that still narrow to them. */
 export type MissionCardTitle = 'Mission' | 'Vision' | 'Values';
 export type MissionCardColor = 'red' | 'blue' | 'green';
 
 export interface MissionCardProps {
   icon: string;
-  title: MissionCardTitle;
-  content: string;
+  /** A plain string: it renders inside the card's own <h3>. An admin override
+      is resolved to text by the caller rather than passed as an element, since
+      a <div> from EditableProse cannot legally nest inside a heading. */
+  title: string;
+  /** A node, so the caller can pass <EditableProse> in place of the built-in
+      copy. It renders inside a <p>. */
+  content: ReactNode;
   color: MissionCardColor;
   className?: string;
 }
@@ -40,7 +46,11 @@ export function MissionCard({ icon, title, content, color, className }: MissionC
         {icon}
       </span>
       <h3 className={cx('mb-3 text-xl font-bold md:text-2xl', palette.accent)}>{title}</h3>
-      <p className="text-base leading-relaxed text-gray-700">{content}</p>
+      {/* A div, not a p: an admin override arrives as a <div class="page-content">
+          from EditableProse, and a div inside a p is invalid markup that the
+          browser silently reparents. The classes are unchanged, so it looks the
+          same either way. */}
+      <div className="text-base leading-relaxed text-gray-700">{content}</div>
     </article>
   );
 }
