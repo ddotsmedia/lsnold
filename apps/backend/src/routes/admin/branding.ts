@@ -25,10 +25,23 @@ import {
  * including the owner's.
  */
 
+/**
+ * Every field is optional, and only the ones actually sent are written.
+ *
+ * Two admin pages edit this single row and each owns a different half of it:
+ * Branding sets site_name/tagline/primary_color, Typography sets
+ * font_family/base_font_size. Requiring all five meant Branding's three-field
+ * save was rejected as "Required". Making each page echo back the other's
+ * fields would have fixed the error but introduced a worse one — whichever page
+ * saved last would overwrite the other's settings with whatever it had loaded.
+ */
 const brandingSchema = z.object({
   site_name: z.string().trim().min(1, 'A site name is required').max(200),
   // Empty string from an untouched input means "no tagline", not "".
-  tagline: z.string().trim().max(300).nullable().optional()
+  // Nullable but not optional here: `.partial()` below adds the optionality, so
+  // an absent key skips the transform instead of being coerced to null — that
+  // is what keeps "clear the tagline" distinct from "leave the tagline alone".
+  tagline: z.string().trim().max(300).nullable()
     .transform((v) => (v ? v : null)),
   // Checked here as well as by the column constraint. This value is
   // interpolated into a style attribute on the public site, so it is the one
@@ -44,7 +57,12 @@ const brandingSchema = z.object({
   // Sets the root font size, and the site's sizes are all in rem, so this
   // scales every page. Bounded to what the layout still holds together at.
   base_font_size: z.number().int().min(12).max(24),
-});
+}).partial();
+
+/** Column order below, so a field's name and its $n stay in one place. */
+const BRANDING_FIELDS = [
+  'site_name', 'tagline', 'primary_color', 'font_family', 'base_font_size',
+] as const;
 
 /** Falls back to the seeded row's values if the table is somehow empty. */
 const FALLBACK = {
@@ -78,7 +96,28 @@ async function updateBranding(db: Pool, req: AuthRequest, res: Response): Promis
     return;
   }
 
-  const { site_name, tagline, primary_color, font_family, base_font_size } = parsed.data;
+  // Presence is read off the raw body, not the parsed result: a field the
+  // caller omitted must stay untouched, and for tagline that is a different
+  // outcome from being sent as null.
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const supplied = BRANDING_FIELDS.filter((f) =>
+    Object.prototype.hasOwnProperty.call(body, f)
+  );
+
+  if (supplied.length === 0) {
+    res.status(400).json({ error: 'No branding fields supplied' });
+    return;
+  }
+
+  // $1..$5 always carry all five columns so the INSERT branch has a complete
+  // row; unsupplied ones fall back to the seed defaults. The UPDATE branch then
+  // assigns only what was actually sent, leaving the other page's half alone.
+  const values = BRANDING_FIELDS.map((f) =>
+    supplied.includes(f) ? parsed.data[f] ?? null : FALLBACK[f]
+  );
+  const assignments = supplied
+    .map((f) => `${f} = $${BRANDING_FIELDS.indexOf(f) + 1}`)
+    .join(',\n                   ');
 
   try {
     // Keyed on id = 1 rather than a subquery, since the table is constrained to
@@ -90,17 +129,12 @@ async function updateBranding(db: Pool, req: AuthRequest, res: Response): Promis
                updated_at, updated_by)
             VALUES (1, $1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
        ON CONFLICT (id) DO UPDATE
-               SET site_name = $1,
-                   tagline = $2,
-                   primary_color = $3,
-                   font_family = $4,
-                   base_font_size = $5,
+               SET ${assignments},
                    updated_at = CURRENT_TIMESTAMP,
                    updated_by = $6
          RETURNING id, site_name, tagline, primary_color, font_family, base_font_size,
                    updated_at`,
-      [site_name, tagline ?? null, primary_color, font_family, base_font_size,
-       req.userId ?? null]
+      [...values, req.userId ?? null]
     );
     res.json(result.rows[0]);
   } catch (error) {
