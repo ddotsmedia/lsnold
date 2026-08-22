@@ -106,16 +106,22 @@ export function Modal({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
+          {/* Capped and scrollable. Content taller than the viewport used to
+              grow the panel past the screen: centred in a fixed overlay, that
+              pushes the title bar and close button out of view and covers the
+              backdrop, so the dialog reads as a full page with no way out.
+              Every modal here held a short form until the media picker put a
+              60-image grid in one. */}
           <motion.div
             variants={modalPanel}
             initial="hidden" animate="visible" exit="exit"
-            className={`relative bg-panel-surface rounded-2xl border border-panel-line/50 ${maxWidth} w-full shadow-2xl`}
+            className={`relative flex max-h-[85vh] flex-col bg-panel-surface rounded-2xl border border-panel-line/50 ${maxWidth} w-full shadow-2xl`}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-panel-line/50">
+            <div className="flex shrink-0 items-center justify-between px-6 py-4 border-b border-panel-line/50">
               <h2 className="text-base font-semibold text-panel-strong">{title}</h2>
               <button onClick={onClose} className="text-panel-muted hover:text-panel-body text-lg transition-colors">×</button>
             </div>
-            <div className="p-6">{children}</div>
+            <div className="overflow-y-auto p-6">{children}</div>
           </motion.div>
         </div>
       )}
