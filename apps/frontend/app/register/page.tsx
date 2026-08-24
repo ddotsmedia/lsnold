@@ -58,9 +58,19 @@ export default function RegisterPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="form-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-3xl px-4 md:px-6">
-            <h2 id="form-heading" className="sr-only">
-              Registration form
-            </h2>
+            {/* Kept sr-only and keeping its id: the section above points at it
+                with aria-labelledby, so dropping either would leave the section
+                unnamed. Editable via the register-form-heading section. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="register-form-heading"
+              id="form-heading"
+              className="sr-only"
+            >
+              <h2 id="form-heading" className="sr-only">
+                Registration form
+              </h2>
+            </EditableHeading>
 
             <div className="rounded-lg bg-white p-6 shadow-md md:p-8">
               <RegistrationForm />
