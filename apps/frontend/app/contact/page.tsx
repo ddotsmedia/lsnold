@@ -170,12 +170,19 @@ export default function ContactPage() {
           <Flower className="absolute right-[10%] bottom-[22%] w-12 text-white opacity-20 lg:w-20" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-12 text-center">
-            <h1
+            <EditableHeading
+              sections={sections}
+              sectionKey="contact-hero"
               id="hero-heading"
               className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
             >
-              Get in Touch
-            </h1>
+              <h1
+                id="hero-heading"
+                className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
+              >
+                Get in Touch
+              </h1>
+            </EditableHeading>
             <p className="mt-4 text-lg text-orange-50 drop-shadow md:text-xl">
               We&rsquo;d love to hear from you
             </p>
@@ -195,9 +202,17 @@ export default function ContactPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="info-heading" className="bg-white py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2 id="info-heading" className="sr-only">
-              Contact details
-            </h2>
+            {/* sr-only, id kept: the section names itself with aria-labelledby. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="contact-info"
+              id="info-heading"
+              className="sr-only"
+            >
+              <h2 id="info-heading" className="sr-only">
+                Contact details
+              </h2>
+            </EditableHeading>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
               {contactCards.map((info) => (
                 <InfoCard
@@ -218,9 +233,16 @@ export default function ContactPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="form-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2 id="form-heading" className="sr-only">
-              Send a message and find us
-            </h2>
+            <EditableHeading
+              sections={sections}
+              sectionKey="contact-form"
+              id="form-heading"
+              className="sr-only"
+            >
+              <h2 id="form-heading" className="sr-only">
+                Send a message and find us
+              </h2>
+            </EditableHeading>
 
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
               <div className="rounded-lg bg-white p-6 shadow-md md:p-8">
@@ -242,7 +264,13 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <h2 className="mb-6 text-2xl font-bold text-gray-800 md:text-3xl">Our Location</h2>
+                <EditableHeading
+                  sections={sections}
+                  sectionKey="contact-location"
+                  className="mb-6 text-2xl font-bold text-gray-800 md:text-3xl"
+                >
+                  <h2 className="mb-6 text-2xl font-bold text-gray-800 md:text-3xl">Our Location</h2>
+                </EditableHeading>
 
                 {/* Without an address the embed resolves to an arbitrary place,
                     so it is dropped rather than shown pointing somewhere wrong. */}
@@ -286,12 +314,19 @@ export default function ContactPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="hours-heading" className="bg-blue-50 py-16 md:py-24">
           <div className="mx-auto max-w-xl px-4 md:px-6">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="contact-hours"
               id="hours-heading"
               className="mb-8 text-center text-2xl font-bold text-gray-800 md:text-3xl"
             >
-              Office Hours
-            </h2>
+              <h2
+                id="hours-heading"
+                className="mb-8 text-center text-2xl font-bold text-gray-800 md:text-3xl"
+              >
+                Office Hours
+              </h2>
+            </EditableHeading>
 
             <dl className="divide-y divide-blue-100 overflow-hidden rounded-lg bg-white shadow-md">
               {hours.map((line) => {
@@ -327,12 +362,19 @@ export default function ContactPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="faq-heading" className="bg-white py-20 md:py-32">
           <div className="mx-auto max-w-3xl px-4 md:px-6">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="contact-faq"
               id="faq-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              Frequently Asked Questions
-            </h2>
+              <h2
+                id="faq-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                Frequently Asked Questions
+              </h2>
+            </EditableHeading>
             <p className="mb-10 text-center text-base text-gray-600 md:mb-12 md:text-lg">
               Can&rsquo;t find what you need? Send us a message above and we will answer directly.
             </p>
