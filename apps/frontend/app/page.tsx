@@ -21,6 +21,8 @@ import {
   Balloon, Block, Cloud, Heart, Party, Rainbow, Rocket, Smiley, Star, Toy,
   BouncingEmoji, PulsingEmoji, SpinningEmoji,
 } from '@/components/animations/EmojiVariety';
+import { ScrollReveal } from '@/components/animations/ScrollReveal';
+import { ParallaxBackground } from '@/components/animations/ParallaxBackground';
 import { useAgeGroups, formatRange } from '@/lib/ageGroups';
 import { usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
@@ -290,7 +292,12 @@ export default function Home() {
         {/* Hero                                                              */}
         {/* ---------------------------------------------------------------- */}
         <section className="relative overflow-hidden bg-blue-900">
-          <HeroRotator slides={heroSlides} intervalMs={6000} />
+          {/* The rotating slides scroll at half page speed; the copy and the
+              buttons over them scroll normally, which is what reads as depth.
+              inset-0 so the layer fills the hero it sits behind. */}
+          <ParallaxBackground speed={0.5} className="absolute inset-0">
+            <HeroRotator slides={heroSlides} intervalMs={6000} />
+          </ParallaxBackground>
 
           {/* Balloons and sky. pointer-events-none throughout: these sit over
               the hero's call-to-action buttons and must never eat a tap.
@@ -420,12 +427,12 @@ export default function Home() {
           <Butterfly className="pointer-events-none absolute left-[4%] top-16 w-14 opacity-70" />
 
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
+            <ScrollReveal className="mx-auto max-w-2xl text-center">
               <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Age Groups</h2>
               <p className="mt-3 text-gray-500">
                 Tailored programs for every stage of your child&apos;s development journey
               </p>
-            </div>
+            </ScrollReveal>
 
             {/* Tab bar */}
             <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -627,7 +634,9 @@ export default function Home() {
           </div>
 
           <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Partners</h2>
+            <ScrollReveal>
+              <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Partners</h2>
+            </ScrollReveal>
 
             {partnersLoading ? (
               <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3 lg:grid-cols-6">

@@ -572,6 +572,7 @@ export default function NurseryPage() {
                   key={achievement.label}
                   number={achievement.number}
                   label={achievement.label}
+                  animate
                 />
               ))}
             </div>
