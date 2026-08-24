@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useInView, useReducedMotion } from 'framer-motion';
+import { useSkipAnimation } from '../../lib/useIsMobile';
 
 /**
  * Counts up to a number when it scrolls into view.
@@ -44,6 +45,9 @@ export function AnimatedCounter({
   delay = 0,
 }: AnimatedCounterProps) {
   const reduced = useReducedMotion();
+  // Also skipped below md: parallax and per-frame counting are the expensive
+  // animations, and a phone is where that cost lands hardest.
+  const skip = useSkipAnimation(reduced);
   const ref = useRef<HTMLSpanElement>(null);
   // once:true — the number settles on its final value and stays there.
   const inView = useInView(ref, { once: true, amount: 0.5 });
@@ -51,7 +55,7 @@ export function AnimatedCounter({
   const [shown, setShown] = useState(0);
 
   useEffect(() => {
-    if (!inView || reduced || !parsed) return;
+    if (!inView || skip || !parsed) return;
 
     let frame = 0;
     let start: number | null = null;
@@ -74,10 +78,10 @@ export function AnimatedCounter({
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [inView, reduced, parsed, duration, delay]);
+  }, [inView, skip, parsed, duration, delay]);
 
   // No digits to count, or motion is suppressed: show the value as written.
-  if (!parsed || reduced) {
+  if (!parsed || skip) {
     return <span ref={ref} className={className}>{value}</span>;
   }
 

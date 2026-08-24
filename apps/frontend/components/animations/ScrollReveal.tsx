@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { useSkipAnimation } from '../../lib/useIsMobile';
 import type { ReactNode } from 'react';
 
 /**
@@ -38,9 +39,12 @@ export function ScrollReveal({
   as = 'div',
 }: ScrollRevealProps) {
   const reduced = useReducedMotion();
+  // Also skipped below md: parallax and per-frame counting are the expensive
+  // animations, and a phone is where that cost lands hardest.
+  const skip = useSkipAnimation(reduced);
   const Tag = motion[as];
 
-  if (reduced) {
+  if (skip) {
     const Plain = as;
     return <Plain className={className}>{children}</Plain>;
   }
@@ -88,7 +92,10 @@ export function ScrollRevealGroup({
   amount?: number;
 }) {
   const reduced = useReducedMotion();
-  if (reduced) return <div className={className}>{children}</div>;
+  // Also skipped below md: parallax and per-frame counting are the expensive
+  // animations, and a phone is where that cost lands hardest.
+  const skip = useSkipAnimation(reduced);
+  if (skip) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -111,7 +118,10 @@ export function ScrollRevealItem({
   className?: string;
 }) {
   const reduced = useReducedMotion();
-  if (reduced) return <div className={className}>{children}</div>;
+  // Also skipped below md: parallax and per-frame counting are the expensive
+  // animations, and a phone is where that cost lands hardest.
+  const skip = useSkipAnimation(reduced);
+  if (skip) return <div className={className}>{children}</div>;
   return <motion.div className={className} variants={item}>{children}</motion.div>;
 }
 

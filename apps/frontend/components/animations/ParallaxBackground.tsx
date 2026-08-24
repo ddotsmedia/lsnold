@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useSkipAnimation } from '../../lib/useIsMobile';
 import type { ReactNode } from 'react';
 
 /**
@@ -33,6 +34,9 @@ export function ParallaxBackground({
   className,
 }: ParallaxBackgroundProps) {
   const reduced = useReducedMotion();
+  // Also skipped below md: parallax and per-frame counting are the expensive
+  // animations, and a phone is where that cost lands hardest.
+  const skip = useSkipAnimation(reduced);
   const ref = useRef<HTMLDivElement>(null);
 
   // start: this element's top meeting the viewport bottom.
@@ -45,7 +49,7 @@ export function ParallaxBackground({
   const overhang = (1 - speed) * 100;
   const travel = useTransform(scrollYProgress, [0, 1], [`-${overhang / 2}%`, `${overhang / 2}%`]);
 
-  if (reduced) {
+  if (skip) {
     return <div className={className}>{children}</div>;
   }
 
