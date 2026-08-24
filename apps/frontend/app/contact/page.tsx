@@ -13,6 +13,7 @@ import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
 import { useFooter, lines } from '@/lib/footer';
 import { useFaqs, type Faq } from '@/lib/faqs';
+import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -224,6 +225,20 @@ export default function ContactPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
               <div className="rounded-lg bg-white p-6 shadow-md md:p-8">
                 <ContactForm />
+
+                {/* Under the form, separated by a rule: a second way to send
+                    the same message, for anyone who would rather not wait on
+                    an email reply. */}
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  <p className="mb-3 text-center text-sm text-gray-600">
+                    Or message us directly
+                  </p>
+                  <WhatsAppCTA
+                    block
+                    message="Hello! I have a question about Little Smarties."
+                    label="Chat on WhatsApp"
+                  />
+                </div>
               </div>
 
               <div>

@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { RegistrationForm } from '@/components/RegistrationForm';
 import { Butterfly, Cloud } from '@/components/Decorations';
 import { usePhone, telHref } from '@/lib/footer';
+import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { PageSections, usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 
@@ -75,6 +76,16 @@ export default function RegisterPage() {
             <div className="rounded-lg bg-white p-6 shadow-md md:p-8">
               <RegistrationForm />
             </div>
+
+            {/* Sits with the phone line rather than above the form: someone
+                who wants to talk rather than type looks for it after seeing
+                what the form asks. */}
+            <WhatsAppCTA
+              className="mt-8 flex flex-col items-center"
+              message="Hello! I'd like to enrol my child at Little Smarties."
+              label="Chat on WhatsApp"
+              hint="Ask us anything before you fill the form in."
+            />
 
             <p className="mt-6 text-center text-sm text-gray-600">
               Prefer to talk it through first?{' '}

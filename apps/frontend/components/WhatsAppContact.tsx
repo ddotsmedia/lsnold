@@ -15,7 +15,8 @@ export interface WhatsAppContactProps {
 const cx = (...classes: Array<string | false | undefined>): string =>
   classes.filter(Boolean).join(' ');
 
-function WhatsAppIcon() {
+/** Exported so WhatsAppCTA reuses this artwork rather than copying the path. */
+export function WhatsAppIcon() {
   return (
     <svg
       width={22}

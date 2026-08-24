@@ -8,6 +8,7 @@ import { BenefitCard } from '@/components/BenefitCard';
 import { TourBookingForm } from '@/components/TourBookingForm';
 import { Butterfly, Flower } from '@/components/Decorations';
 import { usePhone, telHref } from '@/lib/footer';
+import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -181,6 +182,13 @@ export default function BookingPage() {
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md md:p-8">
               <TourBookingForm />
             </div>
+
+            <WhatsAppCTA
+              className="mt-8 flex flex-col items-center"
+              message="Hello! I'd like to book a tour of Little Smarties."
+              label="Book over WhatsApp"
+              hint="Tell us a day that suits and we will confirm a slot."
+            />
 
             <p className="mt-6 text-center text-sm text-gray-600">
               Prefer to arrange it over the phone?{' '}
