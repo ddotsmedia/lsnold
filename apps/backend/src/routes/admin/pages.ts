@@ -255,6 +255,8 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   );
 
   // Editable text sections. Before /:id so they are not read as an id.
+  // Before /:pageId/... so "scheduled" is not read as a page id.
+  router.get('/scheduled', requirePermission('publish:pages'), (req, res) => content.listScheduled(db, req as AuthRequest, res));
   router.get('/:pageId/content', requirePermission('view:pages'), (req, res) => content.listSections(db, req as AuthRequest, res));
   router.post('/:pageId/content', requirePermission('create:pages'), writeLimit, (req, res) => content.createSection(db, req as AuthRequest, res));
   router.post('/:pageId/content/reorder', requirePermission('edit:pages'), writeLimit, (req, res) => content.reorderSections(db, req as AuthRequest, res));

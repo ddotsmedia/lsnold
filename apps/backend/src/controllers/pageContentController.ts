@@ -404,6 +404,48 @@ export async function bulkPublish(db: Pool, req: AuthRequest, res: Response): Pr
 const ReorderSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(200) });
 
 /**
+ * Every scheduled section across all pages, for the content calendar.
+ *
+ * The editor's endpoints are per-page; a calendar needs the whole set, so this
+ * is its own route rather than a flag on listSections.
+ *
+ * Rows already past their moment are still returned: the publisher runs every
+ * five minutes, so there is a window where a section is live to visitors —
+ * listPublicSections COALESCEs the two dates — but published_at is not yet set.
+ * Hiding those would make an item vanish from the calendar before anything
+ * looked like it had happened.
+ */
+export async function listScheduled(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const from = String(req.query.from ?? '');
+    const to = String(req.query.to ?? '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      res.status(400).json({ error: 'from and to must be YYYY-MM-DD' });
+      return;
+    }
+
+    const result = await db.query(
+      `SELECT pcs.id AS section_id, pcs.section_key, pcs.title, pcs.scheduled_publish_at,
+              pcs.published_at, p.id AS page_id, p.slug AS page_slug, p.title AS page_title
+         FROM page_content_sections pcs
+         JOIN pages p ON p.id = pcs.page_id
+        WHERE pcs.deleted_at IS NULL
+          AND p.deleted_at IS NULL
+          AND pcs.scheduled_publish_at IS NOT NULL
+          AND pcs.scheduled_publish_at >= $1::date
+          -- Inclusive of the whole end day, matching the other date filters.
+          AND pcs.scheduled_publish_at < ($2::date + INTERVAL '1 day')
+        ORDER BY pcs.scheduled_publish_at ASC`,
+      [from, to]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('listScheduled failed', error);
+    res.status(500).json({ error: 'Failed to fetch scheduled sections' });
+  }
+}
+
+/**
  * Who changed this section, and when.
  *
  * Reads admin_activity_log rather than a table of its own: logActivity already

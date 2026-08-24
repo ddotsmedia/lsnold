@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/admin/bookings', label: 'Tour Bookings', icon: '◇' },
   { href: '/admin/chatbot', label: 'Chatbot', icon: '◍' },
   { href: '/admin/pages', label: 'Pages', icon: '◻' },
+  { href: '/admin/calendar', label: 'Content Calendar', icon: '▦' },
   { href: '/admin/media', label: 'Media Library', icon: '▨' },
   { href: '/admin/partners', label: 'Partners', icon: '◈' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '❝' },
