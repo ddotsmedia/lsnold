@@ -532,12 +532,19 @@ export default function NurseryPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="team-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-team"
               id="team-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              Meet Our Team
-            </h2>
+              <h2
+                id="team-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                Meet Our Team
+              </h2>
+            </EditableHeading>
             <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
               Experienced professionals dedicated to your child&rsquo;s growth
             </p>
@@ -564,12 +571,19 @@ export default function NurseryPage() {
           className="bg-gradient-to-r from-blue-600 to-red-500 py-20 md:py-32"
         >
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-impact"
               id="impact-heading"
               className="mb-10 text-center text-2xl font-bold text-white md:mb-12 md:text-3xl lg:text-4xl"
             >
-              Our Impact
-            </h2>
+              <h2
+                id="impact-heading"
+                className="mb-10 text-center text-2xl font-bold text-white md:mb-12 md:text-3xl lg:text-4xl"
+              >
+                Our Impact
+              </h2>
+            </EditableHeading>
 
             <div className="grid grid-cols-2 gap-8 md:gap-12 lg:grid-cols-4">
               {ACHIEVEMENTS.map((achievement) => (
@@ -589,12 +603,19 @@ export default function NurseryPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="testimonials-heading" className="bg-blue-50 py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-testimonials"
               id="testimonials-heading"
               className="mb-10 text-center text-2xl font-bold text-gray-800 md:mb-12 md:text-3xl lg:text-4xl"
             >
-              What Parents Say
-            </h2>
+              <h2
+                id="testimonials-heading"
+                className="mb-10 text-center text-2xl font-bold text-gray-800 md:mb-12 md:text-3xl lg:text-4xl"
+              >
+                What Parents Say
+              </h2>
+            </EditableHeading>
 
             {/* Mobile and tablet: swipeable carousel. */}
             <div className="lg:hidden">
@@ -626,9 +647,16 @@ export default function NurseryPage() {
           className="bg-gradient-to-r from-red-500 to-orange-500 py-16 md:py-20"
         >
           <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
-            <h2 id="cta-heading" className="text-2xl font-bold text-white md:text-3xl lg:text-4xl">
-              Ready to give your child the best start?
-            </h2>
+            <EditableHeading
+              sections={sections}
+              sectionKey="nursery-cta"
+              id="cta-heading"
+              className="text-2xl font-bold text-white md:text-3xl lg:text-4xl"
+            >
+              <h2 id="cta-heading" className="text-2xl font-bold text-white md:text-3xl lg:text-4xl">
+                Ready to give your child the best start?
+              </h2>
+            </EditableHeading>
             <p className="mt-4 text-base text-orange-50 md:text-lg">
               Register today, or come and see the rooms for yourself before you decide.
             </p>
