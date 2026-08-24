@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { PageVideo } from '@/components/PageVideo';
 import { PageSections, usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { Button } from '@/components/Button';
@@ -339,6 +340,10 @@ export default function NurseryPage() {
             </EditableProse>
           </div>
         </section>
+
+        {/* Video assigned in admin -> Gallery -> Videos. Renders nothing when
+            none is set for this page. */}
+        <PageVideo pageSlug="nursery" heading="Take a look" />
 
         {/* ---------------------------------------------------------------- */}
         {/* 2. Brief intro                                                   */}

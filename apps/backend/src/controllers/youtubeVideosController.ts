@@ -80,6 +80,10 @@ const CreateSchema = z.object({
   youtube_url: z.string().trim().min(1).max(2000),
   thumbnail_url: z.string().trim().url().max(2000).optional(),
   display_order: z.number().int().min(0).max(9999).optional(),
+  // Which public page shows this video. Null unassigns it — an empty string
+  // from a "None" dropdown option means the same thing.
+  page_slug: z.string().trim().max(100).nullable().optional()
+    .transform((v) => (v ? v : null)),
 });
 
 const UpdateSchema = CreateSchema.partial();
@@ -92,7 +96,9 @@ export async function listPublicYoutubeVideos(
 ): Promise<void> {
   try {
     const result = await db.query(
-      `SELECT id, title, description, youtube_url, youtube_id, thumbnail_url, display_order
+      // page_slug is returned so a caller can pick out the video for one page
+      // without a second endpoint; the gallery ignores it.
+      `SELECT id, title, description, youtube_url, youtube_id, thumbnail_url, display_order, page_slug
        FROM youtube_videos
        WHERE deleted_at IS NULL
        ORDER BY display_order ASC, created_at DESC`
@@ -136,8 +142,8 @@ export async function createYoutubeVideo(db: Pool, req: AuthRequest, res: Respon
 
     const result = await db.query(
       `INSERT INTO youtube_videos
-         (title, description, youtube_url, youtube_id, thumbnail_url, display_order, uploaded_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+         (title, description, youtube_url, youtube_id, thumbnail_url, display_order, uploaded_by, page_slug)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [
         data.title,
         data.description ?? null,
@@ -146,6 +152,7 @@ export async function createYoutubeVideo(db: Pool, req: AuthRequest, res: Respon
         data.thumbnail_url ?? thumbnailFor(youtubeId),
         data.display_order ?? 0,
         req.userId ?? null,
+        data.page_slug ?? null,
       ]
     );
     const row = result.rows[0] as YoutubeVideo;
@@ -200,6 +207,10 @@ export async function updateYoutubeVideo(db: Pool, req: AuthRequest, res: Respon
          youtube_id = COALESCE($5, youtube_id),
          thumbnail_url = COALESCE($6, thumbnail_url),
          display_order = COALESCE($7, display_order),
+         -- Not COALESCE: null is a meaningful value here (unassign the video),
+         -- and COALESCE cannot tell "set to null" from "leave alone". The flag
+         -- says whether the caller sent the field at all.
+         page_slug = CASE WHEN $8::boolean THEN $9 ELSE page_slug END,
          updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 RETURNING *`,
       [
@@ -211,6 +222,8 @@ export async function updateYoutubeVideo(db: Pool, req: AuthRequest, res: Respon
         // Re-derive the thumbnail when the video changed and none was given.
         data.thumbnail_url ?? (youtubeId ? thumbnailFor(youtubeId) : null),
         data.display_order ?? null,
+        Object.prototype.hasOwnProperty.call(req.body ?? {}, 'page_slug'),
+        data.page_slug ?? null,
       ]
     );
 

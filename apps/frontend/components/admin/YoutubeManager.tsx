@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { Button, ConfirmDialog, FormField, Input, Modal, Textarea, Toast } from './shared';
+import { Button, ConfirmDialog, FormField, Input, Modal, Select, Textarea, Toast } from './shared';
 
 interface YoutubeVideo {
   id: string;
@@ -12,6 +12,7 @@ interface YoutubeVideo {
   youtube_id: string;
   thumbnail_url: string | null;
   display_order: number;
+  page_slug: string | null;
   uploaded_by_name?: string | null;
   created_at: string;
 }
@@ -21,9 +22,25 @@ interface FormState {
   description: string;
   youtube_url: string;
   display_order: string;
+  page_slug: string;
 }
 
-const EMPTY: FormState = { title: '', description: '', youtube_url: '', display_order: '0' };
+const EMPTY: FormState = {
+  title: '', description: '', youtube_url: '', display_order: '0', page_slug: '',
+};
+
+/**
+ * Pages that render a video. The value is the route name, matching what
+ * usePageVideo asks for — 'nursery' not 'about'. An empty value leaves the
+ * video in the gallery only.
+ */
+const PAGE_OPTIONS = [
+  { value: '', label: 'Gallery only (not on a page)' },
+  { value: 'home', label: 'Home' },
+  { value: 'nursery', label: 'Nursery / About' },
+  { value: 'facilities', label: 'Facilities' },
+  { value: 'age-groups', label: 'Age Groups' },
+];
 
 /** Mirrors the server-side parser so bad links are caught before a round trip. */
 function previewId(url: string): string | null {
@@ -88,6 +105,7 @@ export function YoutubeManager() {
       description: v.description ?? '',
       youtube_url: v.youtube_url,
       display_order: String(v.display_order),
+      page_slug: v.page_slug ?? '',
     });
     setError(null);
     setOpen(true);
@@ -107,6 +125,9 @@ export function YoutubeManager() {
       description: form.description.trim() || undefined,
       youtube_url: form.youtube_url.trim(),
       display_order: Number(form.display_order) || 0,
+      // Always sent, including as null: the server distinguishes "not supplied"
+      // from "set to null", and null is how a video is unassigned.
+      page_slug: form.page_slug || null,
     });
 
     try {
@@ -167,6 +188,15 @@ export function YoutubeManager() {
               <div className="p-4">
                 <p className="truncate text-sm font-medium text-panel-strong">{v.title}</p>
                 <p className="mt-0.5 truncate text-xs text-panel-muted">{v.youtube_id}</p>
+                <p className="mt-1 text-xs">
+                  {v.page_slug ? (
+                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-emerald-400">
+                      on /{v.page_slug === 'home' ? '' : v.page_slug}
+                    </span>
+                  ) : (
+                    <span className="text-panel-faint">gallery only</span>
+                  )}
+                </p>
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
@@ -233,6 +263,18 @@ export function YoutubeManager() {
               onChange={(e) => setForm((f) => ({ ...f, display_order: e.target.value }))}
             />
           </FormField>
+
+          <FormField label="Show on page">
+            <Select
+              options={PAGE_OPTIONS}
+              value={form.page_slug}
+              onChange={(e) => setForm((f) => ({ ...f, page_slug: e.target.value }))}
+            />
+          </FormField>
+          <p className="-mt-2 text-xs text-panel-muted">
+            A page shows the lowest display order assigned to it. Every video appears in the
+            gallery regardless.
+          </p>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
