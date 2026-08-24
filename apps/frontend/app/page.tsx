@@ -21,7 +21,9 @@ import {
   Balloon, Block, Cloud, Heart, Party, Rainbow, Rocket, Smiley, Star, Toy,
   BouncingEmoji, PulsingEmoji, SpinningEmoji,
 } from '@/components/animations/EmojiVariety';
-import { ScrollReveal } from '@/components/animations/ScrollReveal';
+import {
+  ScrollReveal, ScrollRevealGroup, ScrollRevealItem,
+} from '@/components/animations/ScrollReveal';
 import { ParallaxBackground } from '@/components/animations/ParallaxBackground';
 import { useAgeGroups, formatRange } from '@/lib/ageGroups';
 import { usePageSections } from '@/components/PageSections';
@@ -564,7 +566,12 @@ export default function Home() {
                 ‹
               </button>
 
-              <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-3">
+              {/* Revealed as one block, not card by card. The cards are a
+                  carousel slice — their keys change on every arrow press, so a
+                  per-card stagger would remount and replay the cascade each
+                  time, which reads as lag rather than polish. The wrapper does
+                  not remount, so it animates once and stays put. */}
+              <ScrollReveal className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-3">
                 {visibleTestimonials.map((t, idx) => (
                   <div
                     key={`${t.id}-${idx}`}
@@ -601,7 +608,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </ScrollReveal>
 
               <button
                 aria-label="Next slide"
@@ -647,16 +654,19 @@ export default function Home() {
             ) : partners.length === 0 ? (
               <p className="mt-6 text-base text-gray-600">No partners yet.</p>
             ) : (
-              <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3 lg:grid-cols-6">
+              // Safe to stagger: this list is fetched once and never changes
+              // under interaction, so the cascade plays a single time.
+              <ScrollRevealGroup className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3 lg:grid-cols-6">
                 {partners.map((partner) => (
-                  <PartnerLogo
-                    key={partner.id}
-                    name={partner.name}
-                    logoUrl={partner.logo_url}
-                    websiteUrl={partner.website_url}
-                  />
+                  <ScrollRevealItem key={partner.id}>
+                    <PartnerLogo
+                      name={partner.name}
+                      logoUrl={partner.logo_url}
+                      websiteUrl={partner.website_url}
+                    />
+                  </ScrollRevealItem>
                 ))}
-              </div>
+              </ScrollRevealGroup>
             )}
           </div>
         </section>
