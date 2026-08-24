@@ -408,12 +408,19 @@ export default function AgeGroupsPage() {
           <Flower className="absolute bottom-[16%] left-[14%] w-14 text-white opacity-20 lg:w-24" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-16 text-center">
-            <h1
+            <EditableHeading
+              sections={sections}
+              sectionKey="age-groups-hero"
               id="hero-heading"
               className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
             >
-              Our Age Groups
-            </h1>
+              <h1
+                id="hero-heading"
+                className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
+              >
+                Our Age Groups
+              </h1>
+            </EditableHeading>
             <p className="mt-4 text-lg text-blue-50 drop-shadow md:text-xl">
               Programs tailored to each developmental stage
             </p>
@@ -548,8 +555,10 @@ export default function AgeGroupsPage() {
                   </div>
 
                   {/* Focus areas */}
+                  {/* Resolved to a string: EditableHeading emits an h2 and
+                      these detail blocks are h3. */}
                   <h3 className="mt-8 mb-3 text-xl font-semibold text-gray-800 md:text-2xl">
-                    Focus Areas
+                    {sections['age-groups-focus']?.title?.trim() || 'Focus Areas'}
                   </h3>
                   <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {selected.focusAreas.map((area) => (
@@ -582,7 +591,7 @@ export default function AgeGroupsPage() {
 
                   {/* Sample activities */}
                   <h3 className="mt-8 mb-3 text-xl font-semibold text-gray-800 md:text-2xl">
-                    Sample Activities
+                    {sections['age-groups-activities']?.title?.trim() || 'Sample Activities'}
                   </h3>
                   <ul className="space-y-2">
                     {selected.sampleActivities.map((activity) => (
@@ -597,7 +606,7 @@ export default function AgeGroupsPage() {
 
                   {/* Educator approach */}
                   <h3 className="mt-8 mb-3 text-xl font-semibold text-gray-800 md:text-2xl">
-                    Our Approach
+                    {sections['age-groups-approach']?.title?.trim() || 'Our Approach'}
                   </h3>
                   <p className="text-base leading-relaxed text-gray-700">
                     {selected.educatorApproach}
@@ -643,7 +652,7 @@ export default function AgeGroupsPage() {
 
               {/* Quick facts */}
               <h3 className="mt-14 mb-6 text-xl font-semibold text-gray-800 md:text-2xl">
-                Quick Facts
+                {sections['age-groups-quick-facts']?.title?.trim() || 'Quick Facts'}
               </h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <QuickFactsCard icon="👩‍🏫" metric="Caregiver Ratio" value={selected.ratio} />
