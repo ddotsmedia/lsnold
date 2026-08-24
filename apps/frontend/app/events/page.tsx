@@ -280,9 +280,16 @@ export default function EventsPage() {
         >
           <HeroBackground image={pageImages.hero} />
           <div className="relative z-10">
-            <h1 id="events-hero" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-              Events &amp; Programs
-            </h1>
+            <EditableHeading
+              sections={sections}
+              sectionKey="events-programs-hero"
+              id="events-hero"
+              className="text-3xl font-bold text-white md:text-4xl lg:text-5xl"
+            >
+              <h1 id="events-hero" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+                Events &amp; Programs
+              </h1>
+            </EditableHeading>
             <p className="mx-auto mt-3 max-w-xl text-base text-blue-50 md:text-lg">
               Join us for exciting learning experiences
             </p>
@@ -328,12 +335,19 @@ export default function EventsPage() {
           <>
             <section aria-labelledby="upcoming-heading" className="py-12 md:py-20">
               <div className="mx-auto max-w-6xl px-4 md:px-6">
-                <h2
+                <EditableHeading
+                  sections={sections}
+                  sectionKey="events-upcoming"
                   id="upcoming-heading"
                   className="mb-8 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
                 >
-                  Upcoming Events
-                </h2>
+                  <h2
+                    id="upcoming-heading"
+                    className="mb-8 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+                  >
+                    Upcoming Events
+                  </h2>
+                </EditableHeading>
 
                 {/* Category filter. The list is refetched rather than filtered
                     in the browser, so it stays correct however many events
