@@ -258,6 +258,7 @@ export function createAdminPagesRouter(db: Pool): express.Router {
   router.get('/:pageId/content', requirePermission('view:pages'), (req, res) => content.listSections(db, req as AuthRequest, res));
   router.post('/:pageId/content', requirePermission('create:pages'), writeLimit, (req, res) => content.createSection(db, req as AuthRequest, res));
   router.post('/:pageId/content/reorder', requirePermission('edit:pages'), writeLimit, (req, res) => content.reorderSections(db, req as AuthRequest, res));
+  router.get('/:pageId/content/:sectionId/history', requirePermission('view:pages'), (req, res) => content.sectionHistory(db, req as AuthRequest, res));
   router.put('/:pageId/content/:sectionId', requirePermission('edit:pages'), writeLimit, (req, res) => content.updateSection(db, req as AuthRequest, res));
   router.delete('/:pageId/content/:sectionId', requirePermission('delete:pages'), writeLimit, (req, res) => content.deleteSection(db, req as AuthRequest, res));
   router.post('/:pageId/content/:sectionId/restore', requirePermission('edit:pages'), writeLimit, (req, res) => content.restoreSection(db, req as AuthRequest, res));

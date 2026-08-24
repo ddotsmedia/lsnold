@@ -403,6 +403,50 @@ export async function bulkPublish(db: Pool, req: AuthRequest, res: Response): Pr
 
 const ReorderSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(200) });
 
+/**
+ * Who changed this section, and when.
+ *
+ * Reads admin_activity_log rather than a table of its own: logActivity already
+ * records every create/update/delete/restore here with old and new values, and
+ * a second audit table would be a copy that drifts.
+ *
+ * Its own route rather than /admin/users/activity-log, which requires
+ * view:users — an editor holding view:pages would be refused the history of a
+ * section they can already read.
+ *
+ * admin_user_id, not admin_id: the latter is null on every row this writes.
+ */
+export async function sectionHistory(db: Pool, req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const pageId = await resolvePageId(db, req.params.pageId as string);
+    if (!pageId) { res.status(404).json({ error: 'Page not found' }); return; }
+
+    // Confirms the section belongs to this page, so a section id from
+    // elsewhere cannot be read through a page the caller does happen to hold.
+    const owns = await db.query(
+      'SELECT 1 FROM page_content_sections WHERE id = $1 AND page_id = $2',
+      [req.params.sectionId, pageId]
+    );
+    if (owns.rows.length === 0) { res.status(404).json({ error: 'Section not found' }); return; }
+
+    const result = await db.query(
+      `SELECT al.id, al.action, al.old_values, al.new_values, al.created_at,
+              u.name AS admin_name, u.email AS admin_email
+         FROM admin_activity_log al
+         LEFT JOIN users u ON u.id = al.admin_user_id
+        WHERE al.entity_type = 'page_content_section'
+          AND al.entity_id = $1
+        ORDER BY al.created_at DESC
+        LIMIT 10`,
+      [req.params.sectionId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('sectionHistory failed', error);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+}
+
 export async function reorderSections(db: Pool, req: AuthRequest, res: Response): Promise<void> {
   try {
     const pageId = await resolvePageId(db, req.params.pageId as string);

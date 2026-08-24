@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { api } from '../../../../../lib/api';
 import { Button, Modal, FormField, Input, Toast, ConfirmDialog } from '../../../../../components/admin/shared';
 import { RichTextEditor } from '../../../../../components/admin/RichTextEditor';
+import { EditHistory } from '../../../../../components/admin/EditHistory';
 import {
   PreviewToggle, useBreakpoint, BREAKPOINT_WIDTH,
 } from '../../../../../components/admin/PreviewToggle';
@@ -177,6 +178,7 @@ export default function PageContentEditor() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ title: '', content: '' });
   const [saving, setSaving] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const [showNew, setShowNew] = useState(false);
   const [newSection, setNewSection] = useState({ section_key: '', title: '' });
@@ -234,6 +236,8 @@ export default function PageContentEditor() {
       });
       ok('Section saved');
       setEditingId(null);
+      // Bumped so an open history panel picks up the edit just made.
+      setHistoryKey((k) => k + 1);
       await load();
     } catch (err) {
       fail(err instanceof Error ? err.message : 'Failed to save');
@@ -598,6 +602,8 @@ export default function PageContentEditor() {
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => setConfirmDelete(section)}>Delete</Button>
                   </div>
+
+                  <EditHistory pageId={pageId} sectionId={section.id} refreshKey={historyKey} />
 
                   {scheduling === section.id && (
                     <div className="mt-3 flex flex-col gap-2 rounded-lg border border-panel-line bg-panel-sunken p-3 sm:flex-row sm:items-end">
