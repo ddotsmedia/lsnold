@@ -191,9 +191,16 @@ export default function GalleryPage() {
         >
           <HeroBackground image={pageImages.hero} />
           <div className="relative z-10">
-            <h1 id="gallery-hero" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-              Gallery
-            </h1>
+            <EditableHeading
+              sections={sections}
+              sectionKey="gallery-hero"
+              id="gallery-hero"
+              className="text-3xl font-bold text-white md:text-4xl lg:text-5xl"
+            >
+              <h1 id="gallery-hero" className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+                Gallery
+              </h1>
+            </EditableHeading>
             <p className="mx-auto mt-3 max-w-xl text-base text-blue-50 md:text-lg">
               A look inside our rooms, our garden and our busiest days.
             </p>
@@ -209,9 +216,18 @@ export default function GalleryPage() {
 
         <section aria-labelledby="gallery-heading" className="py-10 md:py-16">
           <div className="mx-auto max-w-6xl px-4 md:px-6">
-            <h2 id="gallery-heading" className="sr-only">
-              Photo gallery
-            </h2>
+            {/* sr-only and keeping its id: the section points at it with
+                aria-labelledby, so dropping either leaves it unnamed. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="gallery-photos"
+              id="gallery-heading"
+              className="sr-only"
+            >
+              <h2 id="gallery-heading" className="sr-only">
+                Photo gallery
+              </h2>
+            </EditableHeading>
 
             <ul className="mb-8 flex flex-wrap gap-2">
               {filters.map(({ slug, name }) => (
@@ -355,7 +371,11 @@ export default function GalleryPage() {
 
                     {otherVideos.length > 0 && (
                       <>
-                        <h3 className="mb-4 mt-10 text-lg font-bold text-gray-900">More Videos</h3>
+                        {/* Resolved to a string: EditableHeading emits an h2 and this
+                block is an h3. */}
+            <h3 className="mb-4 mt-10 text-lg font-bold text-gray-900">
+              {sections['gallery-more-videos']?.title?.trim() || 'More Videos'}
+            </h3>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                           {otherVideos.map((v) => (
                             <button
