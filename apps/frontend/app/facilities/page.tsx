@@ -387,12 +387,19 @@ export default function FacilitiesPage() {
           <Cloud className="absolute left-[12%] bottom-[18%] w-20 text-white opacity-20 lg:w-32" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-16 text-center">
-            <h1
+            <EditableHeading
+              sections={sections}
+              sectionKey="facilities-hero"
               id="hero-heading"
               className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
             >
-              Our State-of-the-Art Facilities
-            </h1>
+              <h1
+                id="hero-heading"
+                className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
+              >
+                Our State-of-the-Art Facilities
+              </h1>
+            </EditableHeading>
             <p className="mt-4 text-lg text-blue-50 drop-shadow md:text-xl">
               Where learning happens in a safe, nurturing environment
             </p>
@@ -408,12 +415,19 @@ export default function FacilitiesPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="intro-heading" className="bg-white py-16 md:py-24">
           <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="facilities-intro-heading"
               id="intro-heading"
               className="mb-6 text-2xl font-bold text-gray-800 md:mb-8 md:text-3xl lg:text-4xl"
             >
-              World-Class Learning Environments
-            </h2>
+              <h2
+                id="intro-heading"
+                className="mb-6 text-2xl font-bold text-gray-800 md:mb-8 md:text-3xl lg:text-4xl"
+              >
+                World-Class Learning Environments
+              </h2>
+            </EditableHeading>
             <div className="space-y-4 text-left text-base leading-relaxed text-gray-700 md:text-lg">
               <p>
                 Every room at Little Smarties is built around what children of that age actually
@@ -518,12 +532,19 @@ export default function FacilitiesPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="safety-heading" className="bg-blue-50 py-20 md:py-32">
           <div className="mx-auto max-w-5xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="facilities-safety"
               id="safety-heading"
               className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
             >
-              Safety &amp; Hygiene Standards
-            </h2>
+              <h2
+                id="safety-heading"
+                className="mb-4 text-center text-2xl font-bold text-gray-800 md:text-3xl lg:text-4xl"
+              >
+                Safety &amp; Hygiene Standards
+              </h2>
+            </EditableHeading>
             <p className="mx-auto mb-10 max-w-2xl text-center text-base text-gray-600 md:mb-12 md:text-lg">
               The routines that run in the background every single day.
             </p>
@@ -564,12 +585,19 @@ export default function FacilitiesPage() {
             )}
 
             <div>
-              <h2
+              <EditableHeading
+                sections={sections}
+                sectionKey="facilities-outdoor"
                 id="outdoor-heading"
                 className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
               >
-                Outdoor Play Areas
-              </h2>
+                <h2
+                  id="outdoor-heading"
+                  className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
+                >
+                  Outdoor Play Areas
+                </h2>
+              </EditableHeading>
               <div className="space-y-4 text-base leading-relaxed text-gray-700">
                 <p>
                   Outdoor time is timetabled, not treated as a reward or an afterthought. Children
@@ -621,12 +649,19 @@ export default function FacilitiesPage() {
             </div>
 
             <div className="lg:order-1">
-              <h2
+              <EditableHeading
+                sections={sections}
+                sectionKey="facilities-technology"
                 id="technology-heading"
                 className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
               >
-                Technology-Enhanced Learning
-              </h2>
+                <h2
+                  id="technology-heading"
+                  className="mb-4 text-2xl font-bold text-gray-800 md:mb-6 md:text-3xl lg:text-4xl"
+                >
+                  Technology-Enhanced Learning
+                </h2>
+              </EditableHeading>
               <div className="space-y-4 text-base leading-relaxed text-gray-700">
                 <p>
                   Screens are a tool here, not a babysitter. Technology appears in short, purposeful
@@ -662,9 +697,16 @@ export default function FacilitiesPage() {
           className="bg-gradient-to-r from-red-600 to-orange-500 py-16 md:py-20"
         >
           <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
-            <h2 id="cta-heading" className="text-xl font-semibold text-white md:text-2xl">
-              Ready to see our facilities in person?
-            </h2>
+            <EditableHeading
+              sections={sections}
+              sectionKey="facilities-cta"
+              id="cta-heading"
+              className="text-xl font-semibold text-white md:text-2xl"
+            >
+              <h2 id="cta-heading" className="text-xl font-semibold text-white md:text-2xl">
+                Ready to see our facilities in person?
+              </h2>
+            </EditableHeading>
             <p className="mt-4 text-base text-orange-50 md:text-lg">
               Book a tour and we will walk you through every room while the children are in them.
             </p>
