@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { api } from '../../../../../lib/api';
 import { Button, Modal, FormField, Input, Toast, ConfirmDialog } from '../../../../../components/admin/shared';
 import { RichTextEditor } from '../../../../../components/admin/RichTextEditor';
+import {
+  PreviewToggle, useBreakpoint, BREAKPOINT_WIDTH,
+} from '../../../../../components/admin/PreviewToggle';
 
 interface Section {
   id: string;
@@ -99,6 +102,7 @@ function SectionPreview({
 }) {
   const [safeHtml, setSafeHtml] = useState('');
   const [stale, setStale] = useState(false);
+  const [breakpoint, setBreakpoint] = useBreakpoint();
 
   useEffect(() => {
     if (isEmpty(html)) { setSafeHtml(''); setStale(false); return; }
@@ -124,24 +128,37 @@ function SectionPreview({
 
   return (
     <div className={className}>
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-medium uppercase tracking-wider text-panel-muted">Preview</p>
-        {stale && <p className="text-[11px] text-amber-400">Preview is behind</p>}
+        <div className="flex items-center gap-2">
+          {stale && <p className="text-[11px] text-amber-400">Preview is behind</p>}
+          <PreviewToggle value={breakpoint} onChange={setBreakpoint} />
+        </div>
       </div>
       {/* White ground and the public stylesheet, because that is what a visitor
           sees. A dark preview would misrepresent every colour on the page. */}
-      <div className="h-full max-h-125 overflow-y-auto rounded-lg border border-panel-line bg-white p-4">
-        {title && <h2 className="mb-3 text-xl font-bold text-gray-800">{title}</h2>}
-        {safeHtml ? (
-          <div
-            className="page-content text-base leading-relaxed text-gray-700"
-            // Sanitised server-side by the same function that guards storage.
-            dangerouslySetInnerHTML={{ __html: safeHtml }}
-          />
-        ) : (
-          <p className="text-sm text-gray-400">Nothing to preview yet.</p>
-        )}
+      <div className="h-full max-h-125 overflow-auto rounded-lg border border-panel-line bg-white p-4">
+        {/* Fixed pixel width, centred, so the text wraps exactly where it will
+            at that viewport. A percentage would just track the panel. */}
+        <div
+          className="mx-auto"
+          style={{ width: BREAKPOINT_WIDTH[breakpoint], maxWidth: '100%' }}
+        >
+          {title && <h2 className="mb-3 text-xl font-bold text-gray-800">{title}</h2>}
+          {safeHtml ? (
+            <div
+              className="page-content text-base leading-relaxed text-gray-700"
+              // Sanitised server-side by the same function that guards storage.
+              dangerouslySetInnerHTML={{ __html: safeHtml }}
+            />
+          ) : (
+            <p className="text-sm text-gray-400">Nothing to preview yet.</p>
+          )}
+        </div>
       </div>
+      <p className="mt-1 text-right text-[11px] text-panel-faint">
+        {BREAKPOINT_WIDTH[breakpoint]}px
+      </p>
     </div>
   );
 }
