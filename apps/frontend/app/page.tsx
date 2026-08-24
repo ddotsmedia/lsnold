@@ -17,6 +17,10 @@ import {
 import { PartnerLogo } from '@/components/PartnerLogo';
 import { PageFeatureImages, PageBackground } from '@/components/PageFeatureImages';
 import { usePageMedia, useAgeGroupImages, slugify } from '@/lib/media';
+import {
+  Balloon, Block, Cloud, Heart, Party, Rainbow, Rocket, Smiley, Star, Toy,
+  BouncingEmoji, PulsingEmoji, SpinningEmoji,
+} from '@/components/animations/EmojiVariety';
 import { useAgeGroups, formatRange } from '@/lib/ageGroups';
 import { usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
@@ -287,6 +291,22 @@ export default function Home() {
         {/* ---------------------------------------------------------------- */}
         <section className="relative overflow-hidden bg-blue-900">
           <HeroRotator slides={heroSlides} intervalMs={6000} />
+
+          {/* Balloons and sky. pointer-events-none throughout: these sit over
+              the hero's call-to-action buttons and must never eat a tap.
+              z-20 clears the two overlay layers below, and the smaller screens
+              get four of the nine — a phone hero is mostly text already. */}
+          <div className="pointer-events-none absolute inset-0 z-20 select-none">
+            <Balloon className="absolute left-[6%] top-[18%] text-4xl sm:text-5xl" duration={5.5} />
+            <Balloon className="absolute right-[9%] top-[26%] text-3xl sm:text-4xl" duration={6.5} delay={0.8} />
+            <Balloon className="absolute left-[22%] bottom-[14%] hidden text-4xl sm:block" duration={5} delay={1.6} />
+            <Balloon className="absolute right-[24%] bottom-[20%] hidden text-3xl lg:block" duration={7} delay={0.4} />
+            <Cloud className="absolute left-[38%] top-[8%] hidden text-4xl opacity-70 sm:block" duration={14} />
+            <Cloud className="absolute right-[14%] bottom-[8%] hidden text-3xl opacity-60 lg:block" duration={11} delay={2} />
+            <Star className="absolute left-[14%] top-[52%] text-2xl sm:text-3xl" duration={2.2} />
+            <Star className="absolute right-[18%] top-[12%] hidden text-2xl sm:block" duration={1.8} delay={0.6} />
+            <Rainbow className="absolute left-[46%] bottom-[10%] hidden text-4xl lg:block" duration={3.4} />
+          </div>
           <div className="pointer-events-none absolute inset-0 bg-black/25" />
           <div className="pointer-events-none absolute inset-0 opacity-70">
             <div className="absolute left-[10%] top-6 h-24 w-24 rounded-full bg-white/10 blur-xl" />
@@ -387,6 +407,16 @@ export default function Home() {
           <FlowerOutline className="pointer-events-none absolute left-[3%] top-24 hidden w-20 opacity-30 lg:block" />
           <FlowerOutline className="pointer-events-none absolute right-[3%] top-10 hidden w-20 rotate-6 opacity-30 lg:block" />
           <PaperAirplane className="pointer-events-none absolute right-[12%] top-6 w-14 rotate-12 opacity-60" />
+
+          {/* Age groups: the energetic set. Toys and blocks, since this is the
+              section about what each room actually does. */}
+          <div className="pointer-events-none absolute inset-0 select-none">
+            <Toy className="absolute left-[7%] top-[38%] hidden text-4xl sm:block" duration={2.6} />
+            <Block className="absolute right-[6%] top-[46%] hidden text-3xl lg:block" duration={3.2} delay={0.5} />
+            <BouncingEmoji emoji="🎨" className="absolute left-[12%] bottom-[12%] text-3xl sm:text-4xl" delay={0.3} />
+            <BouncingEmoji emoji="🧩" className="absolute right-[11%] bottom-[16%] hidden text-3xl sm:block" delay={0.9} />
+            <SpinningEmoji emoji="🎪" className="absolute right-[20%] top-[10%] hidden text-3xl lg:block" duration={4} />
+          </div>
           <Butterfly className="pointer-events-none absolute left-[4%] top-16 w-14 opacity-70" />
 
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -497,6 +527,15 @@ export default function Home() {
           <div className="pointer-events-none absolute bottom-24 left-[14%] h-3 w-3 rounded-full bg-pink-300" />
           <div className="pointer-events-none absolute bottom-16 right-[8%] h-4 w-4 rounded-full bg-green-300" />
 
+          {/* Testimonials: hearts and smileys, the warm set. */}
+          <div className="pointer-events-none absolute inset-0 select-none">
+            <Heart className="absolute left-[4%] top-[30%] text-3xl sm:text-4xl" duration={1.5} />
+            <Heart className="absolute right-[5%] bottom-[28%] hidden text-3xl sm:block" duration={1.7} delay={0.5} />
+            <Smiley className="absolute right-[7%] top-[22%] text-3xl sm:text-4xl" duration={1.8} delay={0.3} />
+            <Smiley className="absolute left-[9%] bottom-[18%] hidden text-3xl lg:block" duration={2} delay={1} />
+            <PulsingEmoji emoji="✨" className="absolute left-[30%] top-[10%] hidden text-2xl lg:block" delay={0.7} />
+          </div>
+
           <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="font-display text-4xl leading-tight text-red-600 sm:text-5xl">
               Our Parents Are
@@ -575,8 +614,19 @@ export default function Home() {
         {/* ---------------------------------------------------------------- */}
         {/* Partners                                                          */}
         {/* ---------------------------------------------------------------- */}
-        <section className="bg-white pb-20 sm:pb-28">
-          <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+        {/* `relative overflow-hidden` added so the party emojis below can be
+            positioned against this section rather than escaping it. */}
+        <section className="relative overflow-hidden bg-white pb-20 sm:pb-28">
+          {/* The closing flourish. Party bursts once on scroll rather than
+              looping — a permanent burst stops reading as a burst. */}
+          <div className="pointer-events-none absolute inset-0 select-none">
+            <Party className="absolute left-[6%] top-[10%] text-4xl sm:text-5xl" />
+            <Party className="absolute right-[7%] top-[16%] hidden text-4xl sm:block" delay={0.25} />
+            <Party className="absolute left-[24%] bottom-[12%] hidden text-3xl lg:block" delay={0.5} />
+            <Rocket className="absolute right-[18%] bottom-[10%] hidden text-3xl lg:block" duration={3.4} delay={0.8} />
+          </div>
+
+          <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Partners</h2>
 
             {partnersLoading ? (
