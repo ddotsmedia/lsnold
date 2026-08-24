@@ -324,11 +324,19 @@ export default function Home() {
           </div>
 
           <div className="relative z-10 flex min-h-[420px] flex-col items-center justify-center px-4 py-24 text-center sm:min-h-[480px] sm:py-28">
-            <h1 className="font-display text-5xl leading-tight text-white drop-shadow-sm sm:text-6xl lg:text-7xl">
-              Welcome to
-              <br />
-              Little Smarties Nursery
-            </h1>
+            {/* An override renders as plain text, so editing this collapses
+                the two lines into one. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="home-hero"
+              className="font-display text-5xl leading-tight text-white drop-shadow-sm sm:text-6xl lg:text-7xl"
+            >
+              <h1 className="font-display text-5xl leading-tight text-white drop-shadow-sm sm:text-6xl lg:text-7xl">
+                Welcome to
+                <br />
+                Little Smarties Nursery
+              </h1>
+            </EditableHeading>
             <Link href="/nursery" className="mt-8">
               <button className="h-12 rounded-full bg-red-600 px-8 font-bold text-white shadow-lg transition-transform hover:scale-105 sm:h-14 sm:px-10">
                 Explore Now
@@ -430,7 +438,13 @@ export default function Home() {
 
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <ScrollReveal className="mx-auto max-w-2xl text-center">
-              <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Age Groups</h2>
+              <EditableHeading
+                sections={sections}
+                sectionKey="home-age-groups"
+                className="font-display text-4xl text-red-600 sm:text-5xl"
+              >
+                <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Age Groups</h2>
+              </EditableHeading>
               <p className="mt-3 text-gray-500">
                 Tailored programs for every stage of your child&apos;s development journey
               </p>
@@ -546,11 +560,18 @@ export default function Home() {
           </div>
 
           <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="font-display text-4xl leading-tight text-red-600 sm:text-5xl">
-              Our Parents Are
-              <br />
-              Our True Ambassadors!
-            </h2>
+            {/* Same as the hero: an override collapses the two lines. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="home-testimonials"
+              className="font-display text-4xl leading-tight text-red-600 sm:text-5xl"
+            >
+              <h2 className="font-display text-4xl leading-tight text-red-600 sm:text-5xl">
+                Our Parents Are
+                <br />
+                Our True Ambassadors!
+              </h2>
+            </EditableHeading>
             <p className="mt-3 text-gray-500">
               Hear from families who have experienced the Little Smarties difference
             </p>
@@ -642,7 +663,13 @@ export default function Home() {
 
           <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
             <ScrollReveal>
-              <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Partners</h2>
+              <EditableHeading
+                sections={sections}
+                sectionKey="home-partners"
+                className="font-display text-4xl text-red-600 sm:text-5xl"
+              >
+                <h2 className="font-display text-4xl text-red-600 sm:text-5xl">Our Partners</h2>
+              </EditableHeading>
             </ScrollReveal>
 
             {partnersLoading ? (
