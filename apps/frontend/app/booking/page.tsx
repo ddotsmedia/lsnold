@@ -108,12 +108,19 @@ export default function BookingPage() {
           <Flower className="absolute right-[10%] bottom-[22%] w-12 text-white opacity-20 lg:w-20" />
 
           <div className="relative z-10 mx-auto max-w-3xl py-12 text-center">
-            <h1
+            <EditableHeading
+              sections={sections}
+              sectionKey="booking-hero"
               id="hero-heading"
               className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
             >
-              Schedule a Tour
-            </h1>
+              <h1
+                id="hero-heading"
+                className="text-3xl font-bold text-white drop-shadow-md md:text-4xl lg:text-5xl"
+              >
+                Schedule a Tour
+              </h1>
+            </EditableHeading>
             <p className="mt-4 text-lg text-blue-50 drop-shadow md:text-xl">
               See our facilities and meet our team
             </p>
@@ -174,9 +181,18 @@ export default function BookingPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="booking-heading" className="bg-white py-20 md:py-32">
           <div className="mx-auto max-w-4xl px-4 md:px-6">
-            <h2 id="booking-heading" className="sr-only">
-              Tour booking form
-            </h2>
+            {/* sr-only and keeping its id: the section points at it with
+                aria-labelledby. */}
+            <EditableHeading
+              sections={sections}
+              sectionKey="booking-form-heading"
+              id="booking-heading"
+              className="sr-only"
+            >
+              <h2 id="booking-heading" className="sr-only">
+                Tour booking form
+              </h2>
+            </EditableHeading>
 
             {/* Bordered because the section behind it is also white */}
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md md:p-8">
@@ -208,12 +224,19 @@ export default function BookingPage() {
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="benefits-heading" className="bg-gray-100 py-20 md:py-32">
           <div className="mx-auto max-w-5xl px-4 md:px-6 lg:px-8">
-            <h2
+            <EditableHeading
+              sections={sections}
+              sectionKey="booking-benefits"
               id="benefits-heading"
               className="mb-10 text-center text-2xl font-bold text-gray-800 md:mb-12 md:text-3xl lg:text-4xl"
             >
-              Why Parents Love Little Smarties
-            </h2>
+              <h2
+                id="benefits-heading"
+                className="mb-10 text-center text-2xl font-bold text-gray-800 md:mb-12 md:text-3xl lg:text-4xl"
+              >
+                Why Parents Love Little Smarties
+              </h2>
+            </EditableHeading>
 
             <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-2">
               {BENEFITS.map((benefit) => (
