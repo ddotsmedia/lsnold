@@ -52,7 +52,7 @@ const dirty = (a: Draft, b: Draft): boolean =>
 
 const photoValid = (url: string): boolean => !url.trim() || /^https?:\/\/\S+$/i.test(url.trim());
 
-/** Initials shown where a member has no photo, matching TeamMemberCard. */
+/** Initials shown where a member has no photo, matching StaffCards. */
 const initials = (name: string): string =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase() || '?';
 
