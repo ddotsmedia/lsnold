@@ -28,7 +28,7 @@ const SITE_SLOTS = [
   { key: 'logo', label: 'Logo', hint: 'Shown in the header on every page.' },
   { key: 'header_bg', label: 'Header Background', hint: 'Optional background behind the header.' },
   { key: 'footer_logo', label: 'Footer Logo', hint: 'Falls back to the main logo.' },
-  { key: 'favicon', label: 'Favicon', hint: 'Stored here; the browser tab icon is still served from the app.' },
+  { key: 'favicon', label: 'Favicon', hint: 'The browser tab icon. Falls back to the logo when empty.' },
 ] as const;
 
 /** Slugs match the ones the public age-groups page uses. */

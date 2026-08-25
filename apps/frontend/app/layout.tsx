@@ -22,10 +22,26 @@ const nunito = Nunito({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: 'Little Smarties Nursery',
-  description: 'Quality early childhood education and care',
-};
+/**
+ * Async because the favicon is an uploaded image like the logo, not a file in
+ * the repo. There is no app/favicon.ico and no public/favicon.ico, so until
+ * this existed every page load asked for /favicon.ico and got a 404 — setting
+ * site_media.favicon alone changed nothing, because nothing read it.
+ *
+ * Falls back to the logo when no favicon has been uploaded, and emits nothing
+ * at all when neither is set, which is the old behaviour rather than a broken
+ * <link>.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const siteMedia = await getSiteMedia();
+  const icon = siteMedia.favicon?.url ?? siteMedia.logo?.url;
+
+  return {
+    title: 'Little Smarties Nursery',
+    description: 'Quality early childhood education and care',
+    ...(icon ? { icons: { icon, shortcut: icon, apple: icon } } : {}),
+  };
+}
 
 /**
  * Async so the site-wide images can be read before anything renders. The
