@@ -14,6 +14,8 @@ import { QuickFactsCard } from '@/components/QuickFactsCard';
 import { Butterfly, Flower } from '@/components/Decorations';
 import { useAgeGroupMedia, useAgeGroupImages, usePageMedia, slugify } from '@/lib/media';
 import { useAgeGroups, formatRange } from '@/lib/ageGroups';
+import { DailyRoutineTimeline } from '@/components/DailyRoutineTimeline';
+import { HandprintDivider } from '@/components/Handprints';
 import type { SiteImage } from '@/lib/media';
 import { Modal } from '@/components/Modal';
 
@@ -432,6 +434,8 @@ export default function AgeGroupsPage() {
 
         {/* Video assigned in admin -> Gallery -> Videos. Renders nothing when
             none is set for this page. */}
+        <HandprintDivider />
+
         <PageVideo pageSlug="age-groups" heading="Take a look" />
 
         {/* ---------------------------------------------------------------- */}
@@ -580,19 +584,10 @@ export default function AgeGroupsPage() {
                   <h3 className="mt-8 mb-3 text-xl font-semibold text-gray-800 md:text-2xl">
                     A Day in {selected.name}
                   </h3>
-                  <ol className="divide-y divide-gray-100 rounded-lg border border-gray-100">
-                    {selected.dailyRoutine.map((entry) => (
-                      <li
-                        key={`${entry.time}-${entry.activity}`}
-                        className="flex items-baseline gap-4 px-4 py-3"
-                      >
-                        <span className="w-14 shrink-0 text-sm font-bold text-blue-800">
-                          {entry.time}
-                        </span>
-                        <span className="text-base text-gray-700">{entry.activity}</span>
-                      </li>
-                    ))}
-                  </ol>
+                  {/* The same routine entries as before, as a timeline whose
+                      rows open. Each slot is a time and an activity only, so
+                      the icon is derived from the wording. */}
+                  <DailyRoutineTimeline slots={selected.dailyRoutine} />
 
                   {/* Sample activities */}
                   <h3 className="mt-8 mb-3 text-xl font-semibold text-gray-800 md:text-2xl">

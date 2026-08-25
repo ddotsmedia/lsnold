@@ -14,6 +14,8 @@ import {
   PaperAirplane,
   CloudScallop,
 } from '@/components/Decorations';
+import { AnimatedMascot } from '@/components/AnimatedMascot';
+import { HandprintDivider } from '@/components/Handprints';
 import { PartnerLogo } from '@/components/PartnerLogo';
 import { PageFeatureImages, PageBackground } from '@/components/PageFeatureImages';
 import { usePageMedia, useAgeGroupImages, slugify } from '@/lib/media';
@@ -342,6 +344,12 @@ export default function Home() {
                 Explore Now
               </button>
             </Link>
+
+            {/* Under the button rather than floating over the hero: the
+                overlay above is pointer-events-none because it sits on top of
+                that button, and a mascot up there would need the same
+                treatment while being harder to see against the photographs. */}
+            <AnimatedMascot className="mt-8" />
           </div>
 
           <CloudScallop className="relative text-white" />
@@ -416,6 +424,8 @@ export default function Home() {
         {/* Uploaded photographs. Skipped entirely while the slots are empty,
             so the page reads as before until images are added. */}
         <PageFeatureImages images={pageImages} className="bg-white pb-20 sm:pb-28" />
+
+        <HandprintDivider className="bg-white" />
 
         {/* ---------------------------------------------------------------- */}
         {/* Age Groups — tabbed selector                                     */}

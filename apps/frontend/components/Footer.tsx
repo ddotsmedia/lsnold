@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useFooter, lines } from '../lib/footer';
+import { FooterHandprints } from './Handprints';
 
 interface FooterLink {
   label: string;
@@ -146,8 +147,10 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-blue-700 text-blue-100/90">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-12 lg:px-8">
+    /* relative so the print pattern can fill it; the content sits above it. */
+    <footer className="relative overflow-hidden bg-blue-700 text-blue-100/90">
+      <FooterHandprints className="text-blue-200" />
+      <div className="relative mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-12 lg:px-8">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white text-lg">
             {footer.logo_url ? (

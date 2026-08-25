@@ -8,7 +8,8 @@ import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSect
 import { Button } from '@/components/Button';
 import { Carousel } from '@/components/Carousel';
 import { MissionCard, type MissionCardColor, type MissionCardTitle } from '@/components/MissionCard';
-import { TeamMemberCard } from '@/components/TeamMemberCard';
+import { StaffCards } from '@/components/StaffCards';
+import { HandprintDivider } from '@/components/Handprints';
 import { useStaff, type StaffMember } from '@/lib/staff';
 import { Butterfly, Circle, Cloud, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
@@ -554,19 +555,11 @@ export default function NurseryPage() {
               Experienced professionals dedicated to your child&rsquo;s growth
             </p>
 
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-3">
-              {team.map((member) => (
-                <TeamMemberCard
-                  key={member.id}
-                  name={member.name}
-                  position={member.role ?? ''}
-                  bio={member.bio ?? ''}
-                  image={member.photo_url ?? undefined}
-                />
-              ))}
-            </div>
+            <StaffCards staff={team} />
           </div>
         </section>
+
+        <HandprintDivider />
 
         {/* ---------------------------------------------------------------- */}
         {/* 6. Testimonials                                                  */}
