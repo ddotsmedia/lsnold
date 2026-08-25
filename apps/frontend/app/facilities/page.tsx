@@ -354,6 +354,18 @@ export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState<readonly Facility[]>(FALLBACK_FACILITIES);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  /**
+   * Whether the fetch has finished, either way.
+   *
+   * Settled, not loaded. A flag set only on success would leave the modal
+   * permanently unopenable whenever the request fails, the response is not an
+   * array, or the table is empty — all three of which still render the
+   * built-in cards, so the page would look fine and simply not respond to a
+   * click. Failing to the built-in list is the intended behaviour here; being
+   * unable to open it is not.
+   */
+  const [settled, setSettled] = useState(false);
+
   // Managed in admin -> Facilities. On any failure the built-in list stands, so
   // a backend problem never empties the page.
   useEffect(() => {
@@ -363,8 +375,13 @@ export default function FacilitiesPage() {
       .then((rows: ApiFacility[]) => {
         if (cancelled || !Array.isArray(rows) || rows.length === 0) return;
         setFacilities(rows.map(toFacility));
+        // The list under any open selection has just been replaced, and the
+        // index was chosen against the old one. Dropping it is better than
+        // opening a different facility than the one that was clicked.
+        setSelectedIndex(null);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => { if (!cancelled) setSettled(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -769,7 +786,7 @@ export default function FacilitiesPage() {
       {/* 4. Facility details modal                                          */}
       {/* ------------------------------------------------------------------ */}
       <FacilityModal
-        isOpen={selectedIndex !== null}
+        isOpen={selectedIndex !== null && settled}
         onClose={closeModal}
         facility={selectedFacility}
         onPrevious={goToPrevious}
