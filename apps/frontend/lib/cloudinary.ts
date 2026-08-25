@@ -8,6 +8,11 @@
 
 const UPLOAD_MARKER = '/image/upload/';
 
+/** A Cloudinary delivery URL, the only kind these transforms apply to. */
+function isCloudinary(url: string): boolean {
+  return url.includes('res.cloudinary.com') && url.includes(UPLOAD_MARKER);
+}
+
 /**
  * Adds a resize to a Cloudinary URL.
  *
@@ -29,10 +34,8 @@ const UPLOAD_MARKER = '/image/upload/';
  * bundled file or an external image still renders.
  */
 export function cloudinaryResize(url: string, width: number, height?: number): string {
-  if (!url) return url;
-  const at = url.indexOf(UPLOAD_MARKER);
-  if (at === -1 || !url.includes('res.cloudinary.com')) return url;
-  const cut = at + UPLOAD_MARKER.length;
+  if (!url || !isCloudinary(url)) return url;
+  const cut = url.indexOf(UPLOAD_MARKER) + UPLOAD_MARKER.length;
   const transform =
     height === undefined ? `w_${width},c_limit` : `w_${width},h_${height},c_fill`;
   return `${url.slice(0, cut)}${transform}/${url.slice(cut)}`;
@@ -53,8 +56,12 @@ export function buildSrcSet(
   url: string,
   widths: readonly number[],
   options: { naturalWidth?: number | null; ratio?: number } = {}
-): string {
-  if (!url || widths.length === 0) return '';
+): string | undefined {
+  // Nothing to offer for a URL this cannot resize: every candidate would be
+  // the same file under a different width descriptor, which is markup that
+  // looks like an optimisation and is not one. Returning undefined leaves the
+  // attribute off entirely. Some gallery rows still point at picsum.photos.
+  if (!url || widths.length === 0 || !isCloudinary(url)) return undefined;
   const natural = options.naturalWidth ?? Infinity;
   const usable = widths.filter((w) => w <= natural);
   const chosen = usable.length > 0 ? usable : [Math.min(...widths)];
