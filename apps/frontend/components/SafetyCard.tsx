@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type SafetyCardColor = 'blue' | 'green' | 'red' | 'yellow';
+export type SafetyCardColor = 'blue' | 'green' | 'red' | 'yellow' | 'purple';
 
 export interface SafetyCardProps {
   icon: string;
@@ -21,6 +21,7 @@ const COLOR_CLASSES: Record<SafetyCardColor, { surface: string; accent: string }
   green: { surface: 'bg-green-50 border-green-100', accent: 'text-green-700' },
   red: { surface: 'bg-red-50 border-red-100', accent: 'text-red-600' },
   yellow: { surface: 'bg-yellow-50 border-yellow-100', accent: 'text-yellow-700' },
+  purple: { surface: 'bg-purple-50 border-purple-100', accent: 'text-purple-700' },
 };
 
 export function SafetyCard({ icon, title, description, color, className }: SafetyCardProps) {

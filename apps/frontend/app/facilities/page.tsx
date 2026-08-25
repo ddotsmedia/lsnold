@@ -14,6 +14,7 @@ import { Cloud, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { usePageMedia } from '@/lib/media';
+import { useFeatureCards, cardsFor, cardColor } from '@/lib/featureCards';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -330,6 +331,20 @@ export default function FacilitiesPage() {
   const pageImages = usePageMedia('facilities');
   // Text written in admin -> Pages -> Text, keyed by section.
   const sections = sectionMap(usePageSections('facilities'));
+  // Safety cards written in admin -> Feature Cards. The built-in list stands
+  // until the fetch lands, and again if it fails, so the section is never
+  // empty and never flashes blank.
+  const dbSafetyCards = cardsFor(useFeatureCards('facilities'), 'facilities-safety');
+  const safetyCards =
+    dbSafetyCards.length > 0
+      ? dbSafetyCards.map((c) => ({
+          key: c.id,
+          icon: c.icon ?? '',
+          title: c.title,
+          description: c.description ?? '',
+          color: cardColor(c.color),
+        }))
+      : SAFETY_FEATURES.map((f) => ({ key: f.title, ...f }));
   // Only the slots that have been filled, in order, so two images lay out as a
   // pair rather than leaving a gap where the third would be.
   const featureImages = ['feature_1', 'feature_2', 'feature_3']
@@ -550,9 +565,9 @@ export default function FacilitiesPage() {
             </p>
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
-              {SAFETY_FEATURES.map((feature) => (
+              {safetyCards.map((feature) => (
                 <SafetyCard
-                  key={feature.title}
+                  key={feature.key}
                   icon={feature.icon}
                   title={feature.title}
                   description={feature.description}

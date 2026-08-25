@@ -11,6 +11,7 @@ import { getBranding } from './admin/branding.js';
 import { getFooter } from './admin/footer.js';
 import { listPublicFaqs } from './admin/faqs.js';
 import { listPublicStaff } from './admin/staff.js';
+import { listPublicFeatureCards } from './admin/pageFeatureCards.js';
 
 /**
  * Read-only endpoints the public site needs: the footer's social links and the
@@ -42,6 +43,10 @@ export function createPublicContentRouter(db: Pool): express.Router {
   // the admin endpoints also return drafts, which a visitor must not see.
   router.get('/faqs', (req, res) => listPublicFaqs(db, req as AuthRequest, res));
   router.get('/staff', (req, res) => listPublicStaff(db, req as AuthRequest, res));
+  // Feature cards for a page, grouped by section key. The facilities page's
+  // Safety & Wellbeing row is the first user.
+  router.get('/page-feature-cards/:slug', (req, res) =>
+    listPublicFeatureCards(db, req as AuthRequest, res));
 
   return router;
 }

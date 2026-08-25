@@ -28,6 +28,7 @@ import { createBrandingRouter } from './branding.js';
 import { createFooterRouter } from './footer.js';
 import { createAdminFaqsRouter } from './faqs.js';
 import { createAdminStaffRouter } from './staff.js';
+import { createAdminPageFeatureCardsRouter } from './pageFeatureCards.js';
 import { createAdminYoutubeVideosRouter } from './youtubeVideos.js';
 
 /**
@@ -77,6 +78,7 @@ export function createAdminRouter(db: Pool): express.Router {
   router.use('/footer', createFooterRouter(db));
   router.use('/faqs', createAdminFaqsRouter(db));
   router.use('/staff', createAdminStaffRouter(db));
+  router.use('/page-feature-cards', createAdminPageFeatureCardsRouter(db));
 
   return router;
 }
