@@ -260,7 +260,10 @@ export default function Home() {
     .filter((image): image is SiteImage => Boolean(image))
     .map((image) => ({ src: image.url, alt: image.alt_text || 'Little Smarties Nursery' }));
 
-  const heroSlides: HeroSlide[] = uploadedSlides.length > 0 ? uploadedSlides : HERO_SLIDES;
+  // Uploaded slides first, then as many bundled ones as it takes to reach five.
+  // The old expression swapped the whole set the moment one slot was filled, so
+  // uploading two photographs cut the rotation from four slides to two.
+  const heroSlides: HeroSlide[] = [...uploadedSlides, ...HERO_SLIDES].slice(0, 5);
 
   // Photographs uploaded in admin -> Age Groups, and the editable rows.
   // Merged over the copy below rather than replacing it: the experiences

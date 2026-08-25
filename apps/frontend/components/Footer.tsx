@@ -274,7 +274,9 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-sm text-blue-200/70 sm:flex-row sm:text-left">
-          <p>&copy; 2026 Little Smarties Nursery School. All rights reserved.</p>
+          {/* Read at render rather than written into the markup, so it stops
+              going stale every January. */}
+          <p>&copy; {new Date().getFullYear()} Little Smarties Nursery School. All rights reserved.</p>
           <Link href="/terms" className="transition-colors hover:text-white">
             Terms &amp; Conditions
           </Link>

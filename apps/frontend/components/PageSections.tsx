@@ -70,12 +70,18 @@ export function PageSections({
    * endpoint returned, consumed or not, so keying off that would empty this
    * block entirely and admin-added sections would have nowhere to appear.
    */
-  consumedKeys = [],
+  consumedKeys,
 }: {
   pageSlug: string;
   className?: string;
   only?: readonly string[];
-  consumedKeys?: readonly string[];
+  /**
+   * Required, not optional with an empty default. A page that forgets it
+   * publishes every section it renders inline a second time, silently — which
+   * is precisely what happened before this prop existed. A compile error is
+   * the only version of this that stays fixed.
+   */
+  consumedKeys: readonly string[];
 }) {
   const all = usePageSections(pageSlug);
   const sections = only

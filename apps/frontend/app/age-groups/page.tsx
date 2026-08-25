@@ -388,6 +388,14 @@ export default function AgeGroupsPage() {
   // Same merge as the cards above: the row wins where it has a value, the
   // built-in copy covers the moment before the fetch lands.
   const selectedRecord = selected ? groupRecords[slugify(selected.name)] : undefined;
+  // The cards above already read their range from the row. The detail panel
+  // has to as well, or correcting an age bracket in the database leaves the
+  // two halves of this page stating different brackets for the same group.
+  const selectedRange = selected
+    ? (selectedRecord
+        ? formatRange(selectedRecord.min_age_months, selectedRecord.max_age_months)
+        : selected.range)
+    : '';
   const previousGroup =
     selectedIndex === null || selectedIndex === 0 ? null : AGE_GROUPS[selectedIndex - 1];
   const nextGroup =
@@ -524,14 +532,14 @@ export default function AgeGroupsPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={heroImage.url}
-                    alt={heroImage.alt_text || `${selected.name}, ${selected.range}`}
+                    alt={heroImage.alt_text || `${selected.name}, ${selectedRange}`}
                     className="aspect-5/6 w-full rounded-lg object-cover lg:sticky lg:top-24"
                   />
                 ) : (
                   <div
                     className={`aspect-5/6 w-full rounded-lg bg-gradient-to-br ${selected.gradient} flex items-center justify-center lg:sticky lg:top-24`}
                     role="img"
-                    aria-label={`${selected.name}, ${selected.range}`}
+                    aria-label={`${selected.name}, ${selectedRange}`}
                   >
                     <span className="text-7xl md:text-8xl" aria-hidden="true">
                       {selected.emoji}
@@ -547,7 +555,7 @@ export default function AgeGroupsPage() {
                   >
                     {selected.name}
                   </h2>
-                  <p className="mt-1 text-lg text-gray-600 md:text-xl">{selected.range}</p>
+                  <p className="mt-1 text-lg text-gray-600 md:text-xl">{selectedRange}</p>
 
                   <div className="mt-6 space-y-4 text-base leading-relaxed text-gray-700">
                     {selected.detailedDescription.map((paragraph) => (
