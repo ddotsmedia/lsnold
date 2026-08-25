@@ -41,8 +41,49 @@ const EXTRA_SLOTS: Record<string, Slot[]> = {
   ],
 };
 
+/**
+ * Two slugs reach this function for the same page. The page editor passes the
+ * pages-table slug ("about"), the Media Library passes the route the images are
+ * stored under ("nursery"). Both have to find the same overrides.
+ */
+const SLUG_ALIASES: Record<string, string> = {
+  about: 'nursery',
+  'news-events': 'events',
+};
+
+/**
+ * Labels naming what a slot actually illustrates, where a page has a settled
+ * answer. "Feature 2" tells an admin nothing about which block on the page
+ * they are replacing.
+ *
+ * Only the label and hint are overridden; the keys stay as they are, because
+ * they are what the public page reads and what the rows are stored under.
+ *
+ * These name the blocks as the page ships. The headings themselves are
+ * editable under Pages -> Text, so a renamed section can leave a label behind
+ * — worth a look here when one is renamed.
+ */
+const SLOT_OVERRIDES: Record<string, Record<string, Partial<Slot>>> = {
+  nursery: {
+    feature_1: {
+      label: 'Intro photo',
+      hint: 'Beside “Little Smarties Early Learning Centre”, near the top.',
+    },
+    feature_2: { label: 'Learning Through Play', hint: 'First philosophy block.' },
+    feature_3: { label: 'Every Child on Their Own Path', hint: 'Second philosophy block.' },
+    background: {
+      label: 'A Partnership With Families',
+      hint: 'Third philosophy block. Tinted until an image is set.',
+    },
+  },
+};
+
 export function slotsForPage(slug?: string): Slot[] {
-  return [...SLOTS, ...(slug ? EXTRA_SLOTS[slug] ?? [] : [])];
+  const key = slug ? SLUG_ALIASES[slug] ?? slug : undefined;
+  const all = [...SLOTS, ...(key ? EXTRA_SLOTS[key] ?? [] : [])];
+  const overrides = key ? SLOT_OVERRIDES[key] : undefined;
+  if (!overrides) return all;
+  return all.map((slot) => (overrides[slot.key] ? { ...slot, ...overrides[slot.key] } : slot));
 }
 
 interface SlotImage {
