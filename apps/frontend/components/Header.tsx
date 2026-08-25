@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Button } from './Button';
 import { useSiteMedia } from '../lib/media';
 import { useBranding } from '../lib/branding';
+import { cloudinaryResize } from '../lib/cloudinary';
 
 export interface NavLink {
   label: string;
@@ -150,8 +151,10 @@ export default function Header({ currentPage }: HeaderProps = {}) {
         >
           {logo ? (
             /* eslint-disable-next-line @next/next/no-img-element */
+            /* 32px tall, at most 140 wide. Bounded at 2x that width; the
+               ladder a srcSet would offer has nothing to choose between. */
             <img
-              src={logo.url}
+              src={cloudinaryResize(logo.url, 280)}
               alt={logo.alt_text || branding.site_name}
               className="h-8 w-auto max-w-35 object-contain"
             />

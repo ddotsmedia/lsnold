@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useFooter, lines } from '../lib/footer';
 import { FooterHandprints } from './Handprints';
+import { cloudinaryResize } from '../lib/cloudinary';
 
 interface FooterLink {
   label: string;
@@ -155,8 +156,11 @@ export default function Footer() {
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white text-lg">
             {footer.logo_url ? (
               /* eslint-disable-next-line @next/next/no-img-element */
+              /* Rendered in a 40px circle. One bounded URL at 2x covers every
+                 screen; the upload behind it is 2560px and was being served
+                 whole, on every page, until this. */
               <img
-                src={footer.logo_url}
+                src={cloudinaryResize(footer.logo_url, 80)}
                 alt={footer.company_name}
                 className="h-full w-full object-contain"
               />
