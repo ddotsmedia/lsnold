@@ -15,6 +15,7 @@ import { HeroBackground } from '@/components/HeroBackground';
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { usePageMedia } from '@/lib/media';
 import { useFeatureCards, cardsFor, cardColor } from '@/lib/featureCards';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -486,7 +487,9 @@ export default function FacilitiesPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={image.id}
-                    src={image.url}
+                    src={cloudinaryResize(image.url, 500, 375)}
+                    srcSet={buildSrcSet(image.url, CARD_WIDTHS, { ratio: 3 / 4 })}
+                    sizes={CARD_SIZES}
                     alt={image.alt_text || ''}
                     loading="lazy"
                     className="aspect-4/3 w-full rounded-lg object-cover shadow-md"
@@ -586,7 +589,9 @@ export default function FacilitiesPage() {
             {pageImages.feature_1 ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={pageImages.feature_1.url}
+                src={cloudinaryResize(pageImages.feature_1.url, 600, 400)}
+                srcSet={buildSrcSet(pageImages.feature_1.url, CARD_WIDTHS, { naturalWidth: pageImages.feature_1.width, ratio: 2 / 3 })}
+                sizes='(max-width: 1024px) calc(100vw - 32px), 576px'
                 alt={pageImages.feature_1.alt_text || 'Outdoor play areas'}
                 loading="lazy"
                 className="aspect-3/2 w-full rounded-lg object-cover shadow-md"
@@ -649,7 +654,9 @@ export default function FacilitiesPage() {
               {pageImages.feature_2 ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={pageImages.feature_2.url}
+                  src={cloudinaryResize(pageImages.feature_2.url, 600, 400)}
+                  srcSet={buildSrcSet(pageImages.feature_2.url, CARD_WIDTHS, { naturalWidth: pageImages.feature_2.width, ratio: 2 / 3 })}
+                  sizes='(max-width: 1024px) calc(100vw - 32px), 576px'
                   alt={pageImages.feature_2.alt_text || 'Technology-enhanced learning'}
                   loading="lazy"
                   className="aspect-3/2 w-full rounded-lg object-cover shadow-md"

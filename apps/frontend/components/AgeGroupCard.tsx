@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, CARD_SIZES } from '../lib/cloudinary';
 
 export type AgeGroupColor = 'pink' | 'purple' | 'blue' | 'red' | 'green' | 'yellow';
 
@@ -95,7 +96,9 @@ export function AgeGroupCard({
       {heroUrl && (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
-          src={heroUrl}
+          src={cloudinaryResize(heroUrl, 500, 333)}
+          srcSet={buildSrcSet(heroUrl, CARD_WIDTHS, { ratio: 2 / 3 })}
+          sizes={CARD_SIZES}
           alt={heroAlt || ''}
           loading="lazy"
           className="mb-4 aspect-3/2 w-full rounded-xl object-cover"
@@ -104,7 +107,14 @@ export function AgeGroupCard({
 
       {iconUrl ? (
         /* eslint-disable-next-line @next/next/no-img-element */
-        <img src={iconUrl} alt={iconAlt || ''} className="mb-3 h-12 w-12 object-contain md:h-14 md:w-14" />
+        /* Fixed at 56px, so one bounded size covers it — 2x for a retina
+           screen and no srcSet to choose between. */
+        <img
+          src={cloudinaryResize(iconUrl, 112)}
+          alt={iconAlt || ''}
+          loading="lazy"
+          className="mb-3 h-12 w-12 object-contain md:h-14 md:w-14"
+        />
       ) : (
         // Hidden when a photograph is showing: an emoji under a real picture
         // reads as a placeholder that failed to load.

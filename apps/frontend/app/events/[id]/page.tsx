@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/Button';
 import { usePhone, telHref } from '@/lib/footer';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 
 interface EventDetail {
   id: string;
@@ -165,7 +166,9 @@ export default function EventDetailPage() {
               {event.image_url && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={event.image_url}
+                  src={cloudinaryResize(event.image_url, 800, 533)}
+                  srcSet={buildSrcSet(event.image_url, WIDE_WIDTHS, { ratio: 2 / 3 })}
+                  sizes='(max-width: 1024px) 100vw, 880px'
                   alt={event.title}
                   className="mt-5 aspect-3/2 w-full rounded-lg object-cover shadow-md"
                 />

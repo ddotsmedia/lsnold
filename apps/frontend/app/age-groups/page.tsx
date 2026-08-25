@@ -18,6 +18,7 @@ import { DailyRoutineTimeline } from '@/components/DailyRoutineTimeline';
 import { HandprintDivider } from '@/components/Handprints';
 import type { SiteImage } from '@/lib/media';
 import { Modal } from '@/components/Modal';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -531,7 +532,9 @@ export default function AgeGroupsPage() {
                 {heroImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={heroImage.url}
+                    src={cloudinaryResize(heroImage.url, 600, 720)}
+                    srcSet={buildSrcSet(heroImage.url, CARD_WIDTHS, { naturalWidth: heroImage.width, ratio: 6 / 5 })}
+                    sizes='(max-width: 1024px) calc(100vw - 32px), 460px'
                     alt={heroImage.alt_text || `${selected.name}, ${selectedRange}`}
                     className="aspect-5/6 w-full rounded-lg object-cover lg:sticky lg:top-24"
                   />
@@ -646,7 +649,9 @@ export default function AgeGroupsPage() {
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={image.url}
+                            src={cloudinaryResize(image.url, 500, 375)}
+                            srcSet={buildSrcSet(image.url, CARD_WIDTHS, { naturalWidth: image.width, ratio: 3 / 4 })}
+                            sizes={CARD_SIZES}
                             alt={image.alt_text || `${selected.name} at Little Smarties`}
                             loading="lazy"
                             className="aspect-4/3 w-full object-cover"
@@ -721,7 +726,9 @@ export default function AgeGroupsPage() {
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={lightbox.url}
+              src={cloudinaryResize(lightbox.url, 800)}
+              srcSet={buildSrcSet(lightbox.url, WIDE_WIDTHS, { naturalWidth: lightbox.width })}
+              sizes='(max-width: 1024px) 100vw, 900px'
               alt={lightbox.alt_text || ''}
               className="max-h-[75vh] w-full rounded-lg object-contain"
             />

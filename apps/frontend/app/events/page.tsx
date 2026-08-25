@@ -12,6 +12,7 @@ import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import Link from 'next/link';
 import { usePhone, telHref } from '@/lib/footer';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 
 interface ApiEvent {
   id: string;
@@ -110,7 +111,9 @@ function EventCard({ event, past, onOpen }: { event: ApiEvent; past: boolean; on
         {event.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={event.image_url}
+            src={cloudinaryResize(event.image_url, 500, 333)}
+            srcSet={buildSrcSet(event.image_url, CARD_WIDTHS, { ratio: 2 / 3 })}
+            sizes={CARD_SIZES}
             alt={event.title}
             loading="lazy"
             className={`aspect-3/2 w-full object-cover ${past ? 'grayscale' : ''}`}
@@ -183,7 +186,9 @@ function NewsCard({ item, onOpen }: { item: ApiNews; onOpen: () => void }) {
       {item.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={item.image_url}
+          src={cloudinaryResize(item.image_url, 500, 333)}
+            srcSet={buildSrcSet(item.image_url, CARD_WIDTHS, { ratio: 2 / 3 })}
+            sizes={CARD_SIZES}
           alt={item.title}
           loading="lazy"
           className="aspect-3/2 w-full object-cover"
@@ -427,7 +432,9 @@ export default function EventsPage() {
             {selected.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={selected.image_url}
+                src={cloudinaryResize(selected.image_url, 800, 533)}
+                srcSet={buildSrcSet(selected.image_url, WIDE_WIDTHS, { ratio: 2 / 3 })}
+                sizes='(max-width: 768px) 100vw, 720px'
                 alt={selected.title}
                 className="mb-5 aspect-3/2 w-full rounded-lg object-cover"
               />
@@ -487,7 +494,9 @@ export default function EventsPage() {
             {selectedNews.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={selectedNews.image_url}
+                src={cloudinaryResize(selectedNews.image_url, 800, 533)}
+                srcSet={buildSrcSet(selectedNews.image_url, WIDE_WIDTHS, { ratio: 2 / 3 })}
+                sizes='(max-width: 768px) 100vw, 720px'
                 alt={selectedNews.title}
                 className="mb-5 aspect-3/2 w-full rounded-lg object-cover"
               />

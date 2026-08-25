@@ -32,6 +32,7 @@ import { usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import type { SiteImage } from '@/lib/media';
 import { useTestimonials, type ApiTestimonial } from '@/lib/testimonials';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 
 interface FeaturedVideo {
   id: string;
@@ -258,7 +259,14 @@ export default function Home() {
   const uploadedSlides: HeroSlide[] = HERO_SLOTS
     .map((slot) => pageImages[slot])
     .filter((image): image is SiteImage => Boolean(image))
-    .map((image) => ({ src: image.url, alt: image.alt_text || 'Little Smarties Nursery' }));
+    // HeroRotator paints each slide as a CSS background-image, which takes no
+    // srcSet — the browser has nothing to choose between. So the URL itself is
+    // bounded instead: 1600px covers the widest hero without shipping the
+    // original, which for these uploads is 2560px.
+    .map((image) => ({
+      src: cloudinaryResize(image.url, 1600),
+      alt: image.alt_text || 'Little Smarties Nursery',
+    }));
 
   // Uploaded slides first, then as many bundled ones as it takes to reach five.
   // The old expression swapped the whole set the moment one slot was filled, so
@@ -409,7 +417,9 @@ export default function Home() {
                 {pageImages.about ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={pageImages.about.url}
+                    src={cloudinaryResize(pageImages.about.url, 600, 450)}
+                    srcSet={buildSrcSet(pageImages.about.url, CARD_WIDTHS, { naturalWidth: pageImages.about.width, ratio: 3 / 4 })}
+                    sizes='(max-width: 1024px) calc(100vw - 32px), 576px'
                     alt={pageImages.about.alt_text || 'Little Smarties Nursery'}
                     className="h-full w-full object-cover"
                   />
@@ -505,7 +515,7 @@ export default function Home() {
                   <div className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-red-600">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={activeIcon.url}
+                      src={cloudinaryResize(activeIcon.url, 160)}
                       alt={activeIcon.alt_text || activeGroup.name}
                       className="h-full w-full object-cover"
                     />
@@ -533,7 +543,9 @@ export default function Home() {
                     gradient box, which reads as a broken picture. */}
                 {activePhoto ? (
                   <img
-                    src={activePhoto.url}
+                    src={cloudinaryResize(activePhoto.url, 600, 450)}
+                    srcSet={buildSrcSet(activePhoto.url, CARD_WIDTHS, { naturalWidth: activePhoto.width, ratio: 3 / 4 })}
+                    sizes='(max-width: 1024px) calc(100vw - 32px), 576px'
                     alt={activePhoto.alt_text || activeGroup.name}
                     className="h-full w-full object-cover"
                   />
@@ -627,7 +639,7 @@ export default function Home() {
                       {t.author_image_url && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={t.author_image_url}
+                          src={cloudinaryResize(t.author_image_url, 112, 112)}
                           alt=""
                           loading="lazy"
                           className="h-10 w-10 rounded-full object-cover"

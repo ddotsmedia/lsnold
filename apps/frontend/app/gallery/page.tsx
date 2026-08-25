@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { PageSections, usePageSections } from '@/components/PageSections';
 import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSection';
 import { HeroBackground } from '@/components/HeroBackground';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, WIDE_WIDTHS, CARD_SIZES } from '@/lib/cloudinary';
 import { usePageMedia } from '@/lib/media';
 import Modal from '@/components/Modal';
 import VideoUploadModal from '@/components/VideoUploadModal';
@@ -279,8 +280,11 @@ export default function GalleryPage() {
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={image.image_url}
+                            src={cloudinaryResize(image.image_url, 500, 500)}
+                            srcSet={buildSrcSet(image.image_url, CARD_WIDTHS, { ratio: 1 })}
+                            sizes={CARD_SIZES}
                             alt={image.alt_text || image.title}
+                            loading="lazy"
                             className="aspect-square w-full object-cover transition group-hover:scale-105"
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
@@ -487,8 +491,12 @@ export default function GalleryPage() {
         {current && (
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* object-contain, so the widths are bounds and no ratio is
+                imposed — a cropped lightbox would defeat the point of it. */}
             <img
-              src={current.image_url}
+              src={cloudinaryResize(current.image_url, 800)}
+              srcSet={buildSrcSet(current.image_url, WIDE_WIDTHS)}
+              sizes="(max-width: 1024px) 100vw, 900px"
               alt={current.alt_text || current.title}
               className="max-h-[60vh] w-full rounded-lg object-contain"
             />

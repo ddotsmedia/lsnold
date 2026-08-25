@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { useSkipAnimation } from '../lib/useIsMobile';
 import type { StaffMember } from '../lib/staff';
+import { cloudinaryResize } from '../lib/cloudinary';
 
 /**
  * The team as tinted cards.
@@ -88,7 +89,7 @@ export function StaffCards({
               {member.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={member.photo_url}
+                  src={cloudinaryResize(member.photo_url, 128, 128)}
                   alt={member.name}
                   className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white/70"
                 />

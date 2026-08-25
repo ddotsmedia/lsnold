@@ -15,7 +15,7 @@ import { Butterfly, Circle, Cloud, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
 import { useTestimonials, type ApiTestimonial } from '@/lib/testimonials';
-import { cloudinaryResize, buildSrcSet } from '@/components/PageFeatureImages';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS } from '@/lib/cloudinary';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -283,7 +283,7 @@ function TestimonialCard({ testimonial }: { testimonial: ApiTestimonial }) {
         {testimonial.author_image_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={testimonial.author_image_url}
+            src={cloudinaryResize(testimonial.author_image_url, 112, 112)}
             alt=""
             loading="lazy"
             className="h-11 w-11 shrink-0 rounded-full object-cover"
@@ -368,7 +368,9 @@ export default function NurseryPage() {
             {pageImages.feature_1 ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={pageImages.feature_1.url}
+                src={cloudinaryResize(pageImages.feature_1.url, 600, 450)}
+                srcSet={buildSrcSet(pageImages.feature_1.url, CARD_WIDTHS, { naturalWidth: pageImages.feature_1.width, ratio: 3 / 4 })}
+                sizes='(max-width: 1024px) calc(100vw - 32px), 576px'
                 alt={pageImages.feature_1.alt_text || 'Little Smarties Early Learning Centre'}
                 className="order-1 aspect-4/3 w-full rounded-lg object-cover shadow-md"
               />
@@ -521,7 +523,7 @@ export default function NurseryPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={cloudinaryResize(image.url, 600, 400)}
-                        srcSet={buildSrcSet(image)}
+                        srcSet={buildSrcSet(image.url, [400, 600, 1000], { naturalWidth: image.width, ratio: 2 / 3 })}
                         // Full width below lg, half the container above it.
                         sizes="(max-width: 1024px) calc(100vw - 32px), 576px"
                         alt={image.alt_text || entry.title}

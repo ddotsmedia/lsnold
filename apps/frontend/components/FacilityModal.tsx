@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Modal } from './Modal';
+import { cloudinaryResize, buildSrcSet, CARD_WIDTHS, CARD_SIZES } from '../lib/cloudinary';
 
 export interface Facility {
   id: number;
@@ -162,7 +163,9 @@ export function FacilityModal({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={src}
-                  src={src}
+                  src={cloudinaryResize(src, 500, 375)}
+                  srcSet={buildSrcSet(src, CARD_WIDTHS, { ratio: 3 / 4 })}
+                  sizes="(max-width: 640px) calc(50vw - 24px), 240px"
                   alt={`${facility.name}, photo ${index + 1}`}
                   loading="lazy"
                   className="aspect-4/3 w-full rounded-lg object-cover"
