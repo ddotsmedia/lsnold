@@ -110,10 +110,16 @@ const PHILOSOPHY: readonly PhilosophyEntry[] = [
 
 /**
  * Which page media slot illustrates each philosophy block, by position.
- * A short list on purpose: only two slots are free on this page, and the third
- * block keeps its tint rather than borrowing an image that belongs elsewhere.
+ *
+ * Not feature_1, feature_2, feature_3. feature_1 is the intro section's tile
+ * further up this page, so mapping it here would publish the same photograph
+ * twice on /nursery.
+ *
+ * background is otherwise unused on this page, which makes it the free slot
+ * for the third block. Nothing is uploaded to it yet, so that block keeps its
+ * tint until someone adds one in Media Library -> Pages -> About -> Background.
  */
-const PHILOSOPHY_SLOTS: readonly (string | undefined)[] = ['feature_2', 'feature_3'];
+const PHILOSOPHY_SLOTS: readonly (string | undefined)[] = ['feature_2', 'feature_3', 'background'];
 
 interface TeamMember {
   name: string;
