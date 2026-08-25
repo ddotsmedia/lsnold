@@ -80,6 +80,9 @@ export const CARD_WIDTHS = [300, 500, 700] as const;
 /** Widths for something that spans the page. */
 export const WIDE_WIDTHS = [400, 800, 1200] as const;
 
+/** Widths for a full-bleed hero, which goes wider than the content shell. */
+export const HERO_WIDTHS = [400, 800, 1200, 1600] as const;
+
 /** `sizes` for a 1/2/3-column card grid inside the site's max-w-6xl shell. */
 export const CARD_SIZES =
   '(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(50vw - 28px), calc(33vw - 24px)';
