@@ -9,6 +9,7 @@ import { TourBookingForm } from '@/components/TourBookingForm';
 import { Butterfly, Flower } from '@/components/Decorations';
 import { usePhone, telHref } from '@/lib/footer';
 import { WhatsAppCTA } from '@/components/WhatsAppCTA';
+import { useFeatureCards, cardsFor } from '@/lib/featureCards';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -91,6 +92,20 @@ export default function BookingPage() {
   const phone = usePhone();
   // Text written in admin -> Pages -> Text, keyed by section.
   const sections = sectionMap(usePageSections('booking'));
+  // Tour facts written in admin -> Feature Cards -> Booking. The built-in list
+  // stands until the fetch lands, and again if it fails, so the row is never
+  // empty and never flashes blank.
+  const dbTourFacts = cardsFor(useFeatureCards('booking'), 'booking-tour-facts');
+  const tourFacts: readonly (TourFact & { key: string })[] =
+    dbTourFacts.length > 0
+      ? dbTourFacts.map((c) => ({
+          key: c.id,
+          icon: c.icon ?? '',
+          label: c.title,
+          value: c.value ?? '',
+          description: c.description ?? '',
+        }))
+      : TOUR_FACTS.map((f) => ({ key: f.label, ...f }));
 
   return (
     <>
@@ -159,9 +174,9 @@ export default function BookingPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-4">
-              {TOUR_FACTS.map((fact) => (
+              {tourFacts.map((fact) => (
                 <article
-                  key={fact.label}
+                  key={fact.key}
                   className="flex h-full flex-col rounded-lg bg-white p-6 shadow-md transition-shadow duration-200 ease-in-out hover:shadow-lg"
                 >
                   <span className="mb-3 text-4xl" aria-hidden="true">

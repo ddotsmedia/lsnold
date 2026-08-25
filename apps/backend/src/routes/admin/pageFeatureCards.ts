@@ -30,6 +30,9 @@ const COLORS = ['blue', 'green', 'red', 'yellow', 'purple'] as const;
 const cardSchema = z.object({
   section_key: z.string().trim().min(1, 'A section key is required').max(100),
   title: z.string().trim().min(1, 'A title is required').max(255),
+  // The large line some cards print between the title and the description
+  // ("45 minutes"). Null on cards that have no such line.
+  value: z.string().trim().max(255).nullable().transform((v) => (v ? v : null)),
   description: z.string().trim().max(2000).nullable().transform((v) => (v ? v : null)),
   // Emoji, and short. A long string here would break the card layout.
   icon: z.string().trim().max(50).nullable().transform((v) => (v ? v : null)),
@@ -37,14 +40,16 @@ const cardSchema = z.object({
   sort_order: z.number().int().min(0).max(9999),
 });
 
-const createSchema = cardSchema.partial({ description: true, icon: true, color: true, sort_order: true });
+const createSchema = cardSchema.partial({
+  value: true, description: true, icon: true, color: true, sort_order: true,
+});
 const updateSchema = cardSchema.partial();
 const reorderSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(200) });
 
-const CARD_FIELDS = ['section_key', 'title', 'description', 'icon', 'color', 'sort_order'] as const;
+const CARD_FIELDS = ['section_key', 'title', 'value', 'description', 'icon', 'color', 'sort_order'] as const;
 
 const COLUMNS =
-  'id, page_slug, section_key, title, description, icon, color, sort_order, created_at, updated_at';
+  'id, page_slug, section_key, title, value, description, icon, color, sort_order, created_at, updated_at';
 
 /**
  * Public read: every card for a page, in order.
@@ -103,9 +108,9 @@ async function createCard(db: Pool, req: AuthRequest, res: Response): Promise<vo
 
     const result = await db.query(
       `INSERT INTO page_feature_cards
-         (page_slug, section_key, title, description, icon, color, sort_order, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${COLUMNS}`,
-      [pageSlug, d.section_key, d.title, d.description ?? null, d.icon ?? null,
+         (page_slug, section_key, title, value, description, icon, color, sort_order, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING ${COLUMNS}`,
+      [pageSlug, d.section_key, d.title, d.value ?? null, d.description ?? null, d.icon ?? null,
        d.color ?? 'blue', order, req.userId ?? null]
     );
 

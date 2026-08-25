@@ -20,6 +20,7 @@ interface FeatureCard {
   page_slug: string;
   section_key: string;
   title: string;
+  value: string | null;
   description: string | null;
   icon: string | null;
   color: string;
@@ -37,6 +38,12 @@ const GROUPS: { pageSlug: string; sectionKey: string; label: string; note: strin
     label: 'Facilities — Safety & Hygiene',
     note: 'The row of cards under the Safety & Hygiene Standards heading on /facilities.',
   },
+  {
+    pageSlug: 'booking',
+    sectionKey: 'booking-tour-facts',
+    label: 'Booking — Tour facts',
+    note: 'The four tour facts on /booking. These use the Value line; the safety cards do not.',
+  },
 ];
 
 const COLORS = [
@@ -47,7 +54,7 @@ const COLORS = [
   { value: 'purple', label: 'Purple' },
 ];
 
-const EMPTY = { title: '', description: '', icon: '', color: 'blue' };
+const EMPTY = { title: '', value: '', description: '', icon: '', color: 'blue' };
 
 export default function FeatureCardsPage() {
   const [groupIndex, setGroupIndex] = useState(0);
@@ -93,6 +100,7 @@ export default function FeatureCardsPage() {
       const body = {
         section_key: group.sectionKey,
         title: form.title.trim(),
+        value: form.value.trim() || null,
         description: form.description.trim() || null,
         icon: form.icon.trim() || null,
         color: form.color,
@@ -199,6 +207,9 @@ export default function FeatureCardsPage() {
                   <span className="text-3xl leading-none" aria-hidden="true">{card.icon || '—'}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-panel-strong">{card.title}</p>
+                    {card.value && (
+                      <p className="truncate text-sm font-semibold text-emerald-400">{card.value}</p>
+                    )}
                     <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-panel-body">
                       {card.description || <span className="text-panel-muted">No description</span>}
                     </p>
@@ -210,6 +221,7 @@ export default function FeatureCardsPage() {
                     setEditId(card.id);
                     setForm({
                       title: card.title,
+                      value: card.value ?? '',
                       description: card.description ?? '',
                       icon: card.icon ?? '',
                       color: card.color,
@@ -234,6 +246,13 @@ export default function FeatureCardsPage() {
           <FormField label="Title *">
             <Input maxLength={255} value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          </FormField>
+          <FormField label="Value">
+            <Input maxLength={255} placeholder="45 minutes" value={form.value}
+              onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))} />
+            <p className="mt-1 text-xs text-panel-muted">
+              The large line under the title. Leave blank on cards that do not show one.
+            </p>
           </FormField>
           <FormField label="Description">
             <Textarea rows={4} maxLength={2000} value={form.description}

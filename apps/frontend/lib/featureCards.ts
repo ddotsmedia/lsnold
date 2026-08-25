@@ -22,6 +22,8 @@ export interface FeatureCard {
   page_slug: string;
   section_key: string;
   title: string;
+  /** The large line some cards print between title and description. */
+  value: string | null;
   description: string | null;
   icon: string | null;
   color: string;
