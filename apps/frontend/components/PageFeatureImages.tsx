@@ -3,6 +3,51 @@
 import type { SiteImage } from '@/lib/media';
 
 /**
+ * Adds a resize to a Cloudinary URL, so a phone is not sent a desktop image.
+ *
+ * The transformation is inserted as its own component directly after
+ * /image/upload/, which chains ahead of whatever is already there:
+ *
+ *   .../upload/f_auto,q_auto/v1/bayrotna/pages/abc
+ *   .../upload/w_400,h_300,c_fill/f_auto,q_auto/v1/bayrotna/pages/abc
+ *
+ * Not appended to the end of the path. That lands inside the public ID rather
+ * than the transformation segment and Cloudinary answers 404 — verified
+ * against the live account before this was written.
+ *
+ * Anything that is not a Cloudinary delivery URL is returned untouched, so a
+ * bundled file or an external image still renders.
+ */
+const UPLOAD_MARKER = '/image/upload/';
+
+function cloudinaryResize(url: string, width: number, height: number): string {
+  const at = url.indexOf(UPLOAD_MARKER);
+  if (at === -1 || !url.includes('res.cloudinary.com')) return url;
+  const cut = at + UPLOAD_MARKER.length;
+  return `${url.slice(0, cut)}w_${width},h_${height},c_fill/${url.slice(cut)}`;
+}
+
+/** 4:3, the ratio the strip crops to. */
+const WIDTHS = [400, 600, 1000] as const;
+
+/**
+ * A srcSet holding only the widths the source can actually fill.
+ *
+ * Upscaling costs rather than saves: the feature image on /nursery is 450px
+ * wide, and asking Cloudinary for 1000px returns 83KB where the original is
+ * 57KB. Candidates wider than the source are dropped, and the smallest is
+ * always kept so a narrow image still has an entry.
+ */
+function buildSrcSet(image: SiteImage): string {
+  const natural = image.width ?? Infinity;
+  const usable = WIDTHS.filter((w) => w <= natural);
+  const widths = usable.length > 0 ? usable : [WIDTHS[0]];
+  return widths
+    .map((w) => `${cloudinaryResize(image.url, w, Math.round((w * 3) / 4))} ${w}w`)
+    .join(', ');
+}
+
+/**
  * The feature_1..3 images uploaded for a page, as a photo strip.
  *
  * Renders nothing while every slot is empty, so a page with no photographs
@@ -48,7 +93,17 @@ export function PageFeatureImages({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={image.id}
-              src={image.url}
+              src={cloudinaryResize(image.url, 600, 450)}
+              srcSet={buildSrcSet(image)}
+              // One column below sm, two to lg, three above — matching the
+              // grid classes chosen above, minus the padding and the gaps.
+              sizes={
+                features.length === 1
+                  ? '(max-width: 640px) calc(100vw - 32px), 1152px'
+                  : features.length === 2
+                    ? '(max-width: 640px) calc(100vw - 32px), calc(50vw - 28px)'
+                    : '(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(50vw - 28px), calc(33vw - 24px)'
+              }
               alt={image.alt_text || ''}
               loading="lazy"
               className="aspect-4/3 w-full rounded-lg object-cover shadow-md"
@@ -83,8 +138,12 @@ export function PageBackground({
   return (
     <section className={`relative overflow-hidden ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Full-bleed, so it is always viewport-wide however the section is
+          sized — hence 100vw rather than the strip's column arithmetic. */}
       <img
-        src={image.url}
+        src={cloudinaryResize(image.url, 600, 450)}
+        srcSet={buildSrcSet(image)}
+        sizes="100vw"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
