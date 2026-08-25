@@ -15,7 +15,7 @@ import { Butterfly, Circle, Cloud, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
 import { useTestimonials, type ApiTestimonial } from '@/lib/testimonials';
-import { PageFeatureImages } from '@/components/PageFeatureImages';
+import { cloudinaryResize, buildSrcSet } from '@/components/PageFeatureImages';
 
 /* -------------------------------------------------------------------------- */
 /* Data                                                                        */
@@ -107,6 +107,13 @@ const PHILOSOPHY: readonly PhilosophyEntry[] = [
     gradient: 'from-green-100 to-emerald-200',
   },
 ];
+
+/**
+ * Which page media slot illustrates each philosophy block, by position.
+ * A short list on purpose: only two slots are free on this page, and the third
+ * block keeps its tint rather than borrowing an image that belongs elsewhere.
+ */
+const PHILOSOPHY_SLOTS: readonly (string | undefined)[] = ['feature_2', 'feature_3'];
 
 interface TeamMember {
   name: string;
@@ -423,11 +430,9 @@ export default function NurseryPage() {
 
         {/* Remaining uploaded photographs. Skipped entirely when the slots are
             empty, so the page reads as before until images are added. */}
-        <PageFeatureImages
-          images={pageImages}
-          slots={['feature_2', 'feature_3']}
-          className="bg-white pb-16 md:pb-24"
-        />
+        {/* The strip that used to sit here drew feature_2 and feature_3, which
+            the philosophy blocks below now illustrate. Keeping both would have
+            published the same two photographs twice on one page. */}
 
         {/* ---------------------------------------------------------------- */}
         {/* 3. Mission, vision, values                                       */}
@@ -497,7 +502,13 @@ export default function NurseryPage() {
             </EditableProse>
 
             <div className="space-y-16 md:space-y-20">
-              {PHILOSOPHY.map((entry, index) => (
+              {PHILOSOPHY.map((entry, index) => {
+                // The first two blocks take the page's feature slots; the
+                // third keeps its tint, there being no third slot to fill it.
+                const slot = PHILOSOPHY_SLOTS[index];
+                const image = slot ? pageImages[slot] : undefined;
+
+                return (
                 <article
                   key={entry.key}
                   className={`grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12 ${
@@ -506,11 +517,24 @@ export default function NurseryPage() {
                   }`}
                 >
                   <figure className="m-0">
-                    <div
-                      className={`aspect-3/2 w-full rounded-lg bg-gradient-to-br ${entry.gradient}`}
-                      role="img"
-                      aria-label={entry.title}
-                    />
+                    {image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cloudinaryResize(image.url, 600, 400)}
+                        srcSet={buildSrcSet(image)}
+                        // Full width below lg, half the container above it.
+                        sizes="(max-width: 1024px) calc(100vw - 32px), 576px"
+                        alt={image.alt_text || entry.title}
+                        loading="lazy"
+                        className="aspect-3/2 w-full rounded-lg object-cover shadow-md"
+                      />
+                    ) : (
+                      <div
+                        className={`aspect-3/2 w-full rounded-lg bg-gradient-to-br ${entry.gradient}`}
+                        role="img"
+                        aria-label={entry.title}
+                      />
+                    )}
                   </figure>
 
                   <div>
@@ -528,7 +552,8 @@ export default function NurseryPage() {
                     </EditableProse>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

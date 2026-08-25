@@ -20,7 +20,7 @@ import type { SiteImage } from '@/lib/media';
  */
 const UPLOAD_MARKER = '/image/upload/';
 
-function cloudinaryResize(url: string, width: number, height: number): string {
+export function cloudinaryResize(url: string, width: number, height: number): string {
   const at = url.indexOf(UPLOAD_MARKER);
   if (at === -1 || !url.includes('res.cloudinary.com')) return url;
   const cut = at + UPLOAD_MARKER.length;
@@ -38,7 +38,7 @@ const WIDTHS = [400, 600, 1000] as const;
  * 57KB. Candidates wider than the source are dropped, and the smallest is
  * always kept so a narrow image still has an entry.
  */
-function buildSrcSet(image: SiteImage): string {
+export function buildSrcSet(image: SiteImage): string {
   const natural = image.width ?? Infinity;
   const usable = WIDTHS.filter((w) => w <= natural);
   const widths = usable.length > 0 ? usable : [WIDTHS[0]];
