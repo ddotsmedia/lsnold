@@ -361,19 +361,44 @@ export async function uploadFacilityImage(db: Pool, req: AuthRequest, res: Respo
     );
     const mediaId = (media.rows[0] as { id: string }).id;
 
-    const next = await db.query(
-      `SELECT COALESCE(MAX(display_order), -1) + 1 AS next FROM facility_images
-        WHERE facility_id = $1 AND deleted_at IS NULL`,
-      [id]
-    );
-    // The first image for a facility becomes its primary automatically.
-    const isFirst = (next.rows[0] as { next: number }).next === 0;
+    // The newest upload becomes the facility's primary image.
+    //
+    // It used to be only the first, which read as a broken upload: the list is
+    // ordered is_primary DESC, so a second, better photo landed behind the
+    // original and the card carried on showing the old one.
+    //
+    // Insert and demote together, or a failure between them leaves the
+    // facility with two primaries or none.
+    const client = await db.connect();
+    let assignment;
+    try {
+      await client.query('BEGIN');
 
-    const assignment = await db.query(
-      `INSERT INTO facility_images (facility_id, media_id, is_primary, display_order)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [id, mediaId, isFirst, (next.rows[0] as { next: number }).next]
-    );
+      const next = await client.query(
+        `SELECT COALESCE(MAX(display_order), -1) + 1 AS next FROM facility_images
+          WHERE facility_id = $1 AND deleted_at IS NULL`,
+        [id]
+      );
+
+      assignment = await client.query(
+        `INSERT INTO facility_images (facility_id, media_id, is_primary, display_order)
+         VALUES ($1,$2,TRUE,$3) RETURNING *`,
+        [id, mediaId, (next.rows[0] as { next: number }).next]
+      );
+
+      await client.query(
+        `UPDATE facility_images SET is_primary = FALSE
+          WHERE facility_id = $1 AND id <> $2 AND deleted_at IS NULL`,
+        [id, assignment.rows[0]?.id]
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     await logActivity(db, req.userId, 'upload', 'facility_image', assignment.rows[0]?.id as string, {
       newValues: { facility_id: id, media_id: mediaId }, req,
@@ -384,7 +409,7 @@ export async function uploadFacilityImage(db: Pool, req: AuthRequest, res: Respo
       media_id: mediaId,
       url,
       alt_text: alt,
-      is_primary: isFirst,
+      is_primary: true,
     });
   } catch (error) {
     console.error('uploadFacilityImage failed', error);
