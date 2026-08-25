@@ -8,7 +8,6 @@ import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSect
 import { Button } from '@/components/Button';
 import { Carousel } from '@/components/Carousel';
 import { MissionCard, type MissionCardColor, type MissionCardTitle } from '@/components/MissionCard';
-import { StatCard } from '@/components/StatCard';
 import { TeamMemberCard } from '@/components/TeamMemberCard';
 import { useStaff, type StaffMember } from '@/lib/staff';
 import { Butterfly, Circle, Cloud, Flower } from '@/components/Decorations';
@@ -157,18 +156,6 @@ const FALLBACK_TEAM: readonly StaffMember[] = FALLBACK_TEAM_RAW.map((m, i) => ({
   photo_url: null,
   display_order: i + 1,
 }));
-
-interface Achievement {
-  number: string;
-  label: string;
-}
-
-const ACHIEVEMENTS: readonly Achievement[] = [
-  { number: '20+', label: 'Years in Business' },
-  { number: '500+', label: 'Children Served' },
-  { number: '25+', label: 'Staff Members' },
-  { number: '4.9', label: 'Star Rating' },
-];
 
 interface Testimonial {
   quote: string;
@@ -564,42 +551,7 @@ export default function NurseryPage() {
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* 6. Achievements                                                  */}
-        {/* ---------------------------------------------------------------- */}
-        <section
-          aria-labelledby="impact-heading"
-          className="bg-gradient-to-r from-blue-600 to-red-500 py-20 md:py-32"
-        >
-          <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-            <EditableHeading
-              sections={sections}
-              sectionKey="nursery-impact"
-              id="impact-heading"
-              className="mb-10 text-center text-2xl font-bold text-white md:mb-12 md:text-3xl lg:text-4xl"
-            >
-              <h2
-                id="impact-heading"
-                className="mb-10 text-center text-2xl font-bold text-white md:mb-12 md:text-3xl lg:text-4xl"
-              >
-                Our Impact
-              </h2>
-            </EditableHeading>
-
-            <div className="grid grid-cols-2 gap-8 md:gap-12 lg:grid-cols-4">
-              {ACHIEVEMENTS.map((achievement) => (
-                <StatCard
-                  key={achievement.label}
-                  number={achievement.number}
-                  label={achievement.label}
-                  animate
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* 7. Testimonials                                                  */}
+        {/* 6. Testimonials                                                  */}
         {/* ---------------------------------------------------------------- */}
         <section aria-labelledby="testimonials-heading" className="bg-blue-50 py-16 md:py-24">
           <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
@@ -640,7 +592,7 @@ export default function NurseryPage() {
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/* 8. Call to action                                                */}
+        {/* 7. Call to action                                                */}
         {/* ---------------------------------------------------------------- */}
         <section
           aria-labelledby="cta-heading"
