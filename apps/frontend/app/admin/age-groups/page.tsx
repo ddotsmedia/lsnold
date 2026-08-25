@@ -9,8 +9,11 @@ import { Button, Modal, FormField, Input, Textarea, Toast, ConfirmDialog } from 
  *
  * Programmes are the six the public site advertises (Bouncing Bunnies and so
  * on) and are what images attach to. Records are rows in the age_groups table,
- * which the registrations foreign key points at; they hold four unrelated
- * entries and are not what the public page renders.
+ * which the registrations foreign key points at.
+ *
+ * They are the same six, matched by slug, and since migration 061 the record
+ * carries the Quick Facts the public page prints. Editing a record therefore
+ * does change the site — the note below used to say otherwise.
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
@@ -50,11 +53,18 @@ interface AgeGroupRecord {
   min_age_months: number;
   max_age_months: number;
   capacity: number | null;
+  caregiver_ratio: string | null;
+  class_size: string | null;
+  focus_hours: string | null;
+  enrichment: string | null;
 }
 
 // capacity is held as a string so the field can be genuinely empty; a number
 // state would coerce a cleared box to 0, which the server rejects.
-const EMPTY_RECORD = { name: '', description: '', min_age_months: 0, max_age_months: 12, capacity: '' };
+const EMPTY_RECORD = {
+  name: '', description: '', min_age_months: 0, max_age_months: 12, capacity: '',
+  caregiver_ratio: '', class_size: '', focus_hours: '', enrichment: '',
+};
 
 function authHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('lsn_token') : null;
@@ -321,6 +331,10 @@ export default function AgeGroupsPage() {
         min_age_months: Number(recordForm.min_age_months),
         max_age_months: Number(recordForm.max_age_months),
         capacity: recordForm.capacity === '' ? null : Number(recordForm.capacity),
+        caregiver_ratio: recordForm.caregiver_ratio.trim() || null,
+        class_size: recordForm.class_size.trim() || null,
+        focus_hours: recordForm.focus_hours.trim() || null,
+        enrichment: recordForm.enrichment.trim() || null,
       };
       if (editId) await api(`/admin/content/age-groups/${editId}`, { method: 'PUT', body: JSON.stringify(body) });
       else await api('/admin/content/age-groups', { method: 'POST', body: JSON.stringify(body) });
@@ -478,8 +492,8 @@ export default function AgeGroupsPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <p className="max-w-2xl text-xs text-panel-muted">
-              Rows in the age_groups table, referenced by registrations. These are separate from the
-              programmes above and are not what the public page shows.
+              Rows in the age_groups table, referenced by registrations. The name, description, age
+              range and quick facts here are published on the public age groups page.
             </p>
             <Button onClick={() => { setEditId(null); setRecordForm(EMPTY_RECORD); setShowRecordModal(true); }}>
               + New Record
@@ -523,6 +537,10 @@ export default function AgeGroupsPage() {
                               min_age_months: r.min_age_months,
                               max_age_months: r.max_age_months,
                               capacity: r.capacity === null ? '' : String(r.capacity),
+                              caregiver_ratio: r.caregiver_ratio ?? '',
+                              class_size: r.class_size ?? '',
+                              focus_hours: r.focus_hours ?? '',
+                              enrichment: r.enrichment ?? '',
                             });
                             setShowRecordModal(true);
                           }}>Edit</Button>
@@ -579,6 +597,37 @@ export default function AgeGroupsPage() {
               chart; rooms left blank are listed as not yet recorded.
             </p>
           </FormField>
+
+          {/* The four Quick Facts cards on the public age groups page.
+              Free text, because that is what the page prints: the ratio in
+              particular is a regulated figure and is shown exactly as typed. */}
+          <div className="space-y-4 border-t border-panel-line/50 pt-4">
+            <p className="text-xs uppercase tracking-wider text-panel-muted">Quick facts (public page)</p>
+            <FormField label="Caregiver ratio">
+              <Input maxLength={120} placeholder="1:8 (1 caregiver per 8 children)"
+                value={recordForm.caregiver_ratio}
+                onChange={(e) => setRecordForm((f) => ({ ...f, caregiver_ratio: e.target.value }))} />
+            </FormField>
+            <FormField label="Class size">
+              <Input maxLength={120} placeholder="Max 16 children"
+                value={recordForm.class_size}
+                onChange={(e) => setRecordForm((f) => ({ ...f, class_size: e.target.value }))} />
+            </FormField>
+            <FormField label="Focus hours">
+              <Input maxLength={120} placeholder="Full day care"
+                value={recordForm.focus_hours}
+                onChange={(e) => setRecordForm((f) => ({ ...f, focus_hours: e.target.value }))} />
+            </FormField>
+            <FormField label="Enrichment">
+              <Input maxLength={255} placeholder="Art, music, drama, nature exploration"
+                value={recordForm.enrichment}
+                onChange={(e) => setRecordForm((f) => ({ ...f, enrichment: e.target.value }))} />
+            </FormField>
+            <p className="text-xs text-panel-muted">
+              Left blank, the page falls back to the wording it ships with.
+            </p>
+          </div>
+
           <div className="flex justify-end gap-2 border-t border-panel-line/50 pt-4">
             <Button variant="secondary" onClick={() => setShowRecordModal(false)}>Cancel</Button>
             <Button onClick={saveRecord}>{editId ? 'Save Changes' : 'Create'}</Button>

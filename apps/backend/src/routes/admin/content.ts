@@ -78,6 +78,12 @@ const AgeGroupSchema = z.object({
     (v) => (v === '' || v === null ? null : v),
     z.number().int().positive('Capacity must be at least 1').nullable().optional()
   ),
+  // The four Quick Facts. Prose, not numbers: the ratio is a regulated figure
+  // families read as written, so it is stored exactly as it is shown.
+  caregiver_ratio: z.preprocess(blankToNull, z.string().trim().max(120).nullable().optional()),
+  class_size: z.preprocess(blankToNull, z.string().trim().max(120).nullable().optional()),
+  focus_hours: z.preprocess(blankToNull, z.string().trim().max(120).nullable().optional()),
+  enrichment: z.preprocess(blankToNull, z.string().trim().max(255).nullable().optional()),
 });
 
 const ReorderSchema = z.object({
@@ -432,9 +438,11 @@ async function createAgeGroup(db: Pool, req: AuthRequest, res: Response): Promis
   try {
     const data = AgeGroupSchema.parse(req.body);
     const result = await db.query(
-      `INSERT INTO age_groups (name, description, min_age_months, max_age_months, capacity)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [data.name, data.description ?? null, data.min_age_months, data.max_age_months, data.capacity ?? null]
+      `INSERT INTO age_groups (name, description, min_age_months, max_age_months, capacity,
+                              caregiver_ratio, class_size, focus_hours, enrichment)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [data.name, data.description ?? null, data.min_age_months, data.max_age_months, data.capacity ?? null,
+       data.caregiver_ratio ?? null, data.class_size ?? null, data.focus_hours ?? null, data.enrichment ?? null]
     );
     await logActivity(db, req.userId, 'create', 'age_group', String(result.rows[0]?.id), { name: data.name });
     res.status(201).json(result.rows[0]);
@@ -456,14 +464,21 @@ async function updateAgeGroup(db: Pool, req: AuthRequest, res: Response): Promis
     if (data.name !== undefined) { sets.push(`name = $${idx++}`); params.push(data.name); }
     if (data.description !== undefined) { sets.push(`description = $${idx++}`); params.push(data.description ?? null); }
     if (data.min_age_months !== undefined) { sets.push(`min_age_months = $${idx++}`); params.push(data.min_age_months); }
-    if (data.max_age_months !== undefined) { sets.push(`max_age_months = ${idx++}`); params.push(data.max_age_months); }
+    // Both of these were missing their $ and so were not placeholders at all:
+    // max_age_months was set to the literal parameter index, and the WHERE
+    // compared a uuid column to an integer, which failed every update.
+    if (data.max_age_months !== undefined) { sets.push(`max_age_months = $${idx++}`); params.push(data.max_age_months); }
     if (data.capacity !== undefined) { sets.push(`capacity = $${idx++}`); params.push(data.capacity ?? null); }
+    if (data.caregiver_ratio !== undefined) { sets.push(`caregiver_ratio = $${idx++}`); params.push(data.caregiver_ratio ?? null); }
+    if (data.class_size !== undefined) { sets.push(`class_size = $${idx++}`); params.push(data.class_size ?? null); }
+    if (data.focus_hours !== undefined) { sets.push(`focus_hours = $${idx++}`); params.push(data.focus_hours ?? null); }
+    if (data.enrichment !== undefined) { sets.push(`enrichment = $${idx++}`); params.push(data.enrichment ?? null); }
 
     if (sets.length === 0) { res.status(400).json({ error: 'No fields to update' }); return; }
 
     params.push(id);
     const result = await db.query(
-      `UPDATE age_groups SET ${sets.join(', ')} WHERE id = ${idx} AND deleted_at IS NULL RETURNING *`,
+      `UPDATE age_groups SET ${sets.join(', ')} WHERE id = $${idx} AND deleted_at IS NULL RETURNING *`,
       params
     );
     if (result.rows.length === 0) { res.status(404).json({ error: 'Age group not found' }); return; }

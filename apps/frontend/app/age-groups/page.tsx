@@ -383,6 +383,9 @@ export default function AgeGroupsPage() {
   // The editable rows. Merged over the copy below, never replacing it: the
   // table has no column for a daily routine or focus areas.
   const groupRecords = useAgeGroups();
+  // Same merge as the cards above: the row wins where it has a value, the
+  // built-in copy covers the moment before the fetch lands.
+  const selectedRecord = selected ? groupRecords[slugify(selected.name)] : undefined;
   const previousGroup =
     selectedIndex === null || selectedIndex === 0 ? null : AGE_GROUPS[selectedIndex - 1];
   const nextGroup =
@@ -551,7 +554,9 @@ export default function AgeGroupsPage() {
                   {/* Ratio highlight */}
                   <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p className="text-sm font-medium text-gray-600">Caregiver-to-child ratio</p>
-                    <p className="mt-1 text-lg font-bold text-blue-800">{selected.ratio}</p>
+                    <p className="mt-1 text-lg font-bold text-blue-800">
+                      {selectedRecord?.caregiver_ratio || selected.ratio}
+                    </p>
                   </div>
 
                   {/* Focus areas */}
@@ -655,10 +660,12 @@ export default function AgeGroupsPage() {
                 {sections['age-groups-quick-facts']?.title?.trim() || 'Quick Facts'}
               </h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <QuickFactsCard icon="👩‍🏫" metric="Caregiver Ratio" value={selected.ratio} />
-                <QuickFactsCard icon="👥" metric="Class Size" value={selected.classSize} />
-                <QuickFactsCard icon="⏰" metric="Focus Hours" value={selected.focusHours} />
-                <QuickFactsCard icon="🎨" metric="Enrichment" value={selected.enrichment} />
+                {/* || rather than ??: a field cleared to an empty string in
+                    admin should fall back to the copy, not blank the card. */}
+                <QuickFactsCard icon="👩‍🏫" metric="Caregiver Ratio" value={selectedRecord?.caregiver_ratio || selected.ratio} />
+                <QuickFactsCard icon="👥" metric="Class Size" value={selectedRecord?.class_size || selected.classSize} />
+                <QuickFactsCard icon="⏰" metric="Focus Hours" value={selectedRecord?.focus_hours || selected.focusHours} />
+                <QuickFactsCard icon="🎨" metric="Enrichment" value={selectedRecord?.enrichment || selected.enrichment} />
               </div>
 
               {/* Previous / next navigation */}

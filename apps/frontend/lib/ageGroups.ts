@@ -24,6 +24,12 @@ export interface AgeGroupRecord {
   max_age_months: number;
   image_url: string | null;
   sort_order: number;
+  // The four Quick Facts, editable since migration 061. Prose rather than
+  // numbers: the ratio is a regulated figure families read as written.
+  caregiver_ratio: string | null;
+  class_size: string | null;
+  focus_hours: string | null;
+  enrichment: string | null;
 }
 
 /** "0–12 months" reads oddly for a nursery; families think in years after one. */
