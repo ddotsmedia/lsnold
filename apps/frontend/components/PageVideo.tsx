@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePageVideo } from '../lib/pageVideo';
+import { cloudinaryResize } from '../lib/cloudinary';
 
 /**
  * The video assigned to a page, if there is one.
@@ -62,8 +63,11 @@ export function PageVideo({ pageSlug, heading, className }: PageVideoProps) {
               aria-label={`Play video: ${video.title}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* An uploaded thumbnail is a Cloudinary asset and gets bounded;
+                  the YouTube fallback is already a fixed 480px still, and
+                  passes through untouched. */}
               <img
-                src={thumb}
+                src={cloudinaryResize(thumb, 800)}
                 alt=""
                 className="h-full w-full object-cover"
                 loading="lazy"
