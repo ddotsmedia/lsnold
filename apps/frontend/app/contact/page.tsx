@@ -7,7 +7,7 @@ import { EditableProse, EditableHeading, sectionMap } from '@/lib/renderPageSect
 import { PageFeatureImages } from '@/components/PageFeatureImages';
 import { Accordion, type AccordionEntry } from '@/components/Accordion';
 import { ContactForm } from '@/components/ContactForm';
-import { InfoCard } from '@/components/InfoCard';
+import { ContactCards } from '@/components/ContactCards';
 import { Butterfly, Flower } from '@/components/Decorations';
 import { HeroBackground } from '@/components/HeroBackground';
 import { usePageMedia } from '@/lib/media';
@@ -111,47 +111,13 @@ export default function ContactPage() {
   // Contact details come from admin -> Footer, the same row the site footer
   // reads, so the two can no longer disagree.
   const footer = useFooter();
-  const emails = lines(footer.email);
+  // ContactCards reads the same footer row for the tiles; these two are what
+  // the map embed and the opening hours list below still need.
   const address = lines(footer.address);
   const hours = lines(footer.hours);
   const mapQuery = encodeURIComponent(address.join(', '));
 
   const faqs = useFaqs(FALLBACK_FAQS);
-
-  const contactCards = [
-    emails.length > 0 && {
-      type: 'email',
-      icon: '✉️',
-      title: 'Email',
-      content: emails,
-      linkText: 'Send Email',
-      // The last address listed is the office one; the first is personal.
-      linkHref: `mailto:${emails[emails.length - 1]}`,
-    },
-    footer.phone?.trim() && {
-      type: 'phone',
-      icon: '📱',
-      title: 'Phone',
-      content: [footer.phone],
-      linkText: 'Call Us',
-      linkHref: `tel:${footer.phone.replace(/\s/g, '')}`,
-    },
-    address.length > 0 && {
-      type: 'address',
-      icon: '📍',
-      title: 'Address',
-      content: address,
-      linkText: 'Get Directions',
-      linkHref: `https://maps.google.com/?q=${mapQuery}`,
-    },
-  ].filter(Boolean) as Array<{
-    type: string;
-    icon: string;
-    title: string;
-    content: readonly string[];
-    linkText: string;
-    linkHref: string;
-  }>;
 
   return (
     <>
@@ -213,18 +179,7 @@ export default function ContactPage() {
                 Contact details
               </h2>
             </EditableHeading>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
-              {contactCards.map((info) => (
-                <InfoCard
-                  key={info.type}
-                  icon={info.icon}
-                  title={info.title}
-                  content={info.content}
-                  linkText={info.linkText}
-                  linkHref={info.linkHref}
-                />
-              ))}
-            </div>
+            <ContactCards />
           </div>
         </section>
 
