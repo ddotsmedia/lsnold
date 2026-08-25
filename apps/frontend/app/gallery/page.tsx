@@ -469,7 +469,11 @@ export default function GalleryPage() {
         </section>
         {/* Text written in admin -> Pages -> Text. Renders nothing until a
             section has content, so the copy above is untouched by default. */}
-        <PageSections pageSlug="gallery" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="gallery"
+          consumedKeys={['gallery-hero', 'gallery-photos', 'gallery-more-videos']}
+        />
 
       </main>
       <Footer />

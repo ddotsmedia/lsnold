@@ -796,7 +796,11 @@ export default function Home() {
         )}
         {/* Text written in admin -> Pages -> Text. Renders nothing until a
             section has content, so the copy above is untouched by default. */}
-        <PageSections pageSlug="home" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="home"
+          consumedKeys={['home-hero', 'home-age-groups', 'home-partners', 'home-testimonials']}
+        />
 
       </main>
 

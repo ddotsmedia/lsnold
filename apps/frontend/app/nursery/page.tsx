@@ -157,6 +157,24 @@ const FALLBACK_TEAM: readonly StaffMember[] = FALLBACK_TEAM_RAW.map((m, i) => ({
   display_order: i + 1,
 }));
 
+/**
+ * Every section key this page renders itself. Anything not listed here is
+ * published a second time by the PageSections block at the foot of the page.
+ *
+ * The two mapped lists are spread rather than spelled out so that adding an
+ * entry to either cannot quietly reintroduce a duplicate.
+ */
+const CONSUMED_SECTION_KEYS: readonly string[] = [
+  'nursery-hero',
+  'nursery-what-we-stand-for',
+  ...MISSION_VISION_VALUES.map((entry) => entry.key),
+  'nursery-philosophy',
+  ...PHILOSOPHY.map((entry) => entry.key),
+  'nursery-team',
+  'nursery-testimonials',
+  'nursery-cta',
+];
+
 interface Testimonial {
   quote: string;
   author: string;
@@ -624,7 +642,7 @@ export default function NurseryPage() {
         </section>
         {/* Text written in admin -> Pages -> Text. Renders nothing until a
             section has content, so the copy above is untouched by default. */}
-        <PageSections pageSlug="about" />
+        <PageSections pageSlug="about" consumedKeys={CONSUMED_SECTION_KEYS} />
 
       </main>
 

@@ -730,7 +730,14 @@ export default function FacilitiesPage() {
 
         {/* Text written in admin -> Pages -> Text. Renders nothing until a
             section has content, so the copy above is untouched by default. */}
-        <PageSections pageSlug="facilities" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="facilities"
+          consumedKeys={[
+            'facilities-hero', 'facilities-intro-heading', 'facilities-outdoor',
+            'facilities-safety', 'facilities-technology', 'facilities-cta',
+          ]}
+        />
 
       </main>
 

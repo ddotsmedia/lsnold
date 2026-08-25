@@ -407,7 +407,11 @@ export default function EventsPage() {
             section has content, so the copy above is untouched by default. */}
         <PageFeatureImages images={pageImages} className="bg-white py-16 md:py-24" />
 
-        <PageSections pageSlug="news-events" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="news-events"
+          consumedKeys={['events-programs-hero', 'events-upcoming']}
+        />
 
       </main>
       <Footer />

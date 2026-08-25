@@ -253,7 +253,11 @@ export default function BookingPage() {
         </section>
         {/* Text written in admin -> Pages -> Text. Renders nothing until a
             section has content, so the copy above is untouched by default. */}
-        <PageSections pageSlug="booking" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="booking"
+          consumedKeys={['booking-hero', 'booking-benefits', 'booking-form-heading']}
+        />
 
       </main>
 

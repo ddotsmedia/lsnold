@@ -386,7 +386,14 @@ export default function ContactPage() {
             section has content, so the copy above is untouched by default. */}
         <PageFeatureImages images={pageImages} className="bg-white py-16 md:py-24" />
 
-        <PageSections pageSlug="contact" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="contact"
+          consumedKeys={[
+            'contact-hero', 'contact-info', 'contact-form',
+            'contact-hours', 'contact-location', 'contact-faq',
+          ]}
+        />
 
       </main>
 

@@ -46,7 +46,7 @@ export function usePageSections(pageSlug: string): PageSection[] {
  * which is why it can be set as markup here.
  */
 /**
- * Keys the pages render inline, in place of their own copy. Excluded here so
+ * Keys every page renders inline, in place of their own copy. Excluded here so
  * the same text cannot appear twice — once where it belongs and again in this
  * block at the foot of the page.
  *
@@ -60,15 +60,29 @@ export function PageSections({
   className = 'bg-white py-16 md:py-24',
   /** Render only these keys, so a page can place sections individually. */
   only,
+  /**
+   * The keys this page already renders itself, beyond the two above. A page
+   * passes every sectionKey it hands to EditableHeading or EditableProse; a key
+   * missing from the list is published twice, once in place and once here.
+   *
+   * The page owns this rather than the component deriving it, because only the
+   * page knows which keys it reads — sectionMap holds every section the
+   * endpoint returned, consumed or not, so keying off that would empty this
+   * block entirely and admin-added sections would have nowhere to appear.
+   */
+  consumedKeys = [],
 }: {
   pageSlug: string;
   className?: string;
   only?: readonly string[];
+  consumedKeys?: readonly string[];
 }) {
   const all = usePageSections(pageSlug);
   const sections = only
     ? all.filter((s) => only.includes(s.section_key))
-    : all.filter((s) => !RENDERED_INLINE.includes(s.section_key));
+    : all.filter(
+        (s) => !RENDERED_INLINE.includes(s.section_key) && !consumedKeys.includes(s.section_key)
+      );
 
   if (sections.length === 0) return null;
 

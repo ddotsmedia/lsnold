@@ -101,7 +101,8 @@ export default function RegisterPage() {
         </section>
 
         {/* Any further sections added in admin, after the form. */}
-        <PageSections pageSlug="register" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections pageSlug="register" consumedKeys={['hero', 'register-form-heading']} />
       </main>
 
       <Footer />

@@ -695,7 +695,14 @@ export default function AgeGroupsPage() {
             section has content, so the copy above is untouched by default. */}
         <PageFeatureImages images={pageImages} className="bg-white py-16 md:py-24" />
 
-        <PageSections pageSlug="age-groups" />
+        {/* Keys this page renders itself; without them each is published twice. */}
+        <PageSections
+          pageSlug="age-groups"
+          consumedKeys={[
+            'age-groups-hero', 'age-groups-focus', 'age-groups-activities',
+            'age-groups-approach', 'age-groups-quick-facts',
+          ]}
+        />
 
       </main>
 
