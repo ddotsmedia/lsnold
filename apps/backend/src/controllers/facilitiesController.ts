@@ -380,16 +380,19 @@ export async function uploadFacilityImage(db: Pool, req: AuthRequest, res: Respo
         [id]
       );
 
+      // Demote first: idx_facility_images_primary allows one primary per
+      // facility, so inserting a second TRUE before clearing the old one
+      // violates it and the upload fails.
+      await client.query(
+        `UPDATE facility_images SET is_primary = FALSE
+          WHERE facility_id = $1 AND deleted_at IS NULL`,
+        [id]
+      );
+
       assignment = await client.query(
         `INSERT INTO facility_images (facility_id, media_id, is_primary, display_order)
          VALUES ($1,$2,TRUE,$3) RETURNING *`,
         [id, mediaId, (next.rows[0] as { next: number }).next]
-      );
-
-      await client.query(
-        `UPDATE facility_images SET is_primary = FALSE
-          WHERE facility_id = $1 AND id <> $2 AND deleted_at IS NULL`,
-        [id, assignment.rows[0]?.id]
       );
 
       await client.query('COMMIT');
